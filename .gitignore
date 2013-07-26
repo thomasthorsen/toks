@@ -1,6 +1,6 @@
 .svn
 *.o
-src/uncrustify
+src/toks
 Makefile
 man/Makefile
 man/uncrustify.1
@@ -23,14 +23,8 @@ win32/Debug
 *.obj
 autom4te.cache
 build
-*.xcodeproj/*.pbxuser
-*.xcodeproj/*.perspectivev3
-*.xcodeproj/*.mode1v3
-*.xcodeproj/*.tm_build_errors
-*.tmproj
-*.xcworkspace
 xcuserdata
 Debug
 .*
-uncrustify-*-win32
+toks-*-win32
 src/config.h
