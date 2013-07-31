@@ -5,10 +5,10 @@
 #
 
 # grab the version - there is probably an easier way...
-VERSION=`grep '#define UNCRUSTIFY_VERSION ' src/uncrustify_version.h | \
-         sed -e "s/#define UNCRUSTIFY_VERSION//" -e 's/\"//g' -e 's/ //g'`
-VERDIR=uncrustify-$VERSION-win32
-RELDIR=../release
+VERSION=`grep '#define VERSION ' src/config.h | \
+         sed -e "s/#define VERSION//" -e 's/\"//g' -e 's/ //g'`
+VERDIR=toks-$VERSION-win32
+RELDIR=.
 THEZIP=$RELDIR/$VERDIR.zip
 
 echo "Building version $VERSION for Win32"
@@ -23,12 +23,9 @@ if [ -e $VERDIR ] ; then
 fi
 mkdir $VERDIR
 
-cp src/uncrustify.exe              $VERDIR/
-cp etc/*.cfg                       $VERDIR/
-cp ChangeLog                       $VERDIR/
-cp documentation/htdocs/index.html $VERDIR/
+cp src/toks.exe $VERDIR/
 
-strip $VERDIR/uncrustify.exe
+strip $VERDIR/toks.exe
 
 if ! [ -e $RELDIR ] ; then
   mkdir $RELDIR

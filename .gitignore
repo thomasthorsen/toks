@@ -26,5 +26,5 @@ build
 xcuserdata
 Debug
 .*
-toks-*-win32
+toks-*-win32*
 src/config.h
