@@ -1,14 +1,14 @@
 AUTOMAKE_OPTIONS = foreign no-dependencies
 
 DISTCLEANFILES =
-CLEANFILES = *.o *~ *.bak
+CLEANFILES = *.o
 MAINTAINERCLEANFILES = Makefile.in
 
-bin_PROGRAMS = uncrustify
+bin_PROGRAMS = toks
 
 BUILT_SOURCES = token_names.h
 
-uncrustify_SOURCES = uncrustify.cpp chunk_list.cpp indent.cpp align.cpp combine.cpp \
+toks_SOURCES = uncrustify.cpp chunk_list.cpp indent.cpp align.cpp combine.cpp \
 		tokenize.cpp tokenize_cleanup.cpp space.cpp newlines.cpp output.cpp \
 		args.cpp options.cpp keywords.cpp punctuators.cpp parse_frame.cpp \
 		logmask.cpp logger.cpp ChunkStack.cpp braces.cpp brace_cleanup.cpp \
@@ -29,4 +29,4 @@ token_names.h: token_enum.h ../make_token_names.sh
 	@echo "Rebuilding token_names.h"
 	@sh ../make_token_names.sh
 
-uncrustify_CPPFLAGS = -Wall
+toks_CPPFLAGS = -Wall
