@@ -25,8 +25,8 @@ noinst_HEADERS = chunk_list.h options.h char_table.h chunk_list.h \
 		uncrustify_version.h \
 		unc_ctype.h unc_text.h
 
-token_names.h: token_enum.h ../make_token_names.sh
+token_names.h: token_enum.h ../scripts/make_token_names.sh
 	@echo "Rebuilding token_names.h"
-	@sh ../make_token_names.sh
+	@sh ../scripts/make_token_names.sh
 
 toks_CPPFLAGS = -Wall

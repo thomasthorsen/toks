@@ -6,7 +6,7 @@ SUBDIRS = src
 
 # INCLUDES = @INCLUDES@
 
-EXTRA_DIST = scripts make_token_names.sh \
+EXTRA_DIST = scripts \
 	win32 make_win32.sh
 
 check-local:

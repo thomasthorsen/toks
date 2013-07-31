@@ -734,9 +734,9 @@ uninstall-am: uninstall-binPROGRAMS
 	tags uninstall uninstall-am uninstall-binPROGRAMS
 
 
-token_names.h: token_enum.h ../make_token_names.sh
+token_names.h: token_enum.h ../scripts/make_token_names.sh
 	@echo "Rebuilding token_names.h"
-	@sh ../make_token_names.sh
+	@sh ../scripts/make_token_names.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
