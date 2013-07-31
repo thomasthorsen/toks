@@ -8,7 +8,7 @@
 #define DEFINE_PCF_NAMES
 #define DEFINE_CHAR_TABLE
 
-#include "uncrustify_version.h"
+#include "config.h"
 #include "uncrustify_types.h"
 #include "char_table.h"
 #include "chunk_list.h"
@@ -203,7 +203,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
 
 static void version_exit(void)
 {
-   printf("uncrustify %s\n", UNCRUSTIFY_VERSION);
+   printf("toks %s\n", VERSION);
    exit(0);
 }
 

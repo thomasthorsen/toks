@@ -8,7 +8,7 @@
 #include "uncrustify_types.h"
 #include "args.h"
 #include "prototypes.h"
-#include "uncrustify_version.h"
+#include "config.h"
 #include <cstring>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>  /* strcasecmp() */
@@ -1669,7 +1669,7 @@ int save_option_file(FILE *pfile, bool withDoc)
    int        name_len;
    int        idx;
 
-   fprintf(pfile, "# Uncrustify %s\n", UNCRUSTIFY_VERSION);
+   fprintf(pfile, "# toks %s\n", VERSION);
 
    /* Print the options by group */
    for (group_map_it jt = group_map.begin(); jt != group_map.end(); jt++)
@@ -1813,7 +1813,7 @@ void print_options(FILE *pfile)
    }
    max_width++;
 
-   fprintf(pfile, "# Uncrustify %s\n", UNCRUSTIFY_VERSION);
+   fprintf(pfile, "# toks %s\n", VERSION);
 
    /* Print the all out */
    for (group_map_it jt = group_map.begin(); jt != group_map.end(); jt++)

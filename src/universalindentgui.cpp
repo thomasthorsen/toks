@@ -3,7 +3,7 @@
  * Exports the config file for UniversalIndentGUI
  */
 #include "prototypes.h"
-#include "uncrustify_version.h"
+#include "config.h"
 #include "unc_ctype.h"
 #include <stdio.h>
 
@@ -64,7 +64,7 @@ void print_universal_indent_cfg(FILE *pfile)
            "stringparaminquotes=false\n"
            "useCfgFileParameter=\"-c \"\n"
            "version=%s\n",
-           UNCRUSTIFY_VERSION);
+           VERSION);
 
    /* Now add each option */
    for (idx = 0; idx < UG_group_count; idx++)

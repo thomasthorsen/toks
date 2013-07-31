@@ -22,7 +22,6 @@ noinst_HEADERS = chunk_list.h options.h char_table.h chunk_list.h \
 		ChunkStack.h args.h token_names.h token_enum.h ListManager.h md5.h \
 		align_stack.h backup.h base_types.h log_levels.h \
 		punctuators.h \
-		uncrustify_version.h \
 		unc_ctype.h unc_text.h
 
 token_names.h: token_enum.h ../scripts/make_token_names.sh
