@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = foreign no-dependencies
 
 DISTCLEANFILES =
-CLEANFILES = *.o
+CLEANFILES =
 MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = toks
