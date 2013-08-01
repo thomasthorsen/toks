@@ -25,16 +25,10 @@
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include "unc_ctype.h"
-#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif
-#ifdef HAVE_STRINGS_H
 #include <strings.h>  /* strcasecmp() */
-#endif
 #include <vector>
 #include <deque>
 
@@ -155,9 +149,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --prefix PFX : Prepend PFX to the output filename path.\n"
            " --replace    : replace source files (creates a backup)\n"
            " --no-backup  : replace files, no backup. Useful if files are under source control\n"
-#ifdef HAVE_UTIME_H
            " --mtime      : preserve mtime on replaced files\n"
-#endif
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : load a file with types (usually not needed)\n"
            " -q           : quiet mode - no output on stderr (-L will override)\n"
@@ -762,10 +754,8 @@ static int load_mem_file(const char *filename, file_mem& fm)
       return(-1);
    }
 
-#ifdef HAVE_UTIME_H
    /* Save off mtime */
    fm.utb.modtime = my_stat.st_mtime;
-#endif
 
    /* Try to read in the file */
    p_file = fopen(filename, "rb");
@@ -1079,14 +1069,12 @@ static void do_source_file(const char *filename_in,
          }
       }
 
-#ifdef HAVE_UTIME_H
       if (keep_mtime)
       {
          /* update mtime -- don't care if it fails */
          fm.utb.actime = time(NULL);
          (void)utime(filename_in, &fm.utb);
       }
-#endif
    }
 }
 

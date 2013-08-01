@@ -21,11 +21,7 @@
 
 #define __STDC_FORMAT_MACROS
 
-#if defined HAVE_INTTYPES_H
 #include <inttypes.h>
-#else
-#error "Don't know where int8_t is defined"
-#endif
 
 
 /* some of my favorite aliases */

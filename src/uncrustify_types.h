@@ -21,9 +21,7 @@ using namespace std;
 #include "unc_text.h"
 #include <cstdio>
 #include <assert.h>
-#ifdef HAVE_UTIME_H
 #include <utime.h>
-#endif
 
 #define UNCRUSTIFY_OFF_TEXT    " *INDENT-OFF*"
 #define UNCRUSTIFY_ON_TEXT     " *INDENT-ON*"
@@ -343,9 +341,7 @@ struct file_mem
    deque<int>     data;
    bool           bom;
    CharEncoding   enc;
-#ifdef HAVE_UTIME_H
    struct utimbuf utb;
-#endif
 };
 
 struct cp_data

@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
 project(toks CXX)
 
-SET(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -g")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -g")
+
+set(VERSION "0.0")
+
+configure_file ("${PROJECT_SOURCE_DIR}/src/config.h.in"
+                "${PROJECT_BINARY_DIR}/config.h")
+include_directories("${PROJECT_BINARY_DIR}")
 
 add_executable(toks
 src/align.cpp
