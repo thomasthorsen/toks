@@ -20,10 +20,12 @@ Supported languages:
 Building
 --------
 
- $ ./configure
+ $ mkdir build
+ $ cd build
+ $ cmake ..
  $ make
 
-The executable is src/toks.
+The executable is build/toks.
 
 
 Usage
