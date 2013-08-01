@@ -8,7 +8,7 @@
 #ifndef CHUNKSTACK_H_INCLUDED
 #define CHUNKSTACK_H_INCLUDED
 
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include <deque>
 
 class ChunkStack

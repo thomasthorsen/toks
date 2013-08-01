@@ -8,7 +8,7 @@
  * @author  Ben Gardner
  * @license GPL v2+
  */
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include "char_table.h"
 #include "args.h"
 #include <cstring>

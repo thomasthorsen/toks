@@ -5,7 +5,7 @@
  * @author  Ben Gardner
  * @license GPL v2+
  */
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include "prototypes.h"
 #include "unc_ctype.h"
 #include <cstring>

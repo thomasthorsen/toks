@@ -8,7 +8,7 @@
 #ifndef C_PARSE_PROTOTYPES_H_INCLUDED
 #define C_PARSE_PROTOTYPES_H_INCLUDED
 
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include "chunk_list.h"
 
 #include <string>

@@ -1,13 +1,13 @@
 /**
- * @file uncrustify_types.h
+ * @file toks_types.h
  *
- * Defines some types for the uncrustify program
+ * Defines some types for the toks program
  *
  * @author  Ben Gardner
  * @license GPL v2+
  */
-#ifndef UNCRUSTIFY_TYPES_H_INCLUDED
-#define UNCRUSTIFY_TYPES_H_INCLUDED
+#ifndef TOKS_TYPES_H_INCLUDED
+#define TOKS_TYPES_H_INCLUDED
 
 #include <vector>
 #include <deque>
@@ -22,9 +22,6 @@ using namespace std;
 #include <cstdio>
 #include <assert.h>
 #include <utime.h>
-
-#define UNCRUSTIFY_OFF_TEXT    " *INDENT-OFF*"
-#define UNCRUSTIFY_ON_TEXT     " *INDENT-ON*"
 
 /**
  * Brace stage enum used in brace_cleanup
@@ -361,7 +358,6 @@ struct cp_data
    int                lang_flags; // LANG_xxx
    bool               lang_forced;
 
-   bool               unc_off;
    UINT32             line_number;
    UINT16             column;  /* column for parsing */
    UINT16             spaces;  /* space count on output */
@@ -401,4 +397,4 @@ struct cp_data
 
 extern struct cp_data cpd;
 
-#endif   /* UNCRUSTIFY_TYPES_H_INCLUDED */
+#endif   /* TOKS_TYPES_H_INCLUDED */

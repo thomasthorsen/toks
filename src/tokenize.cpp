@@ -7,7 +7,7 @@
  * @author  Ben Gardner
  * @license GPL v2+
  */
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include "char_table.h"
 #include "prototypes.h"
 #include "chunk_list.h"
@@ -450,22 +450,6 @@ static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
       }
    }
 
-   if (cpd.unc_off)
-   {
-      if (pc.str.find(UNCRUSTIFY_ON_TEXT) >= 0)
-      {
-         LOG_FMT(LBCTRL, "Found '%s' on line %d\n", UNCRUSTIFY_ON_TEXT, pc.orig_line);
-         cpd.unc_off = false;
-      }
-   }
-   else
-   {
-      if (pc.str.find(UNCRUSTIFY_OFF_TEXT) >= 0)
-      {
-         LOG_FMT(LBCTRL, "Found '%s' on line %d\n", UNCRUSTIFY_OFF_TEXT, pc.orig_line);
-         cpd.unc_off = true;
-      }
-   }
    return(true);
 }
 
@@ -1062,110 +1046,6 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
 
 
 /**
- * Parses any number of tab or space chars followed by a newline.
- * Does not change pc.len if a newline isn't found.
- * This is not the same as parse_whitespace() because it only consumes until
- * a single newline is encountered.
- */
-static bool parse_newline(tok_ctx& ctx)
-{
-   ctx.save();
-
-   /* Eat whitespace */
-   while ((ctx.peek() == ' ') || (ctx.peek() == '\t'))
-   {
-      ctx.get();
-   }
-   if ((ctx.peek() == '\r') || (ctx.peek() == '\n'))
-   {
-      if (ctx.peek() == '\n')
-      {
-         ctx.get();
-      }
-      else /* it is '\r' */
-      {
-         ctx.get();
-         if (ctx.peek() == '\n')
-         {
-            ctx.get();
-         }
-      }
-      return(true);
-   }
-   ctx.restore();
-   return(false);
-}
-
-
-static bool parse_ignored(tok_ctx& ctx, chunk_t& pc)
-{
-   int nl_count = 0;
-
-   /* Parse off newlines/blank lines */
-   while (parse_newline(ctx))
-   {
-      nl_count++;
-   }
-   if (nl_count > 0)
-   {
-      pc.nl_count = nl_count;
-      pc.type     = CT_NEWLINE;
-      return(true);
-   }
-
-   /* See if the INDENT-ON text is on this line */
-   ctx.save();
-   pc.str.clear();
-   while (ctx.more() &&
-          (ctx.peek() != '\r') &&
-          (ctx.peek() != '\n'))
-   {
-      pc.str.append(ctx.get());
-   }
-   if (pc.str.size() == 0)
-   {
-      /* end of file? */
-      return(false);
-   }
-   /* Note that we aren't actually making sure this is in a comment, yet */
-   if (pc.str.find(UNCRUSTIFY_ON_TEXT) < 0)
-   {
-      pc.type = CT_IGNORED;
-      return(true);
-   }
-   ctx.restore();
-
-   /* parse off whitespace leading to the comment */
-   if (parse_whitespace(ctx, pc))
-   {
-      pc.type = CT_IGNORED;
-      return(true);
-   }
-
-   /* Look for the ending comment and let it pass */
-   if (parse_comment(ctx, pc) && !cpd.unc_off)
-   {
-      return(true);
-   }
-
-   /* Reset the chunk & scan to until a newline */
-   pc.str.clear();
-   while (ctx.more() &&
-          (ctx.peek() != '\r') &&
-          (ctx.peek() != '\n'))
-   {
-      pc.str.append(ctx.get());
-   }
-   if (pc.str.size() > 0)
-   {
-      pc.type = CT_IGNORED;
-      return(true);
-   }
-   return(false);
-}
-
-
-/**
  * Skips the next bit of whatever and returns the type of block.
  *
  * pc.str is the input text.
@@ -1194,15 +1074,6 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
    pc.type      = CT_NONE;
    pc.nl_count  = 0;
    pc.flags     = 0;
-
-   /* If it is turned off, we put everything except newlines into CT_UNKNOWN */
-   if (cpd.unc_off)
-   {
-      if (parse_ignored(ctx, pc))
-      {
-         return(true);
-      }
-   }
 
    /**
     * Parse whitespace

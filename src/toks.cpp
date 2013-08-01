@@ -9,7 +9,7 @@
 #define DEFINE_CHAR_TABLE
 
 #include "config.h"
-#include "uncrustify_types.h"
+#include "toks_types.h"
 #include "char_table.h"
 #include "chunk_list.h"
 #include "prototypes.h"
@@ -1646,7 +1646,6 @@ static void uncrustify_end()
    }
 
    /* Clean up some state variables */
-   cpd.unc_off     = false;
    cpd.al_cnt      = 0;
    cpd.did_newline = true;
    cpd.frame_count = 0;
