@@ -291,35 +291,6 @@ int main(int argc, char *argv[])
       cfg_file = p_arg;
    }
 
-   /* Try to find a config file at an alternate location */
-   if (cfg_file.empty())
-   {
-      if (!unc_getenv("UNCRUSTIFY_CONFIG", cfg_file))
-      {
-         string home;
-
-         if (unc_homedir(home))
-         {
-            struct stat tmp_stat;
-            string      path;
-
-            path = home + "/uncrustify.cfg";
-            if (stat(path.c_str(), &tmp_stat) == 0)
-            {
-               cfg_file = path;
-            }
-            else
-            {
-               path = home + "/.uncrustify.cfg";
-               if (stat(path.c_str(), &tmp_stat) == 0)
-               {
-                  cfg_file = path;
-               }
-            }
-         }
-      }
-   }
-
    /* Get the parsed file name */
    if (((parsed_file = arg.Param("--parsed")) != NULL) ||
        ((parsed_file = arg.Param("-p")) != NULL))

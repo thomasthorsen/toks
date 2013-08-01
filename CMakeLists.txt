@@ -19,8 +19,6 @@ src/braces.cpp
 src/chunk_list.cpp
 src/ChunkStack.cpp
 src/combine.cpp
-src/compat_posix.cpp
-src/compat_win32.cpp
 src/defines.cpp
 src/detect.cpp
 src/indent.cpp
