@@ -40,7 +40,7 @@ src/sorting.cpp
 src/space.cpp
 src/tokenize_cleanup.cpp
 src/tokenize.cpp
-src/uncrustify.cpp
+src/toks.cpp
 src/unc_text.cpp
 src/unicode.cpp
 src/universalindentgui.cpp

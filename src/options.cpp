@@ -10,9 +10,7 @@
 #include "prototypes.h"
 #include "config.h"
 #include <cstring>
-#ifdef HAVE_STRINGS_H
 #include <strings.h>  /* strcasecmp() */
-#endif
 #include <cstdio>
 #include <cstdlib>
 #include <cerrno>
