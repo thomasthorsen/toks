@@ -43,5 +43,4 @@ src/tokenize.cpp
 src/toks.cpp
 src/unc_text.cpp
 src/unicode.cpp
-src/universalindentgui.cpp
 src/width.cpp)

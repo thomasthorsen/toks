@@ -268,12 +268,6 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc);
 
 
 /*
- * universalindentgui.cpp
- */
-void print_universal_indent_cfg(FILE *pfile);
-
-
-/*
  * unicode.cpp
  */
 void write_bom(FILE *pf, CharEncoding enc);

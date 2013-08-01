@@ -161,7 +161,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --show-config            : print out option documentation and exit\n"
            " --update-config          : Output a new config file. Use with -o FILE\n"
            " --update-config-with-doc : Output a new config file. Use with -o FILE\n"
-           " --universalindent        : Output a config file for Universal Indent GUI\n"
            " --detect                 : detects the config from a source file. Use with '-f FILE'\n"
            "                            Detection is fairly limited.\n"
            "\n"
@@ -184,11 +183,8 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Note: Use comments containing ' *INDENT-OFF*' and ' *INDENT-ON*' to disable\n"
            "      processing of parts of the source file.\n"
            "\n"
-           "There are currently %d options and minimal documentation.\n"
-           "Try UniversalIndentGUI and good luck.\n"
-           "\n"
            ,
-           path_basename(argv0), UO_option_count);
+           path_basename(argv0));
    exit(code);
 }
 
@@ -438,7 +434,7 @@ int main(int argc, char *argv[])
    }
 
    /* Try to load the config file, if available.
-    * It is optional for "--universalindent" and "--detect", but required for
+    * It is optional for "--detect", but required for
     * everything else.
     */
    if (!cfg_file.empty())
@@ -448,26 +444,6 @@ int main(int argc, char *argv[])
       {
          usage_exit("Unable to load the config file", argv[0], 56);
       }
-   }
-
-   if (arg.Present("--universalindent"))
-   {
-      FILE *pfile = stdout;
-
-      if (output_file != NULL)
-      {
-         pfile = fopen(output_file, "w");
-         if (pfile == NULL)
-         {
-            fprintf(stderr, "Unable to open %s for write: %s (%d)\n",
-                    output_file, strerror(errno), errno);
-            return EXIT_FAILURE;
-         }
-      }
-
-      print_universal_indent_cfg(pfile);
-
-      return EXIT_SUCCESS;
    }
 
    if (detect)
