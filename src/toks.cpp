@@ -47,7 +47,6 @@ static void do_source_file(const char *filename_in,
                            const char *filename_out,
                            const char *parsed_file);
 static void process_source_list(const char *source_list);
-static int load_header_files();
 
 static const char *make_output_filename(char *buf, int buf_size,
                                         const char *filename);
@@ -349,9 +348,6 @@ int main(int argc, char *argv[])
       }
    }
 
-   /* This relies on cpd.filename being the config file name */
-   load_header_files();
-
    if ((source_file == NULL) && (source_list == NULL) && (p_arg == NULL))
    {
       /* no input specified, so use stdin */
@@ -590,69 +586,6 @@ static int load_mem_file(const char *filename, file_mem& fm)
 }
 
 
-/**
- * Try to load the file from the config folder first and then by name
- */
-static int load_mem_file_config(const char *filename, file_mem& fm)
-{
-   int  retval;
-   char buf[1024];
-
-   snprintf(buf, sizeof(buf), "%.*s%s",
-            path_dirname_len(cpd.filename), cpd.filename, filename);
-
-   retval = load_mem_file(buf, fm);
-   if (retval < 0)
-   {
-      retval = load_mem_file(filename, fm);
-      if (retval < 0)
-      {
-         LOG_FMT(LERR, "Failed to load (%s) or (%s)\n", buf, filename);
-         cpd.error_count++;
-      }
-   }
-   return(retval);
-}
-
-
-static int load_header_files()
-{
-   int retval = 0;
-
-   if ((cpd.settings[UO_cmt_insert_file_header].str != NULL) &&
-       (cpd.settings[UO_cmt_insert_file_header].str[0] != 0))
-   {
-      retval |= load_mem_file_config(cpd.settings[UO_cmt_insert_file_header].str,
-                                     cpd.file_hdr);
-   }
-   if ((cpd.settings[UO_cmt_insert_file_footer].str != NULL) &&
-       (cpd.settings[UO_cmt_insert_file_footer].str[0] != 0))
-   {
-      retval |= load_mem_file_config(cpd.settings[UO_cmt_insert_file_footer].str,
-                                     cpd.file_ftr);
-   }
-   if ((cpd.settings[UO_cmt_insert_func_header].str != NULL) &&
-       (cpd.settings[UO_cmt_insert_func_header].str[0] != 0))
-   {
-      retval |= load_mem_file_config(cpd.settings[UO_cmt_insert_func_header].str,
-                                     cpd.func_hdr);
-   }
-   if ((cpd.settings[UO_cmt_insert_class_header].str != NULL) &&
-       (cpd.settings[UO_cmt_insert_class_header].str[0] != 0))
-   {
-      retval |= load_mem_file_config(cpd.settings[UO_cmt_insert_class_header].str,
-                                     cpd.class_hdr);
-   }
-   if ((cpd.settings[UO_cmt_insert_oc_msg_header].str != NULL) &&
-       (cpd.settings[UO_cmt_insert_oc_msg_header].str[0] != 0))
-   {
-      retval |= load_mem_file_config(cpd.settings[UO_cmt_insert_oc_msg_header].str,
-                                     cpd.oc_msg_hdr);
-   }
-   return(retval);
-}
-
-
 static const char *make_output_filename(char *buf, int buf_size,
                                         const char *filename)
 {
@@ -835,237 +768,12 @@ static void do_source_file(const char *filename_in,
 }
 
 
-static void add_file_header()
-{
-   if (!chunk_is_comment(chunk_get_head()))
-   {
-      /*TODO: detect the typical #ifndef FOO / #define FOO sequence */
-      tokenize(cpd.file_hdr.data, chunk_get_head());
-   }
-}
-
-
-static void add_file_footer()
-{
-   chunk_t *pc = chunk_get_tail();
-
-   /* Back up if the file ends with a newline */
-   if ((pc != NULL) && chunk_is_newline(pc))
-   {
-      pc = chunk_get_prev(pc);
-   }
-   if ((pc != NULL) &&
-       (!chunk_is_comment(pc) || !chunk_is_newline(chunk_get_prev(pc))))
-   {
-      pc = chunk_get_tail();
-      if (!chunk_is_newline(pc))
-      {
-         LOG_FMT(LSYS, "Adding a newline at the end of the file\n");
-         newline_add_after(pc);
-      }
-      tokenize(cpd.file_ftr.data, NULL);
-   }
-}
-
-
-static void add_func_header(c_token_t type, file_mem& fm)
-{
-   chunk_t *pc;
-   chunk_t *ref;
-   chunk_t *tmp;
-   bool    do_insert;
-
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next_ncnlnp(pc))
-   {
-      if (pc->type != type)
-      {
-         continue;
-      }
-
-      do_insert = false;
-
-      /* On a function proto or def. Back up to a close brace or semicolon on
-       * the same level
-       */
-      ref = pc;
-      while ((ref = chunk_get_prev(ref)) != NULL)
-      {
-         /* Bail if we change level or find an access specifier colon */
-         if ((ref->level != pc->level) || (ref->type == CT_PRIVATE_COLON))
-         {
-            do_insert = true;
-            break;
-         }
-
-         /* If we hit an angle close, back up to the angle open */
-         if (ref->type == CT_ANGLE_CLOSE)
-         {
-            ref = chunk_get_prev_type(ref, CT_ANGLE_OPEN, ref->level, CNAV_PREPROC);
-            continue;
-         }
-
-         /* Bail if we hit a preprocessor and cmt_insert_before_preproc is false */
-         if (ref->flags & PCF_IN_PREPROC)
-         {
-            tmp = chunk_get_prev_type(ref, CT_PREPROC, ref->level);
-            if ((tmp != NULL) && (tmp->parent_type == CT_PP_IF))
-            {
-               tmp = chunk_get_prev_nnl(tmp);
-               if (chunk_is_comment(tmp) &&
-                   !cpd.settings[UO_cmt_insert_before_preproc].b)
-               {
-                  break;
-               }
-            }
-         }
-
-         /* Ignore 'right' comments */
-         if (chunk_is_comment(ref) && chunk_is_newline(chunk_get_prev(ref)))
-         {
-            break;
-         }
-
-         if ((ref->level == pc->level) &&
-             ((ref->flags & PCF_IN_PREPROC) ||
-              (ref->type == CT_SEMICOLON) ||
-              (ref->type == CT_BRACE_CLOSE)))
-         {
-            do_insert = true;
-            break;
-         }
-      }
-      if (do_insert)
-      {
-         /* Insert between after and ref */
-         chunk_t *after = chunk_get_next_ncnl(ref);
-         tokenize(fm.data, after);
-         for (tmp = chunk_get_next(ref); tmp != after; tmp = chunk_get_next(tmp))
-         {
-            tmp->level = after->level;
-         }
-      }
-   }
-}
-
-
-static void add_msg_header(c_token_t type, file_mem& fm)
-{
-   chunk_t *pc;
-   chunk_t *ref;
-   chunk_t *tmp;
-   bool    do_insert;
-
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next_ncnlnp(pc))
-   {
-      if (pc->type != type)
-      {
-         continue;
-      }
-
-      do_insert = false;
-
-      /* On a function proto or def. Back up to a close brace or semicolon on
-       * the same level
-       */
-      ref = pc;
-      while ((ref = chunk_get_prev(ref)) != NULL)
-      {
-         /* ignore the CT_TYPE token that is the result type */
-         if ((ref->level != pc->level) &&
-             ((ref->type == CT_TYPE) ||
-              (ref->type == CT_PTR_TYPE)))
-         {
-            continue;
-         }
-
-         if ((ref->level != pc->level) && (ref->type == CT_OC_CATEGORY))
-         {
-            ref = chunk_get_next_ncnl(ref);
-            if (ref)
-            {
-               do_insert = true;
-            }
-            break;
-         }
-
-         /* Bail if we change level or find an access specifier colon */
-         if ((ref->level != pc->level) || (ref->type == CT_PRIVATE_COLON))
-         {
-            do_insert = true;
-            break;
-         }
-
-         /* If we hit an angle close, back up to the angle open */
-         if (ref->type == CT_ANGLE_CLOSE)
-         {
-            ref = chunk_get_prev_type(ref, CT_ANGLE_OPEN, ref->level, CNAV_PREPROC);
-            continue;
-         }
-
-         /* Bail if we hit a preprocessor and cmt_insert_before_preproc is false */
-         if (ref->flags & PCF_IN_PREPROC)
-         {
-            tmp = chunk_get_prev_type(ref, CT_PREPROC, ref->level);
-            if ((tmp != NULL) && (tmp->parent_type == CT_PP_IF))
-            {
-               tmp = chunk_get_prev_nnl(tmp);
-               if (chunk_is_comment(tmp) &&
-                   !cpd.settings[UO_cmt_insert_before_preproc].b)
-               {
-                  break;
-               }
-            }
-         }
-
-         /* Ignore 'right' comments */
-         if (chunk_is_comment(ref) && chunk_is_newline(chunk_get_prev(ref)))
-         {
-            break;
-         }
-
-         if ((ref->level == pc->level) &&
-             ((ref->flags & PCF_IN_PREPROC) ||
-              (ref->type == CT_SEMICOLON) ||
-              (ref->type == CT_BRACE_CLOSE) ||
-              (ref->type == CT_OC_CLASS)))
-         {
-            do_insert = true;
-            break;
-         }
-      }
-
-      if (do_insert)
-      {
-         /* Insert between after and ref */
-         chunk_t *after = chunk_get_next_ncnl(ref);
-         tokenize(fm.data, after);
-         for (tmp = chunk_get_next(ref); tmp != after; tmp = chunk_get_next(tmp))
-         {
-            tmp->level = after->level;
-         }
-      }
-   }
-}
-
-
 static void uncrustify_start(const deque<int>& data)
 {
    /**
     * Parse the text into chunks
     */
    tokenize(data, NULL);
-
-   /* Add the file header */
-   if (cpd.file_hdr.data.size() > 0)
-   {
-      add_file_header();
-   }
-
-   /* Add the file footer */
-   if (cpd.file_ftr.data.size() > 0)
-   {
-      add_file_footer();
-   }
 
    annotations_newlines();
 
@@ -1165,22 +873,6 @@ static void uncrustify_file(const file_mem& fm, FILE *pfout,
     */
    if (pfout != NULL)
    {
-      /**
-       * Add comments before function defs and classes
-       */
-      if (cpd.func_hdr.data.size() > 0)
-      {
-         add_func_header(CT_FUNC_DEF, cpd.func_hdr);
-      }
-      if (cpd.class_hdr.data.size() > 0)
-      {
-         add_func_header(CT_CLASS, cpd.class_hdr);
-      }
-      if (cpd.oc_msg_hdr.data.size() > 0)
-      {
-         add_msg_header(CT_OC_MSG_DECL, cpd.oc_msg_hdr);
-      }
-
       /**
        * Change virtual braces into real braces...
        */
