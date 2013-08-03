@@ -143,8 +143,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --version                : print the version and exit\n"
            " --update-config          : Output a new config file. Use with -o FILE\n"
            " --update-config-with-doc : Output a new config file. Use with -o FILE\n"
-           " --detect                 : detects the config from a source file. Use with '-f FILE'\n"
-           "                            Detection is fairly limited.\n"
            "\n"
            "Debug Options:\n"
            " -p FILE      : dump debug info to a file\n"
@@ -333,7 +331,6 @@ int main(int argc, char *argv[])
 
    bool update_config    = arg.Present("--update-config");
    bool update_config_wd = arg.Present("--update-config-with-doc");
-   bool detect           = arg.Present("--detect");
 
    /* Grab the output override */
    output_file = arg.Param("-o");
@@ -342,12 +339,8 @@ int main(int argc, char *argv[])
    LOG_FMT(LDATA, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LDATA, "source_file = %s\n", (source_file != NULL) ? source_file : "null");
    LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
-   LOG_FMT(LDATA, "detect      = %d\n", detect);
 
-   /* Try to load the config file, if available.
-    * It is optional for "--detect", but required for
-    * everything else.
-    */
+   /* Try to load the config file, if available. */
    if (!cfg_file.empty())
    {
       cpd.filename = cfg_file.c_str();
@@ -355,39 +348,6 @@ int main(int argc, char *argv[])
       {
          usage_exit("Unable to load the config file", argv[0], 56);
       }
-   }
-
-   if (detect)
-   {
-      file_mem fm;
-
-      if ((source_file == NULL) || (source_list != NULL))
-      {
-         fprintf(stderr, "The --detect option requires a single input file\n");
-         return EXIT_FAILURE;
-      }
-
-      /* Do some simple language detection based on the filename extension */
-      if (!cpd.lang_forced || (cpd.lang_flags == 0))
-      {
-         cpd.lang_flags = language_from_filename(source_file);
-      }
-
-      /* Try to read in the source file */
-      if (load_mem_file(source_file, fm) < 0)
-      {
-         LOG_FMT(LERR, "Failed to load (%s)\n", source_file);
-         cpd.error_count++;
-         return EXIT_FAILURE;
-      }
-
-      uncrustify_start(fm.data);
-      detect_options();
-      uncrustify_end();
-
-      redir_stdout(output_file);
-      save_option_file(stdout, update_config_wd);
-      return EXIT_SUCCESS;
    }
 
    /* Everything beyond this point requires a config file, so complain and

@@ -27,13 +27,6 @@ const char *get_file_extension(int& idx);
 
 
 /*
- * detect.cpp
- */
-
-void detect_options();
-
-
-/*
  *  output.cpp
  */
 
