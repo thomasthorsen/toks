@@ -45,10 +45,9 @@ static void uncrustify_file(const file_mem& fm, FILE *pfout,
                             const char *parsed_file);
 static void do_source_file(const char *filename_in,
                            const char *filename_out,
-                           const char *parsed_file,
-                           bool keep_mtime);
+                           const char *parsed_file);
 static void process_source_list(const char *source_list, const char *prefix,
-                                const char *suffix, bool keep_mtime);
+                                const char *suffix);
 static int load_header_files();
 
 static const char *make_output_filename(char *buf, int buf_size,
@@ -143,7 +142,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " files        : files to process (can be combined with -F)\n"
            " --suffix SFX : Append SFX to the output filename. The default is '.uncrustify'\n"
            " --prefix PFX : Prepend PFX to the output filename path.\n"
-           " --mtime      : preserve mtime on replaced files\n"
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : load a file with types (usually not needed)\n"
            " -q           : quiet mode - no output on stderr (-L will override)\n"
@@ -345,7 +343,6 @@ int main(int argc, char *argv[])
    const char *prefix = arg.Param("--prefix");
    const char *suffix = arg.Param("--suffix");
 
-   bool keep_mtime       = arg.Present("--mtime");
    bool update_config    = arg.Present("--update-config");
    bool update_config_wd = arg.Present("--update-config-with-doc");
    bool detect           = arg.Present("--detect");
@@ -484,7 +481,7 @@ int main(int argc, char *argv[])
    else if (source_file != NULL)
    {
       /* Doing a single file */
-      do_source_file(source_file, output_file, parsed_file, keep_mtime);
+      do_source_file(source_file, output_file, parsed_file);
    }
    else
    {
@@ -505,12 +502,12 @@ int main(int argc, char *argv[])
          char outbuf[1024];
          do_source_file(p_arg,
                         make_output_filename(outbuf, sizeof(outbuf), p_arg, prefix, suffix),
-                        NULL, keep_mtime);
+                        NULL);
       }
 
       if (source_list != NULL)
       {
-         process_source_list(source_list, prefix, suffix, keep_mtime);
+         process_source_list(source_list, prefix, suffix);
       }
    }
 
@@ -522,8 +519,7 @@ int main(int argc, char *argv[])
 
 
 static void process_source_list(const char *source_list,
-                                const char *prefix, const char *suffix,
-                                bool keep_mtime)
+                                const char *prefix, const char *suffix)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -571,7 +567,7 @@ static void process_source_list(const char *source_list,
          char outbuf[1024];
          do_source_file(fname,
                         make_output_filename(outbuf, sizeof(outbuf), fname, prefix, suffix),
-                        NULL, keep_mtime);
+                        NULL);
       }
    }
 
@@ -662,9 +658,6 @@ static int load_mem_file(const char *filename, file_mem& fm)
    {
       return(-1);
    }
-
-   /* Save off mtime */
-   fm.utb.modtime = my_stat.st_mtime;
 
    /* Try to read in the file */
    p_file = fopen(filename, "rb");
@@ -867,12 +860,10 @@ const char *fix_filename(const char *filename)
  * @param filename_in  the file to read
  * @param filename_out NULL (stdout) or the file to write
  * @param parsed_file  NULL or the filename for the parsed debug info
- * @param keep_mtime   don't change the mtime (dangerous)
  */
 static void do_source_file(const char *filename_in,
                            const char *filename_out,
-                           const char *parsed_file,
-                           bool       keep_mtime)
+                           const char *parsed_file)
 {
    FILE     *pfout;
    bool     did_open    = false;
@@ -956,13 +947,6 @@ static void do_source_file(const char *filename_in,
                cpd.error_count++;
             }
          }
-      }
-
-      if (keep_mtime)
-      {
-         /* update mtime -- don't care if it fails */
-         fm.utb.actime = time(NULL);
-         (void)utime(filename_in, &fm.utb);
       }
    }
 }

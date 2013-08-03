@@ -21,7 +21,6 @@ using namespace std;
 #include "unc_text.h"
 #include <cstdio>
 #include <assert.h>
-#include <utime.h>
 
 /**
  * Brace stage enum used in brace_cleanup
@@ -338,7 +337,6 @@ struct file_mem
    deque<int>     data;
    bool           bom;
    CharEncoding   enc;
-   struct utimbuf utb;
 };
 
 struct cp_data
