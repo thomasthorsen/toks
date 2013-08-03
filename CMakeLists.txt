@@ -13,7 +13,6 @@ add_executable(toks
 src/align.cpp
 src/align_stack.cpp
 src/args.cpp
-src/backup.cpp
 src/brace_cleanup.cpp
 src/braces.cpp
 src/chunk_list.cpp

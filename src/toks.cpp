@@ -18,7 +18,6 @@
 #include "logger.h"
 #include "log_levels.h"
 #include "md5.h"
-#include "backup.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -47,9 +46,9 @@ static void uncrustify_file(const file_mem& fm, FILE *pfout,
 static void do_source_file(const char *filename_in,
                            const char *filename_out,
                            const char *parsed_file,
-                           bool no_backup, bool keep_mtime);
+                           bool keep_mtime);
 static void process_source_list(const char *source_list, const char *prefix,
-                                const char *suffix, bool no_backup, bool keep_mtime);
+                                const char *suffix, bool keep_mtime);
 static int load_header_files();
 
 static const char *make_output_filename(char *buf, int buf_size,
@@ -136,9 +135,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "\n"
            "Errors are always dumped to stderr\n"
            "\n"
-           "The '-f' and '-o' options may not be used with '-F', '--replace' or '--no-backup'.\n"
-           "The '--prefix' and '--suffix' options may not be used with '--replace' or '--no-backup'.\n"
-           "\n"
            "Basic Options:\n"
            " -c CFG       : use the config file CFG\n"
            " -f FILE      : process the single file FILE (output to stdout, use with -o)\n"
@@ -147,8 +143,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " files        : files to process (can be combined with -F)\n"
            " --suffix SFX : Append SFX to the output filename. The default is '.uncrustify'\n"
            " --prefix PFX : Prepend PFX to the output filename path.\n"
-           " --replace    : replace source files (creates a backup)\n"
-           " --no-backup  : replace files, no backup. Useful if files are under source control\n"
            " --mtime      : preserve mtime on replaced files\n"
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : load a file with types (usually not needed)\n"
@@ -174,8 +168,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "uncrustify -c my.cfg -f foo.d -L0-2,20-23,51\n"
            "uncrustify -c my.cfg -f foo.d -o foo.d\n"
            "uncrustify -c my.cfg foo.d\n"
-           "uncrustify -c my.cfg --replace foo.d\n"
-           "uncrustify -c my.cfg --no-backup foo.d\n"
            "uncrustify -c my.cfg --prefix=out -F files.txt\n"
            "\n"
            ,
@@ -353,8 +345,6 @@ int main(int argc, char *argv[])
    const char *prefix = arg.Param("--prefix");
    const char *suffix = arg.Param("--suffix");
 
-   bool no_backup        = arg.Present("--no-backup");
-   bool replace          = arg.Present("--replace");
    bool keep_mtime       = arg.Present("--mtime");
    bool update_config    = arg.Present("--update-config");
    bool update_config_wd = arg.Present("--update-config-with-doc");
@@ -369,27 +359,11 @@ int main(int argc, char *argv[])
    LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
    LOG_FMT(LDATA, "prefix      = %s\n", (prefix != NULL) ? prefix : "null");
    LOG_FMT(LDATA, "suffix      = %s\n", (suffix != NULL) ? suffix : "null");
-   LOG_FMT(LDATA, "replace     = %d\n", replace);
-   LOG_FMT(LDATA, "no_backup   = %d\n", no_backup);
    LOG_FMT(LDATA, "detect      = %d\n", detect);
 
-   if (replace || no_backup)
+   if ((prefix == NULL) && (suffix == NULL))
    {
-      if ((prefix != NULL) || (suffix != NULL))
-      {
-         usage_exit("Cannot use --replace with --prefix or --suffix", argv[0], 66);
-      }
-      if ((source_file != NULL) || (output_file != NULL))
-      {
-         usage_exit("Cannot use --replace or --no-backup with -f or -o", argv[0], 66);
-      }
-   }
-   else
-   {
-      if ((prefix == NULL) && (suffix == NULL))
-      {
-         suffix = ".uncrustify";
-      }
+      suffix = ".uncrustify";
    }
 
    /* Try to load the config file, if available.
@@ -510,7 +484,7 @@ int main(int argc, char *argv[])
    else if (source_file != NULL)
    {
       /* Doing a single file */
-      do_source_file(source_file, output_file, parsed_file, no_backup, keep_mtime);
+      do_source_file(source_file, output_file, parsed_file, keep_mtime);
    }
    else
    {
@@ -531,12 +505,12 @@ int main(int argc, char *argv[])
          char outbuf[1024];
          do_source_file(p_arg,
                         make_output_filename(outbuf, sizeof(outbuf), p_arg, prefix, suffix),
-                        NULL, no_backup, keep_mtime);
+                        NULL, keep_mtime);
       }
 
       if (source_list != NULL)
       {
-         process_source_list(source_list, prefix, suffix, no_backup, keep_mtime);
+         process_source_list(source_list, prefix, suffix, keep_mtime);
       }
    }
 
@@ -549,7 +523,7 @@ int main(int argc, char *argv[])
 
 static void process_source_list(const char *source_list,
                                 const char *prefix, const char *suffix,
-                                bool no_backup, bool keep_mtime)
+                                bool keep_mtime)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -597,7 +571,7 @@ static void process_source_list(const char *source_list,
          char outbuf[1024];
          do_source_file(fname,
                         make_output_filename(outbuf, sizeof(outbuf), fname, prefix, suffix),
-                        NULL, no_backup, keep_mtime);
+                        NULL, keep_mtime);
       }
    }
 
@@ -893,18 +867,15 @@ const char *fix_filename(const char *filename)
  * @param filename_in  the file to read
  * @param filename_out NULL (stdout) or the file to write
  * @param parsed_file  NULL or the filename for the parsed debug info
- * @param no_backup    don't create a backup, if filename_out == filename_in
  * @param keep_mtime   don't change the mtime (dangerous)
  */
 static void do_source_file(const char *filename_in,
                            const char *filename_out,
                            const char *parsed_file,
-                           bool       no_backup,
                            bool       keep_mtime)
 {
    FILE     *pfout;
    bool     did_open    = false;
-   bool     need_backup = false;
    file_mem fm;
    string   filename_tmp;
 
@@ -937,18 +908,6 @@ static void do_source_file(const char *filename_in,
       {
          /* Create 'outfile.uncrustify' */
          filename_tmp = fix_filename(filename_out);
-
-         if (!no_backup)
-         {
-            if (backup_copy_file(filename_in, fm.raw) != SUCCESS)
-            {
-               LOG_FMT(LERR, "%s: Failed to create backup file for %s\n",
-                       __func__, filename_in);
-               cpd.error_count++;
-               return;
-            }
-            need_backup = true;
-         }
       }
       make_folders(filename_tmp);
 
@@ -970,11 +929,6 @@ static void do_source_file(const char *filename_in,
    if (did_open)
    {
       fclose(pfout);
-
-      if (need_backup)
-      {
-         backup_create_md5_file(filename_in);
-      }
 
       if (filename_tmp != filename_out)
       {
