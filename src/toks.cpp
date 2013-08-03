@@ -141,8 +141,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
            " --version                : print the version and exit\n"
-           " --update-config          : Output a new config file. Use with -o FILE\n"
-           " --update-config-with-doc : Output a new config file. Use with -o FILE\n"
            "\n"
            "Debug Options:\n"
            " -p FILE      : dump debug info to a file\n"
@@ -329,9 +327,6 @@ int main(int argc, char *argv[])
       // not using a file list, source_list is NULL
    }
 
-   bool update_config    = arg.Present("--update-config");
-   bool update_config_wd = arg.Present("--update-config-with-doc");
-
    /* Grab the output override */
    output_file = arg.Param("-o");
 
@@ -362,13 +357,6 @@ int main(int argc, char *argv[])
    /*
     *  Done parsing args
     */
-
-   if (update_config || update_config_wd)
-   {
-      redir_stdout(output_file);
-      save_option_file(stdout, update_config_wd);
-      return EXIT_SUCCESS;
-   }
 
    /* Check for unused args (ignore them) */
    idx   = 1;
