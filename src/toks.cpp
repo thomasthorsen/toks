@@ -157,7 +157,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
            " --version                : print the version and exit\n"
-           " --show-config            : print out option documentation and exit\n"
            " --update-config          : Output a new config file. Use with -o FILE\n"
            " --update-config-with-doc : Output a new config file. Use with -o FILE\n"
            " --detect                 : detects the config from a source file. Use with '-f FILE'\n"
@@ -242,12 +241,6 @@ int main(int argc, char *argv[])
        arg.Present("--usage") || arg.Present("-?"))
    {
       usage_exit(NULL, argv[0], EXIT_SUCCESS);
-   }
-
-   if (arg.Present("--show-config"))
-   {
-      print_options(stdout);
-      return EXIT_SUCCESS;
    }
 
 #ifdef WIN32
