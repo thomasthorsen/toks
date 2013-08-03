@@ -224,8 +224,6 @@ void output_parsed(FILE *pfile)
    chunk_t *pc;
    int     cnt;
 
-   save_option_file(pfile, false);
-
    fprintf(pfile, "# -=====-\n");
    fprintf(pfile, "# Line      Tag          Parent     Columns  Br/Lvl/pp Flag Nl  Text");
    for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
