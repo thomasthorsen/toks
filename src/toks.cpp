@@ -46,14 +46,11 @@ static void uncrustify_file(const file_mem& fm, FILE *pfout,
 static void do_source_file(const char *filename_in,
                            const char *filename_out,
                            const char *parsed_file);
-static void process_source_list(const char *source_list, const char *prefix,
-                                const char *suffix);
+static void process_source_list(const char *source_list);
 static int load_header_files();
 
 static const char *make_output_filename(char *buf, int buf_size,
-                                        const char *filename,
-                                        const char *prefix,
-                                        const char *suffix);
+                                        const char *filename);
 
 static int load_mem_file(const char *filename, file_mem& fm);
 
@@ -126,9 +123,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "If no input files are specified, the input is read from stdin\n"
            "If reading from stdin, you should specify the language using -l\n"
            "\n"
-           "If -F is used or files are specified on the command line, the output filename is\n"
-           "'prefix/filename' + suffix\n"
-           "\n"
            "When reading from stdin or doing a single file via the '-f' option,\n"
            "the output is dumped to stdout, unless redirected with -o FILE.\n"
            "\n"
@@ -140,8 +134,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -o FILE      : Redirect stdout to FILE\n"
            " -F FILE      : read files to process from FILE, one filename per line (- is stdin)\n"
            " files        : files to process (can be combined with -F)\n"
-           " --suffix SFX : Append SFX to the output filename. The default is '.uncrustify'\n"
-           " --prefix PFX : Prepend PFX to the output filename path.\n"
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : load a file with types (usually not needed)\n"
            " -q           : quiet mode - no output on stderr (-L will override)\n"
@@ -166,7 +158,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "uncrustify -c my.cfg -f foo.d -L0-2,20-23,51\n"
            "uncrustify -c my.cfg -f foo.d -o foo.d\n"
            "uncrustify -c my.cfg foo.d\n"
-           "uncrustify -c my.cfg --prefix=out -F files.txt\n"
            "\n"
            ,
            path_basename(argv0));
@@ -340,9 +331,6 @@ int main(int argc, char *argv[])
       // not using a file list, source_list is NULL
    }
 
-   const char *prefix = arg.Param("--prefix");
-   const char *suffix = arg.Param("--suffix");
-
    bool update_config    = arg.Present("--update-config");
    bool update_config_wd = arg.Present("--update-config-with-doc");
    bool detect           = arg.Present("--detect");
@@ -354,14 +342,7 @@ int main(int argc, char *argv[])
    LOG_FMT(LDATA, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LDATA, "source_file = %s\n", (source_file != NULL) ? source_file : "null");
    LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
-   LOG_FMT(LDATA, "prefix      = %s\n", (prefix != NULL) ? prefix : "null");
-   LOG_FMT(LDATA, "suffix      = %s\n", (suffix != NULL) ? suffix : "null");
    LOG_FMT(LDATA, "detect      = %d\n", detect);
-
-   if ((prefix == NULL) && (suffix == NULL))
-   {
-      suffix = ".uncrustify";
-   }
 
    /* Try to load the config file, if available.
     * It is optional for "--detect", but required for
@@ -486,14 +467,6 @@ int main(int argc, char *argv[])
    else
    {
       /* Doing multiple files */
-      if (prefix != NULL)
-      {
-         LOG_FMT(LSYS, "Output prefix: %s/\n", prefix);
-      }
-      if (suffix != NULL)
-      {
-         LOG_FMT(LSYS, "Output suffix: %s\n", suffix);
-      }
 
       /* Do the files on the command line first */
       idx = 1;
@@ -501,13 +474,13 @@ int main(int argc, char *argv[])
       {
          char outbuf[1024];
          do_source_file(p_arg,
-                        make_output_filename(outbuf, sizeof(outbuf), p_arg, prefix, suffix),
+                        make_output_filename(outbuf, sizeof(outbuf), p_arg),
                         NULL);
       }
 
       if (source_list != NULL)
       {
-         process_source_list(source_list, prefix, suffix);
+         process_source_list(source_list);
       }
    }
 
@@ -518,8 +491,7 @@ int main(int argc, char *argv[])
 }
 
 
-static void process_source_list(const char *source_list,
-                                const char *prefix, const char *suffix)
+static void process_source_list(const char *source_list)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -566,7 +538,7 @@ static void process_source_list(const char *source_list,
       {
          char outbuf[1024];
          do_source_file(fname,
-                        make_output_filename(outbuf, sizeof(outbuf), fname, prefix, suffix),
+                        make_output_filename(outbuf, sizeof(outbuf), fname),
                         NULL);
       }
    }
@@ -763,19 +735,11 @@ static int load_header_files()
 
 
 static const char *make_output_filename(char *buf, int buf_size,
-                                        const char *filename,
-                                        const char *prefix,
-                                        const char *suffix)
+                                        const char *filename)
 {
    int len = 0;
 
-   if (prefix != NULL)
-   {
-      len = snprintf(buf, buf_size, "%s/", prefix);
-   }
-
-   snprintf(&buf[len], buf_size - len, "%s%s", filename,
-            (suffix != NULL) ? suffix : "");
+   snprintf(&buf[len], buf_size - len, "%s", filename);
 
    return(buf);
 }
