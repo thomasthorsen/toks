@@ -129,7 +129,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Errors are always dumped to stderr\n"
            "\n"
            "Basic Options:\n"
-           " -c CFG       : use the config file CFG\n"
            " -f FILE      : process the single file FILE (output to stdout, use with -o)\n"
            " -o FILE      : Redirect stdout to FILE\n"
            " -F FILE      : read files to process from FILE, one filename per line (- is stdin)\n"
@@ -149,11 +148,11 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --decode     : decode remaining args (chunk flags) and exit\n"
            "\n"
            "Usage Examples\n"
-           "cat foo.d | uncrustify -q -c my.cfg -l d\n"
-           "uncrustify -c my.cfg -f foo.d\n"
-           "uncrustify -c my.cfg -f foo.d -L0-2,20-23,51\n"
-           "uncrustify -c my.cfg -f foo.d -o foo.d\n"
-           "uncrustify -c my.cfg foo.d\n"
+           "cat foo.d | uncrustify -q -l d\n"
+           "uncrustify -f foo.d\n"
+           "uncrustify -f foo.d -L0-2,20-23,51\n"
+           "uncrustify -f foo.d -o foo.d\n"
+           "uncrustify foo.d\n"
            "\n"
            ,
            path_basename(argv0));
@@ -189,7 +188,6 @@ static void redir_stdout(const char *output_file)
 
 int main(int argc, char *argv[])
 {
-   string     cfg_file;
    const char *parsed_file = NULL;
    const char *source_file = NULL;
    const char *output_file = NULL;
@@ -247,13 +245,6 @@ int main(int argc, char *argv[])
          log_pcf_flags(LSYS, strtoul(p_arg, NULL, 16));
       }
       return EXIT_SUCCESS;
-   }
-
-   /* Get the config file name */
-   if (((p_arg = arg.Param("--config")) != NULL) ||
-       ((p_arg = arg.Param("-c")) != NULL))
-   {
-      cfg_file = p_arg;
    }
 
    /* Get the parsed file name */
@@ -330,29 +321,9 @@ int main(int argc, char *argv[])
    /* Grab the output override */
    output_file = arg.Param("-o");
 
-   LOG_FMT(LDATA, "config_file = %s\n", cfg_file.c_str());
    LOG_FMT(LDATA, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LDATA, "source_file = %s\n", (source_file != NULL) ? source_file : "null");
    LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
-
-   /* Try to load the config file, if available. */
-   if (!cfg_file.empty())
-   {
-      cpd.filename = cfg_file.c_str();
-      if (load_option_file(cpd.filename) < 0)
-      {
-         usage_exit("Unable to load the config file", argv[0], 56);
-      }
-   }
-
-   /* Everything beyond this point requires a config file, so complain and
-    * bail if we don't have one.
-    */
-   if (cfg_file.empty())
-   {
-      usage_exit("Specify the config file with '-c file' or set UNCRUSTIFY_CONFIG",
-                 argv[0], 58);
-   }
 
    /*
     *  Done parsing args
