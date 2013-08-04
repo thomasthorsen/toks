@@ -41,15 +41,9 @@ static const char *language_to_string(int lang);
 static bool read_stdin(file_mem& fm);
 static void uncrustify_start(const deque<int>& data);
 static void uncrustify_end();
-static void uncrustify_file(const file_mem& fm, FILE *pfout,
-                            const char *parsed_file);
-static void do_source_file(const char *filename_in,
-                           const char *filename_out,
-                           const char *parsed_file);
+static void uncrustify_file(const file_mem& fm, FILE *pfout);
+static void do_source_file(const char *filename_in);
 static void process_source_list(const char *source_list);
-
-static const char *make_output_filename(char *buf, int buf_size,
-                                        const char *filename);
 
 static int load_mem_file(const char *filename, file_mem& fm);
 
@@ -186,19 +180,11 @@ static void redir_stdout(const char *output_file)
 
 int main(int argc, char *argv[])
 {
-   const char *parsed_file = NULL;
    const char *output_file = NULL;
    const char *source_list = NULL;
    log_mask_t mask;
    int        idx;
    const char *p_arg;
-
-   /* If ran without options... check keyword sort and show the usage info */
-   if (argc == 1)
-   {
-      keywords_are_sorted();
-      usage_exit(NULL, argv[0], EXIT_SUCCESS);
-   }
 
    /* Build options map */
    register_options();
@@ -242,13 +228,6 @@ int main(int argc, char *argv[])
          log_pcf_flags(LSYS, strtoul(p_arg, NULL, 16));
       }
       return EXIT_SUCCESS;
-   }
-
-   /* Get the parsed file name */
-   if (((parsed_file = arg.Param("--parsed")) != NULL) ||
-       ((parsed_file = arg.Param("-p")) != NULL))
-   {
-      LOG_FMT(LNOTE, "Will export parsed data to: %s\n", parsed_file);
    }
 
    /* Enable log sevs? */
@@ -346,7 +325,7 @@ int main(int argc, char *argv[])
               (int)fm.raw.size(), (int)fm.data.size(),
               language_to_string(cpd.lang_flags));
 
-      uncrustify_file(fm, stdout, parsed_file);
+      uncrustify_file(fm, stdout);
    }
    else
    {
@@ -356,10 +335,7 @@ int main(int argc, char *argv[])
       idx = 1;
       while ((p_arg = arg.Unused(idx)) != NULL)
       {
-         char outbuf[1024];
-         do_source_file(p_arg,
-                        make_output_filename(outbuf, sizeof(outbuf), p_arg),
-                        NULL);
+         do_source_file(p_arg);
       }
 
       if (source_list != NULL)
@@ -420,10 +396,7 @@ static void process_source_list(const char *source_list)
 
       if (fname[0] != '#')
       {
-         char outbuf[1024];
-         do_source_file(fname,
-                        make_output_filename(outbuf, sizeof(outbuf), fname),
-                        NULL);
+         do_source_file(fname);
       }
    }
 
@@ -457,42 +430,6 @@ static bool read_stdin(file_mem& fm)
    /* Copy the raw data from the deque to the vector */
    fm.raw.insert(fm.raw.end(), dq.begin(), dq.end());
    return(decode_unicode(fm.raw, fm.data, fm.enc, fm.bom));
-}
-
-
-static void make_folders(const string& filename)
-{
-   int  idx;
-   int  last_idx = 0;
-   char outname[4096];
-
-   snprintf(outname, sizeof(outname), "%s", filename.c_str());
-
-   for (idx = 0; outname[idx] != 0; idx++)
-   {
-      if ((outname[idx] == '/') || (outname[idx] == '\\'))
-      {
-         outname[idx] = PATH_SEP;
-      }
-
-      if ((idx > last_idx) && (outname[idx] == PATH_SEP))
-      {
-         outname[idx] = 0;
-
-         if ((strcmp(&outname[last_idx], ".") != 0) &&
-             (strcmp(&outname[last_idx], "..") != 0))
-         {
-            //fprintf(stderr, "%s: %s\n", __func__, outname);
-            mkdir(outname, 0750);
-         }
-         outname[idx] = PATH_SEP;
-      }
-
-      if (outname[idx] == PATH_SEP)
-      {
-         last_idx = idx + 1;
-      }
-   }
 }
 
 
@@ -555,103 +492,13 @@ static int load_mem_file(const char *filename, file_mem& fm)
 }
 
 
-static const char *make_output_filename(char *buf, int buf_size,
-                                        const char *filename)
-{
-   int len = 0;
-
-   snprintf(&buf[len], buf_size - len, "%s", filename);
-
-   return(buf);
-}
-
-
-/**
- * Reinvent the wheel with a file comparision function...
- */
-static bool file_content_matches(const string& filename1, const string& filename2)
-{
-   struct stat st1, st2;
-   int         fd1, fd2;
-   UINT8       buf1[1024], buf2[1024];
-   int         len1 = 0, len2 = 0;
-   int         minlen;
-
-   /* Check the sizes first */
-   if ((stat(filename1.c_str(), &st1) != 0) ||
-       (stat(filename2.c_str(), &st2) != 0) ||
-       (st1.st_size != st2.st_size))
-   {
-      return(false);
-   }
-
-   if ((fd1 = open(filename1.c_str(), O_RDONLY)) < 0)
-   {
-      return(false);
-   }
-   if ((fd2 = open(filename2.c_str(), O_RDONLY)) < 0)
-   {
-      close(fd1);
-      return(false);
-   }
-
-   while ((len1 >= 0) && (len2 >= 0))
-   {
-      if (len1 == 0)
-      {
-         len1 = read(fd1, buf1, sizeof(buf1));
-      }
-      if (len2 == 0)
-      {
-         len2 = read(fd2, buf2, sizeof(buf2));
-      }
-      if ((len1 <= 0) || (len2 <= 0))
-      {
-         break;
-      }
-      minlen = (len1 < len2) ? len1 : len2;
-      if (memcmp(buf1, buf2, minlen) != 0)
-      {
-         break;
-      }
-      len1 -= minlen;
-      len2 -= minlen;
-   }
-
-   close(fd1);
-   close(fd2);
-
-   return((len1 == 0) && (len2 == 0));
-}
-
-
-const char *fix_filename(const char *filename)
-{
-   char *tmp_file;
-
-   /* Create 'outfile.uncrustify' */
-   tmp_file = new char[strlen(filename) + 16 + 1]; /* + 1 for '\0' */
-   if (tmp_file != NULL)
-   {
-      sprintf(tmp_file, "%s.uncrustify", filename);
-   }
-   return(tmp_file);
-}
-
-
 /**
  * Does a source file.
  *
  * @param filename_in  the file to read
- * @param filename_out NULL (stdout) or the file to write
- * @param parsed_file  NULL or the filename for the parsed debug info
  */
-static void do_source_file(const char *filename_in,
-                           const char *filename_out,
-                           const char *parsed_file)
+static void do_source_file(const char *filename_in)
 {
-   FILE     *pfout;
-   bool     did_open    = false;
    file_mem fm;
    string   filename_tmp;
 
@@ -672,68 +519,8 @@ static void do_source_file(const char *filename_in,
    LOG_FMT(LSYS, "Parsing: %s as language %s\n",
            filename_in, language_to_string(cpd.lang_flags));
 
-   if (filename_out == NULL)
-   {
-      pfout = stdout;
-   }
-   else
-   {
-      /* If the out file is the same as the in file, then use a temp file */
-      filename_tmp = filename_out;
-      if (strcmp(filename_in, filename_out) == 0)
-      {
-         /* Create 'outfile.uncrustify' */
-         filename_tmp = fix_filename(filename_out);
-      }
-      make_folders(filename_tmp);
-
-      pfout = fopen(filename_tmp.c_str(), "wb");
-      if (pfout == NULL)
-      {
-         LOG_FMT(LERR, "%s: Unable to create %s: %s (%d)\n",
-                 __func__, filename_tmp.c_str(), strerror(errno), errno);
-         cpd.error_count++;
-         return;
-      }
-      did_open = true;
-      //LOG_FMT(LSYS, "Output file %s\n", filename_out);
-   }
-
    cpd.filename = filename_in;
-   uncrustify_file(fm, pfout, parsed_file);
-
-   if (did_open)
-   {
-      fclose(pfout);
-
-      if (filename_tmp != filename_out)
-      {
-         /* We need to compare and then do a rename */
-         if (file_content_matches(filename_tmp, filename_out))
-         {
-            /* No change - remove tmp file */
-            (void)unlink(filename_tmp.c_str());
-         }
-         else
-         {
-#ifdef WIN32
-
-            /* windows can't rename a file if the target exists, so delete it
-             * first. This may cause data loss if the tmp file gets deleted
-             * or can't be renamed.
-             */
-            (void)unlink(filename_out);
-#endif
-            /* Change - rename filename_tmp to filename_out */
-            if (rename(filename_tmp.c_str(), filename_out) != 0)
-            {
-               LOG_FMT(LERR, "%s: Unable to rename '%s' to '%s'\n",
-                       __func__, filename_tmp.c_str(), filename_out);
-               cpd.error_count++;
-            }
-         }
-      }
-   }
+   uncrustify_file(fm, stdout);
 }
 
 
@@ -783,8 +570,7 @@ static void uncrustify_start(const deque<int>& data)
 }
 
 
-static void uncrustify_file(const file_mem& fm, FILE *pfout,
-                            const char *parsed_file)
+static void uncrustify_file(const file_mem& fm, FILE *pfout)
 {
    const deque<int>& data = fm.data;
 
@@ -1025,20 +811,7 @@ static void uncrustify_file(const file_mem& fm, FILE *pfout,
    }
 
    /* Special hook for dumping parsed data for debugging */
-   if (parsed_file != NULL)
-   {
-      FILE *p_file = fopen(parsed_file, "w");
-      if (p_file != NULL)
-      {
-         output_parsed(p_file);
-         fclose(p_file);
-      }
-      else
-      {
-         LOG_FMT(LERR, "%s: Failed to open '%s' for write: %s (%d)\n",
-                 __func__, parsed_file, strerror(errno), errno);
-      }
-   }
+   output_parsed(stdout);
 
    uncrustify_end();
 }
