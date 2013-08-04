@@ -128,7 +128,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Errors are always dumped to stderr\n"
            "\n"
            "Basic Options:\n"
-           " -f FILE      : process the single file FILE (output to stdout, use with -o)\n"
            " -o FILE      : Redirect stdout to FILE\n"
            " -F FILE      : read files to process from FILE, one filename per line (- is stdin)\n"
            " files        : files to process (can be combined with -F)\n"
@@ -148,9 +147,9 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "\n"
            "Usage Examples\n"
            "cat foo.d | uncrustify -q -l d\n"
-           "uncrustify -f foo.d\n"
-           "uncrustify -f foo.d -L0-2,20-23,51\n"
-           "uncrustify -f foo.d -o foo.d\n"
+           "uncrustify foo.d\n"
+           "uncrustify -L0-2,20-23,51 foo.d\n"
+           "uncrustify -o foo.out foo.d\n"
            "uncrustify foo.d\n"
            "\n"
            ,
@@ -188,7 +187,6 @@ static void redir_stdout(const char *output_file)
 int main(int argc, char *argv[])
 {
    const char *parsed_file = NULL;
-   const char *source_file = NULL;
    const char *output_file = NULL;
    const char *source_list = NULL;
    log_mask_t mask;
@@ -304,13 +302,6 @@ int main(int argc, char *argv[])
       }
    }
 
-   /* Get the source file name */
-   if (((source_file = arg.Param("--file")) == NULL) &&
-       ((source_file = arg.Param("-f")) == NULL))
-   {
-      // not using a single file, source_file is NULL
-   }
-
    if (((source_list = arg.Param("--files")) == NULL) &&
        ((source_list = arg.Param("-F")) == NULL))
    {
@@ -321,42 +312,25 @@ int main(int argc, char *argv[])
    output_file = arg.Param("-o");
 
    LOG_FMT(LDATA, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
-   LOG_FMT(LDATA, "source_file = %s\n", (source_file != NULL) ? source_file : "null");
    LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
 
    /*
     *  Done parsing args
     */
 
+   redir_stdout(output_file);
+
    /* Check for unused args (ignore them) */
    idx   = 1;
    p_arg = arg.Unused(idx);
 
-   /* Check args - for multifile options */
-   if ((source_list != NULL) || (p_arg != NULL))
-   {
-      if (source_file != NULL)
-      {
-         usage_exit("Cannot specify both the single file option and a multi-file option.",
-                    argv[0], 67);
-      }
-
-      if (output_file != NULL)
-      {
-         usage_exit("Cannot specify -o with a multi-file option.",
-                    argv[0], 68);
-      }
-   }
-
-   if ((source_file == NULL) && (source_list == NULL) && (p_arg == NULL))
+   if ((source_list == NULL) && (p_arg == NULL))
    {
       /* no input specified, so use stdin */
       if (cpd.lang_flags == 0)
       {
          cpd.lang_flags = LANG_C;
       }
-
-      redir_stdout(output_file);
 
       file_mem fm;
       if (!read_stdin(fm))
@@ -373,11 +347,6 @@ int main(int argc, char *argv[])
               language_to_string(cpd.lang_flags));
 
       uncrustify_file(fm, stdout, parsed_file);
-   }
-   else if (source_file != NULL)
-   {
-      /* Doing a single file */
-      do_source_file(source_file, output_file, parsed_file);
    }
    else
    {
