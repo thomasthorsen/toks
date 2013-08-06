@@ -10,7 +10,6 @@ configure_file ("${PROJECT_SOURCE_DIR}/src/config.h.in"
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_executable(toks
-src/align_stack.cpp
 src/args.cpp
 src/brace_cleanup.cpp
 src/chunk_list.cpp
