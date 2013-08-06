@@ -116,18 +116,6 @@
  *    thatreallyannoysme.whenIhavetomaintain[thecode] = 3;
  */
 
-
-
-void indent_to_column(chunk_t *pc, int column)
-{
-   if (column < pc->column)
-   {
-      column = pc->column;
-   }
-   reindent_line(pc, column);
-}
-
-
 enum align_mode
 {
    ALMODE_SHIFT,     /* shift relative to the current column */

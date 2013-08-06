@@ -58,7 +58,6 @@ string op_val_to_string(argtype_e argtype, op_val_t op_val);
  *  indent.cpp
  */
 
-void indent_to_column(chunk_t *pc, int column);
 void align_to_column(chunk_t *pc, int column);
 
 #define reindent_line(pc, col)    reindent_line2(pc, col, __func__, __LINE__)
