@@ -126,7 +126,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " files        : files to process (can be combined with -F)\n"
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : load a file with types (usually not needed)\n"
-           " -q           : quiet mode - no output on stderr (-L will override)\n"
            "\n"
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
@@ -139,7 +138,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --decode     : decode remaining args (chunk flags) and exit\n"
            "\n"
            "Usage Examples\n"
-           "cat foo.d | toks -q -l d\n"
+           "cat foo.d | toks -l d\n"
            "toks foo.d\n"
            "toks -L0-2,20-23,51 foo.d\n"
            "toks -o foo.out foo.d\n"
@@ -207,20 +206,21 @@ int main(int argc, char *argv[])
 
    /* Init logging */
    log_init(stderr);
-   if (arg.Present("-q"))
-   {
-      logmask_from_string("", mask);
-      log_set_mask(mask);
-   }
    if (((p_arg = arg.Param("-L")) != NULL) ||
        ((p_arg = arg.Param("--log")) != NULL))
    {
       logmask_from_string(p_arg, mask);
-      log_set_mask(mask);
    }
+   else
+   {
+      logmask_from_string("", mask);
+   }
+   log_set_mask(mask);
 
    if (arg.Present("--decode"))
    {
+      logmask_from_string("0", mask);
+      log_set_mask(mask);
       idx = 1;
       while ((p_arg = arg.Unused(idx)) != NULL)
       {
