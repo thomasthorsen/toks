@@ -1,5 +1,5 @@
 /**
- * @file uncrustify.cpp
+ * @file toks.cpp
  * This file takes an input C/C++/D/Java file and reformats it.
  *
  * @author  Ben Gardner
@@ -39,9 +39,9 @@ static int language_from_tag(const char *tag);
 static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
 static bool read_stdin(file_mem& fm);
-static void uncrustify_start(const deque<int>& data);
-static void uncrustify_end();
-static void uncrustify_file(const file_mem& fm);
+static void toks_start(const deque<int>& data);
+static void toks_end();
+static void toks_file(const file_mem& fm);
 static void do_source_file(const char *filename_in);
 static void process_source_list(const char *source_list);
 
@@ -139,11 +139,11 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --decode     : decode remaining args (chunk flags) and exit\n"
            "\n"
            "Usage Examples\n"
-           "cat foo.d | uncrustify -q -l d\n"
-           "uncrustify foo.d\n"
-           "uncrustify -L0-2,20-23,51 foo.d\n"
-           "uncrustify -o foo.out foo.d\n"
-           "uncrustify foo.d\n"
+           "cat foo.d | toks -q -l d\n"
+           "toks foo.d\n"
+           "toks -L0-2,20-23,51 foo.d\n"
+           "toks -o foo.out foo.d\n"
+           "toks foo.d\n"
            "\n"
            ,
            path_basename(argv0));
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
               (int)fm.raw.size(), (int)fm.data.size(),
               language_to_string(cpd.lang_flags));
 
-      uncrustify_file(fm);
+      toks_file(fm);
    }
    else
    {
@@ -519,11 +519,11 @@ static void do_source_file(const char *filename_in)
            filename_in, language_to_string(cpd.lang_flags));
 
    cpd.filename = filename_in;
-   uncrustify_file(fm);
+   toks_file(fm);
 }
 
 
-static void uncrustify_start(const deque<int>& data)
+static void toks_start(const deque<int>& data)
 {
    /**
     * Parse the text into chunks
@@ -569,7 +569,7 @@ static void uncrustify_start(const deque<int>& data)
 }
 
 
-static void uncrustify_file(const file_mem& fm)
+static void toks_file(const file_mem& fm)
 {
    const deque<int>& data = fm.data;
 
@@ -619,16 +619,16 @@ static void uncrustify_file(const file_mem& fm)
       }
    }
 
-   uncrustify_start(data);
+   toks_start(data);
 
    /* Special hook for dumping parsed data for debugging */
    output_parsed(stdout);
 
-   uncrustify_end();
+   toks_end();
 }
 
 
-static void uncrustify_end()
+static void toks_end()
 {
    /* Free all the memory */
    chunk_t *pc;

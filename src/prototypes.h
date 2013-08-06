@@ -15,7 +15,7 @@
 #include <deque>
 
 /*
- *  uncrustify.cpp
+ *  toks.cpp
  */
 
 const char *get_token_name(c_token_t token);
