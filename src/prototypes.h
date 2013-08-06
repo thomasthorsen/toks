@@ -30,9 +30,7 @@ const char *get_file_extension(int& idx);
  *  output.cpp
  */
 
-void output_text(FILE *pfile);
 void output_parsed(FILE *pfile);
-void add_long_preprocessor_conditional_block_comment(void);
 
 
 /*
@@ -60,51 +58,11 @@ string op_val_to_string(argtype_e argtype, op_val_t op_val);
  *  indent.cpp
  */
 
-void indent_text(void);
-void indent_preproc(void);
 void indent_to_column(chunk_t *pc, int column);
 void align_to_column(chunk_t *pc, int column);
 
 #define reindent_line(pc, col)    reindent_line2(pc, col, __func__, __LINE__)
 void reindent_line2(chunk_t *pc, int column, const char *fcn_name, int lineno);
-void quick_indent_again(void);
-
-
-/*
- *  align.cpp
- */
-
-void align_all(void);
-void align_backslash_newline(void);
-void align_right_comments(void);
-void align_preprocessor(void);
-void align_struct_initializers(void);
-chunk_t *align_nl_cont(chunk_t *start);
-chunk_t *align_assign(chunk_t *first, int span, int thresh);
-void quick_align_again(void);
-
-
-/*
- *  braces.cpp
- */
-
-void do_braces(void);
-void add_long_closebrace_comment(void);
-chunk_t *insert_comment_after(chunk_t *ref, c_token_t cmt_type, const unc_text& cmt_text);
-
-
-/*
- *  sorting.cpp
- */
-
-void sort_imports(void);
-
-
-/*
- *  parens.cpp
- */
-
-void do_parens(void);
 
 
 /*
@@ -135,24 +93,12 @@ chunk_t *skip_template_prev(chunk_t *ang_close);
 chunk_t *skip_attribute_next(chunk_t *attr);
 chunk_t *skip_attribute_prev(chunk_t *fp_close);
 
-void remove_extra_returns();
-
 
 /*
  *  newlines.cpp
  */
 
-void newlines_remove_newlines(void);
-void newlines_cleanup_braces(bool first);
-void newlines_insert_blank_lines(void);
-void newlines_squeeze_ifdef(void);
-void newlines_eat_start_end(void);
-void newlines_chunk_pos(c_token_t chunk_type, tokenpos_e mode);
-void newlines_class_colon_pos(void);
-void newlines_cleanup_dup(void);
 void annotations_newlines(void);
-void newline_after_multiline_comment(void);
-void do_blank_lines(void);
 void newline_iarf(chunk_t *pc, argval_t av);
 
 #define newline_add_before(pc)    newline_add_before2(pc, __func__, __LINE__)
@@ -244,18 +190,11 @@ int pf_check(struct parse_frame *frm, chunk_t *pc);
 
 
 /*
- * width.cpp
- */
-void do_code_width(void);
-
-
-/*
  * lang_pawn.cpp
  */
 void pawn_prescan(void);
 void pawn_add_virtual_semicolons();
 chunk_t *pawn_check_vsemicolon(chunk_t *pc);
-void pawn_scrub_vsemi(void);
 chunk_t *pawn_add_vsemi_after(chunk_t *pc);
 
 
@@ -268,12 +207,6 @@ void write_string(FILE *pf, const deque<int>& text, CharEncoding enc);
 void write_string(FILE *pf, const char *ascii_text, CharEncoding enc);
 bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc, bool& has_bom);
 void encode_utf8(int ch, vector<UINT8>& res);
-
-
-/*
- * semicolons.cpp
- */
-void remove_extra_semicolons(void);
 
 
 /**

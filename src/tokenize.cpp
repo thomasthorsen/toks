@@ -1325,7 +1325,6 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
  * This function parses or tokenizes the whole buffer into a list.
  * It has to do some tricks to parse preprocessors.
  *
- * If output_text() were called immediately after, two things would happen:
  *  - trailing whitespace are removed.
  *  - leading space & tabs are converted to the appropriate format.
  *

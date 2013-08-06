@@ -10,11 +10,9 @@ configure_file ("${PROJECT_SOURCE_DIR}/src/config.h.in"
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_executable(toks
-src/align.cpp
 src/align_stack.cpp
 src/args.cpp
 src/brace_cleanup.cpp
-src/braces.cpp
 src/chunk_list.cpp
 src/ChunkStack.cpp
 src/combine.cpp
@@ -28,15 +26,11 @@ src/md5.cpp
 src/newlines.cpp
 src/options.cpp
 src/output.cpp
-src/parens.cpp
 src/parse_frame.cpp
 src/punctuators.cpp
-src/semicolons.cpp
-src/sorting.cpp
 src/space.cpp
 src/tokenize_cleanup.cpp
 src/tokenize.cpp
 src/toks.cpp
 src/unc_text.cpp
-src/unicode.cpp
-src/width.cpp)
+src/unicode.cpp)
