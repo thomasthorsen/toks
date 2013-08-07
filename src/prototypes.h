@@ -1,6 +1,6 @@
 /**
  * @file prototypes.h
- * Big jumble of prototypes used in Uncrustify.
+ * Big jumble of prototypes used in toks.
  *
  * @author  Ben Gardner
  * @license GPL v2+

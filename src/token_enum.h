@@ -174,7 +174,7 @@ typedef enum
    CT_BRACE_OPEN,       /* {...} */
    CT_BRACE_CLOSE,
 
-   CT_VBRACE_OPEN,      /* virtual brace, i.e. brace inserted by uncrustify */
+   CT_VBRACE_OPEN,      /* virtual brace, i.e. brace inserted by toks */
    CT_VBRACE_CLOSE,
 
    CT_SQUARE_OPEN,      /* [...] */
