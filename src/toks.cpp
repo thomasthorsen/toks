@@ -184,9 +184,6 @@ int main(int argc, char *argv[])
    int        idx;
    const char *p_arg;
 
-   /* Build options map */
-   register_options();
-
    Args arg(argc, argv);
 
    if (arg.Present("--version") || arg.Present("-v"))
@@ -234,9 +231,6 @@ int main(int argc, char *argv[])
    {
       log_show_sev(true);
    }
-
-   /* Load the config file */
-   set_option_defaults();
 
    /* Load type files */
    idx = 0;
@@ -530,8 +524,6 @@ static void toks_start(const deque<int>& data)
     */
    tokenize(data, NULL);
 
-   annotations_newlines();
-
    /**
     * Change certain token types based on simple sequence.
     * Example: change '[' + ']' to '[]'
@@ -573,39 +565,6 @@ static void toks_file(const file_mem& fm)
 {
    const deque<int>& data = fm.data;
 
-   /* Save off the encoding and whether a BOM is required */
-   cpd.bom = fm.bom;
-   cpd.enc = fm.enc;
-   if (cpd.settings[UO_utf8_force].b ||
-       ((cpd.enc == ENC_BYTE) && cpd.settings[UO_utf8_byte].b))
-   {
-      cpd.enc = ENC_UTF8;
-   }
-   argval_t av;
-   switch (cpd.enc)
-   {
-   case ENC_UTF8:
-      av = cpd.settings[UO_utf8_bom].a;
-      break;
-
-   case ENC_UTF16_LE:
-   case ENC_UTF16_BE:
-      av = AV_FORCE;
-      break;
-
-   default:
-      av = AV_IGNORE;
-      break;
-   }
-   if (av == AV_REMOVE)
-   {
-      cpd.bom = false;
-   }
-   else if (av != AV_IGNORE)
-   {
-      cpd.bom = true;
-   }
-
    /* Check for embedded 0's (represents a decoding failure or corrupt file) */
    for (int idx = 0; idx < (int)data.size() - 1; idx++)
    {
@@ -646,7 +605,6 @@ static void toks_end()
    cpd.changes     = 0;
    cpd.in_preproc  = CT_NONE;
    cpd.consumed    = false;
-   memset(cpd.le_counts, 0, sizeof(cpd.le_counts));
    cpd.preproc_ncnl_count = 0;
 }
 

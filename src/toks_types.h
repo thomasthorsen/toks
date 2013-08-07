@@ -14,7 +14,6 @@
 using namespace std;
 
 #include "base_types.h"
-#include "options.h"
 #include "token_enum.h"    /* c_token_t */
 #include "log_levels.h"
 #include "logger.h"
@@ -354,18 +353,11 @@ struct cp_data
    UINT16             column;  /* column for parsing */
    UINT16             spaces;  /* space count on output */
 
-   /* stuff to auto-detect line endings */
-   UINT32             le_counts[LE_AUTO];
-   unc_text           newline;
-
    bool               consumed;
 
    int                did_newline;
    c_token_t          in_preproc;
    int                preproc_ncnl_count;
-
-   bool               bom;
-   CharEncoding       enc;
 
    /* bumped up when a line is split or indented */
    int                changes;
@@ -376,7 +368,6 @@ struct cp_data
    bool               al_c99_array;
 
    /* Here are all the settings */
-   op_val_t           settings[UO_option_count];
    int                max_option_name_len;
 
    struct parse_frame frames[16];

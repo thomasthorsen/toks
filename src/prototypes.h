@@ -34,44 +34,11 @@ void output_parsed(FILE *pfile);
 
 
 /*
- *  options.cpp
- */
-
-void unc_begin_group(uncrustify_groups id, const char *short_desc, const char *long_desc = NULL);
-void register_options(void);
-void set_option_defaults(void);
-int load_option_file(const char *filename);
-int save_option_file(FILE *pfile, bool withDoc);
-int set_option_value(const char *name, const char *value);
-const group_map_value *get_group_name(int ug);
-const option_map_value *get_option_name(int uo);
-
-string argtype_to_string(argtype_e argtype);
-string bool_to_string(bool val);
-string argval_to_string(argval_t argval);
-string number_to_string(int number);
-string lineends_to_string(lineends_e linends);
-string tokenpos_to_string(tokenpos_e tokenpos);
-string op_val_to_string(argtype_e argtype, op_val_t op_val);
-
-/*
- *  indent.cpp
- */
-
-void align_to_column(chunk_t *pc, int column);
-
-#define reindent_line(pc, col)    reindent_line2(pc, col, __func__, __LINE__)
-void reindent_line2(chunk_t *pc, int column, const char *fcn_name, int lineno);
-
-
-/*
  *  space.cpp
  */
 
 void space_text(void);
 void space_text_balance_nested_parens(void);
-int space_col_align(chunk_t *first, chunk_t *second);
-int space_needed(chunk_t *first, chunk_t *second);
 void space_add_after(chunk_t *pc, int count);
 
 
@@ -97,9 +64,6 @@ chunk_t *skip_attribute_prev(chunk_t *fp_close);
  *  newlines.cpp
  */
 
-void annotations_newlines(void);
-void newline_iarf(chunk_t *pc, argval_t av);
-
 #define newline_add_before(pc)    newline_add_before2(pc, __func__, __LINE__)
 chunk_t *newline_add_before2(chunk_t *pc, const char *fcn, int line);
 
@@ -112,18 +76,6 @@ chunk_t *newline_add_after2(chunk_t *pc, const char *fcn, int line);
 #define newline_force_after(pc)     newline_force_after2(pc, __func__, __LINE__)
 chunk_t *newline_force_after2(chunk_t *pc, const char *fcn, int line);
 
-
-#define newline_del_between(start, end) \
-   newline_del_between2(start, end, __func__, __LINE__)
-
-void newline_del_between2(chunk_t *start, chunk_t *end,
-                          const char *func, int line);
-
-#define newline_add_between(start, end) \
-   newline_add_between2(start, end, __func__, __LINE__)
-
-chunk_t *newline_add_between2(chunk_t *start, chunk_t *end,
-                              const char *func, int line);
 
 /*
  *  tokenize.cpp
@@ -208,6 +160,13 @@ bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEnco
 void encode_utf8(int ch, vector<UINT8>& res);
 
 
+/* Options we couldn't quite get rid of */
+#define UO_input_tab_size 8
+#define UO_indent_else_if false
+#define UO_tok_split_gte false
+#define UO_string_escape_char '\\'
+#define UO_string_escape_char2 '0'
+
 /**
  * Advances to the next tab stop.
  * Column 1 is the left-most column.
@@ -226,40 +185,5 @@ int calc_next_tab_column(int col, int tabsize)
    col = 1 + ((((col - 1) / tabsize) + 1) * tabsize);
    return(col);
 }
-
-
-/**
- * Advances to the next tab stop for output.
- *
- * @param col  The current column
- * @return the next tabstop column
- */
-static_inline
-int next_tab_column(int col)
-{
-   return(calc_next_tab_column(col, cpd.settings[UO_output_tab_size].n));
-}
-
-
-/**
- * Advances to the next tab stop if not currently on one.
- *
- * @param col  The current column
- * @return the next tabstop column
- */
-static_inline
-int align_tab_column(int col)
-{
-   if (col <= 0)
-   {
-      col = 1;
-   }
-   if ((col % cpd.settings[UO_output_tab_size].n) != 1)
-   {
-      col = next_tab_column(col);
-   }
-   return(col);
-}
-
 
 #endif   /* C_PARSE_PROTOTYPES_H_INCLUDED */

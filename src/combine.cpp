@@ -1409,7 +1409,6 @@ static void process_returns(void)
 static chunk_t *process_return(chunk_t *pc)
 {
    chunk_t *next;
-   chunk_t *temp;
    chunk_t *semi;
    chunk_t *cpar;
    chunk_t chunk;
@@ -1421,11 +1420,6 @@ static chunk_t *process_return(chunk_t *pc)
       return(next);
    }
 
-   if (cpd.settings[UO_nl_return_expr].a != AV_IGNORE)
-   {
-      newline_iarf(pc, cpd.settings[UO_nl_return_expr].a);
-   }
-
    if (next->type == CT_PAREN_OPEN)
    {
       /* See if the return is fully paren'd */
@@ -1433,81 +1427,18 @@ static chunk_t *process_return(chunk_t *pc)
       semi = chunk_get_next_ncnl(cpar);
       if (chunk_is_semicolon(semi))
       {
-         if (cpd.settings[UO_mod_paren_on_return].a == AV_REMOVE)
-         {
-            LOG_FMT(LRETURN, "%s: removing parens on line %d\n",
-                    __func__, pc->orig_line);
+         LOG_FMT(LRETURN, "%s: keeping parens on line %d\n",
+                 __func__, pc->orig_line);
 
-            /* lower the level of everything */
-            for (temp = next; temp != cpar; temp = chunk_get_next(temp))
-            {
-               temp->level--;
-            }
+         /* mark & keep them */
+         next->parent_type = CT_RETURN;
+         cpar->parent_type = CT_RETURN;
 
-            /* delete the parens */
-            chunk_del(next);
-            chunk_del(cpar);
-
-            /* back up the semicolon */
-            semi->column--;
-            semi->orig_col--;
-            semi->orig_col_end--;
-         }
-         else
-         {
-            LOG_FMT(LRETURN, "%s: keeping parens on line %d\n",
-                    __func__, pc->orig_line);
-
-            /* mark & keep them */
-            next->parent_type = CT_RETURN;
-            cpar->parent_type = CT_RETURN;
-         }
          return(semi);
       }
    }
 
-   /* We don't have a fully paren'd return. Should we add some? */
-   if ((cpd.settings[UO_mod_paren_on_return].a & AV_ADD) == 0)
-   {
-      return(next);
-   }
-
-   /* find the next semicolon on the same level */
-   semi = next;
-   while ((semi = chunk_get_next(semi)) != NULL)
-   {
-      if ((chunk_is_semicolon(semi) && (pc->level == semi->level)) ||
-          (semi->level < pc->level))
-      {
-         break;
-      }
-   }
-   if (chunk_is_semicolon(semi) && (pc->level == semi->level))
-   {
-      /* add the parens */
-      chunk.type        = CT_PAREN_OPEN;
-      chunk.str         = "(";
-      chunk.level       = pc->level;
-      chunk.brace_level = pc->brace_level;
-      chunk.orig_line   = pc->orig_line;
-      chunk.parent_type = CT_RETURN;
-      chunk.flags       = pc->flags & PCF_COPY_FLAGS;
-      chunk_add_before(&chunk, next);
-
-      chunk.type      = CT_PAREN_CLOSE;
-      chunk.str       = ")";
-      chunk.orig_line = semi->orig_line;
-      cpar            = chunk_add_before(&chunk, semi);
-
-      LOG_FMT(LRETURN, "%s: added parens on line %d\n",
-              __func__, pc->orig_line);
-
-      for (temp = next; temp != cpar; temp = chunk_get_next(temp))
-      {
-         temp->level++;
-      }
-   }
-   return(semi);
+   return(next);
 }
 
 
@@ -2024,18 +1955,6 @@ static void fix_typedef(chunk_t *start)
 
       LOG_FMT(LTYPEDEF, "%s: fcn typedef [%s] on line %d\n", __func__,
               the_type->text(), the_type->orig_line);
-
-      /* If we are aligning on the open paren, grab that instead */
-      if (open_paren && (cpd.settings[UO_align_typedef_func].n == 1))
-      {
-         the_type = open_paren;
-      }
-      if (cpd.settings[UO_align_typedef_func].n != 0)
-      {
-         LOG_FMT(LTYPEDEF, "%s:  -- align anchor on [%s] @ %d:%d\n", __func__,
-                 the_type->text(), the_type->orig_line, the_type->orig_col);
-         the_type->flags |= PCF_ANCHOR;
-      }
 
       /* already did everything we need to do */
       return;
@@ -3615,7 +3534,6 @@ static void mark_class_ctor(chunk_t *start)
 static void mark_namespace(chunk_t *pns)
 {
    chunk_t *pc;
-   chunk_t *br_close;
    bool    is_using = false;
 
    pc = chunk_get_prev_ncnl(pns);
@@ -3643,17 +3561,6 @@ static void mark_namespace(chunk_t *pns)
          continue;
       }
 
-      if ((cpd.settings[UO_indent_namespace_limit].n > 0) &&
-          ((br_close = chunk_skip_to_match(pc)) != NULL))
-      {
-         int diff = br_close->orig_line - pc->orig_line;
-
-         if (diff > cpd.settings[UO_indent_namespace_limit].n)
-         {
-            pc->flags       |= PCF_LONG_BLOCK;
-            br_close->flags |= PCF_LONG_BLOCK;
-         }
-      }
       flag_parens(pc, PCF_IN_NAMESPACE, CT_NONE, CT_NAMESPACE, false);
       return;
    }
@@ -5018,27 +4925,13 @@ static void handle_wrap(chunk_t *pc)
    chunk_t *name = chunk_get_next(opp);
    chunk_t *clp  = chunk_get_next(name);
 
-   argval_t pav = (pc->type == CT_FUNC_WRAP) ?
-                  cpd.settings[UO_sp_func_call_paren].a :
-                  cpd.settings[UO_sp_cpp_cast_paren].a;
-
-   argval_t av = (pc->type == CT_FUNC_WRAP) ?
-                 cpd.settings[UO_sp_inside_fparen].a :
-                 cpd.settings[UO_sp_inside_paren_cast].a;
-
    if ((clp != NULL) &&
        (opp->type == CT_PAREN_OPEN) &&
        ((name->type == CT_WORD) || (name->type == CT_TYPE)) &&
        (clp->type == CT_PAREN_CLOSE))
    {
-      const char *psp = (pav & AV_ADD) ? " " : "";
-      const char *fsp = (av & AV_ADD) ? " " : "";
-
-      pc->str.append(psp);
       pc->str.append("(");
-      pc->str.append(fsp);
       pc->str.append(name->str);
-      pc->str.append(fsp);
       pc->str.append(")");
 
       pc->type = (pc->type == CT_FUNC_WRAP) ? CT_FUNCTION : CT_TYPE;

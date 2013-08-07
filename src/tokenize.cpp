@@ -78,7 +78,7 @@ struct tok_ctx
          switch (ch)
          {
          case '\t':
-            c.col = calc_next_tab_column(c.col, cpd.settings[UO_input_tab_size].n);
+            c.col = calc_next_tab_column(c.col, UO_input_tab_size);
             break;
 
          case '\n':
@@ -380,17 +380,8 @@ static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
             {
                if (ctx.peek() == '\n')
                {
-                  cpd.le_counts[LE_CRLF]++;
                   pc.str.append(ctx.get());  /* store the '\n' */
                }
-               else
-               {
-                  cpd.le_counts[LE_CR]++;
-               }
-            }
-            else
-            {
-               cpd.le_counts[LE_LF]++;
             }
          }
       }
@@ -434,17 +425,8 @@ static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
             {
                if (ctx.peek() == '\n')
                {
-                  cpd.le_counts[LE_CRLF]++;
                   pc.str.append(ctx.get());  /* store the '\n' */
                }
-               else
-               {
-                  cpd.le_counts[LE_CR]++;
-               }
-            }
-            else
-            {
-               cpd.le_counts[LE_LF]++;
             }
          }
       }
@@ -721,8 +703,8 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
 {
    bool escaped = 0;
    int  end_ch;
-   char escape_char  = cpd.settings[UO_string_escape_char].n;
-   char escape_char2 = cpd.settings[UO_string_escape_char2].n;
+   char escape_char  = UO_string_escape_char;
+   char escape_char2 = UO_string_escape_char2;
 
    pc.str.clear();
    while (quote_idx-- > 0)
@@ -978,19 +960,12 @@ static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
          {
             /* CRLF ending */
             ctx.get();     /* throw away \n */
-            cpd.le_counts[LE_CRLF]++;
-         }
-         else
-         {
-            /* CR ending */
-            cpd.le_counts[LE_CR]++;
          }
          nl_count++;
          break;
 
       case '\n':
          /* LF ending */
-         cpd.le_counts[LE_LF]++;
          nl_count++;
          break;
 
@@ -1450,32 +1425,6 @@ void tokenize(const deque<int>& data, chunk_t *ref)
             cpd.in_preproc = CT_PREPROC;
          }
       }
-   }
-
-   /* Set the cpd.newline string for this file */
-   if ((cpd.settings[UO_newlines].le == LE_LF) ||
-       ((cpd.settings[UO_newlines].le == LE_AUTO) &&
-        (cpd.le_counts[LE_LF] >= cpd.le_counts[LE_CRLF]) &&
-        (cpd.le_counts[LE_LF] >= cpd.le_counts[LE_CR])))
-   {
-      /* LF line ends */
-      cpd.newline = "\n";
-      LOG_FMT(LLINEENDS, "Using LF line endings\n");
-   }
-   else if ((cpd.settings[UO_newlines].le == LE_CRLF) ||
-            ((cpd.settings[UO_newlines].le == LE_AUTO) &&
-             (cpd.le_counts[LE_CRLF] >= cpd.le_counts[LE_LF]) &&
-             (cpd.le_counts[LE_CRLF] >= cpd.le_counts[LE_CR])))
-   {
-      /* CRLF line ends */
-      cpd.newline = "\r\n";
-      LOG_FMT(LLINEENDS, "Using CRLF line endings\n");
-   }
-   else
-   {
-      /* CR line ends */
-      cpd.newline = "\r";
-      LOG_FMT(LLINEENDS, "Using CR line endings\n");
    }
 }
 

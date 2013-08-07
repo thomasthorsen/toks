@@ -34,7 +34,7 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc)
 
    chunk             = *pc;
    chunk.type        = CT_VSEMICOLON;
-   chunk.str         = cpd.settings[UO_mod_pawn_semicolon].b ? ";" : "";
+   chunk.str         = "";
    chunk.column     += pc->len();
    chunk.parent_type = CT_NONE;
 

@@ -16,14 +16,12 @@ src/chunk_list.cpp
 src/ChunkStack.cpp
 src/combine.cpp
 src/defines.cpp
-src/indent.cpp
 src/keywords.cpp
 src/lang_pawn.cpp
 src/logger.cpp
 src/logmask.cpp
 src/md5.cpp
 src/newlines.cpp
-src/options.cpp
 src/output.cpp
 src/parse_frame.cpp
 src/punctuators.cpp
