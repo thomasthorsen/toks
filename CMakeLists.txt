@@ -21,7 +21,6 @@ src/lang_pawn.cpp
 src/logger.cpp
 src/logmask.cpp
 src/md5.cpp
-src/newlines.cpp
 src/output.cpp
 src/parse_frame.cpp
 src/punctuators.cpp
