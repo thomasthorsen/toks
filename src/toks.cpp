@@ -132,7 +132,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --version                : print the version and exit\n"
            "\n"
            "Debug Options:\n"
-           " -p FILE      : dump debug info to a file\n"
            " -L SEV       : Set the log severity (see log_levels.h)\n"
            " -s           : Show the log severity in the logs\n"
            " --decode     : decode remaining args (chunk flags) and exit\n"
@@ -142,7 +141,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "toks foo.d\n"
            "toks -L0-2,20-23,51 foo.d\n"
            "toks -o foo.out foo.d\n"
-           "toks foo.d\n"
            "\n"
            ,
            path_basename(argv0));

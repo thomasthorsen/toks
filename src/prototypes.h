@@ -34,15 +34,6 @@ void output_parsed(FILE *pfile);
 
 
 /*
- *  space.cpp
- */
-
-void space_text(void);
-void space_text_balance_nested_parens(void);
-void space_add_after(chunk_t *pc, int count);
-
-
-/*
  *  combine.cpp
  */
 
