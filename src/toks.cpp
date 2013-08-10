@@ -579,7 +579,9 @@ static void toks_file(const file_mem& fm)
    toks_start(data);
 
    /* Special hook for dumping parsed data for debugging */
-   output_parsed(stdout);
+   /* output_parsed(stdout); */
+
+   output();
 
    toks_end();
 }

@@ -30,6 +30,7 @@ const char *get_file_extension(int& idx);
  *  output.cpp
  */
 
+void output(void);
 void output_parsed(FILE *pfile);
 
 
@@ -139,7 +140,7 @@ void encode_utf8(int ch, vector<UINT8>& res);
 #define UO_indent_else_if false
 #define UO_tok_split_gte false
 #define UO_string_escape_char '\\'
-#define UO_string_escape_char2 '0'
+#define UO_string_escape_char2 0
 
 /**
  * Advances to the next tab stop.
