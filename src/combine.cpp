@@ -503,10 +503,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
        (pc->type == CT_STRUCT) ||
        (pc->type == CT_UNION))
    {
-      if (prev->type != CT_TYPEDEF)
-      {
-         fix_enum_struct_union(pc);
-      }
+      fix_enum_struct_union(pc);
    }
 
    if (pc->type == CT_EXTERN)
@@ -1731,7 +1728,7 @@ static void fix_type_cast(chunk_t *start)
 
 
 /**
- * We are on an enum/struct/union tag that is NOT inside a typedef.
+ * We are on an enum/struct/union tag
  * If there is a {...} and words before the ';', then they are variables.
  *
  * tag { ... } [*] word [, [*]word] ;
@@ -1868,7 +1865,7 @@ static void fix_enum_struct_union(chunk_t *pc)
       next = chunk_get_next_ncnl(next);
    }
 
-   if (next && !prev && (next->type == CT_SEMICOLON))
+   if (next && !prev && (next->type == CT_SEMICOLON) && (next->parent_type == CT_NONE))
    {
       next->parent_type = pc->type;
    }
