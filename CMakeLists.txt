@@ -15,7 +15,6 @@ src/brace_cleanup.cpp
 src/chunk_list.cpp
 src/ChunkStack.cpp
 src/combine.cpp
-src/defines.cpp
 src/keywords.cpp
 src/lang_pawn.cpp
 src/logger.cpp

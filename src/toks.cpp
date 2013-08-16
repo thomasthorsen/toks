@@ -41,9 +41,9 @@ static const char *language_to_string(int lang);
 static bool read_stdin(file_mem& fm);
 static void toks_start(const deque<int>& data);
 static void toks_end();
-static void toks_file(const file_mem& fm);
-static void do_source_file(const char *filename_in);
-static void process_source_list(const char *source_list);
+static void toks_file(const file_mem& fm, bool dump);
+static void do_source_file(const char *filename_in, bool dump);
+static void process_source_list(const char *source_list, bool dump);
 
 static int load_mem_file(const char *filename, file_mem& fm);
 
@@ -132,6 +132,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --version                : print the version and exit\n"
            "\n"
            "Debug Options:\n"
+           " -d           : Dump all tokens\n"
            " -L SEV       : Set the log severity (see log_levels.h)\n"
            " -s           : Show the log severity in the logs\n"
            " --decode     : decode remaining args (chunk flags) and exit\n"
@@ -181,6 +182,7 @@ int main(int argc, char *argv[])
    log_mask_t mask;
    int        idx;
    const char *p_arg;
+   bool dump = false;
 
    Args arg(argc, argv);
 
@@ -230,6 +232,11 @@ int main(int argc, char *argv[])
       log_show_sev(true);
    }
 
+   if (arg.Present("-d"))
+   {
+      dump = true;
+   }
+
    /* Load type files */
    idx = 0;
    while ((p_arg = arg.Params("-t", idx)) != NULL)
@@ -242,20 +249,6 @@ int main(int argc, char *argv[])
    while ((p_arg = arg.Params("--type", idx)) != NULL)
    {
       add_keyword(p_arg, CT_TYPE);
-   }
-
-   /* Load define files */
-   idx = 0;
-   while ((p_arg = arg.Params("-d", idx)) != NULL)
-   {
-      load_define_file(p_arg);
-   }
-
-   /* add defines */
-   idx = 0;
-   while ((p_arg = arg.Params("--define", idx)) != NULL)
-   {
-      add_define(p_arg, NULL);
    }
 
    /* Check for a language override */
@@ -316,7 +309,7 @@ int main(int argc, char *argv[])
               (int)fm.raw.size(), (int)fm.data.size(),
               language_to_string(cpd.lang_flags));
 
-      toks_file(fm);
+      toks_file(fm, dump);
    }
    else
    {
@@ -326,23 +319,22 @@ int main(int argc, char *argv[])
       idx = 1;
       while ((p_arg = arg.Unused(idx)) != NULL)
       {
-         do_source_file(p_arg);
+         do_source_file(p_arg, dump);
       }
 
       if (source_list != NULL)
       {
-         process_source_list(source_list);
+         process_source_list(source_list, dump);
       }
    }
 
    clear_keyword_file();
-   clear_defines();
 
    return((cpd.error_count != 0) ? EXIT_FAILURE : EXIT_SUCCESS);
 }
 
 
-static void process_source_list(const char *source_list)
+static void process_source_list(const char *source_list, bool dump)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -387,7 +379,7 @@ static void process_source_list(const char *source_list)
 
       if (fname[0] != '#')
       {
-         do_source_file(fname);
+         do_source_file(fname, dump);
       }
    }
 
@@ -488,7 +480,7 @@ static int load_mem_file(const char *filename, file_mem& fm)
  *
  * @param filename_in  the file to read
  */
-static void do_source_file(const char *filename_in)
+static void do_source_file(const char *filename_in, bool dump)
 {
    file_mem fm;
    string   filename_tmp;
@@ -511,7 +503,7 @@ static void do_source_file(const char *filename_in)
            filename_in, language_to_string(cpd.lang_flags));
 
    cpd.filename = filename_in;
-   toks_file(fm);
+   toks_file(fm, dump);
 }
 
 
@@ -559,7 +551,7 @@ static void toks_start(const deque<int>& data)
 }
 
 
-static void toks_file(const file_mem& fm)
+static void toks_file(const file_mem& fm, bool dump)
 {
    const deque<int>& data = fm.data;
 
@@ -579,7 +571,10 @@ static void toks_file(const file_mem& fm)
    toks_start(data);
 
    /* Special hook for dumping parsed data for debugging */
-   /* output_parsed(stdout); */
+   if (dump)
+   {
+      output_parsed(stdout);
+   }
 
    output();
 

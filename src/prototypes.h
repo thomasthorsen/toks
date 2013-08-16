@@ -87,16 +87,6 @@ bool keywords_are_sorted(void);
 
 
 /*
- *  defines.cpp
- */
-
-int load_define_file(const char *filename);
-void add_define(const char *tag, const char *value);
-void print_defines(FILE *pfile);
-void clear_defines(void);
-
-
-/*
  *  punctuators.cpp
  */
 const chunk_tag_t *find_punctuator(const char *str, int lang_flags);
