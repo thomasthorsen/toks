@@ -38,9 +38,11 @@ void output(void)
             printf("\n");
             break;
          }
+         case CT_MACRO_FUNC:
+            /* Fallthrough */
          case CT_FUNC_DEF:
          {
-            printf("%s:%u:%u FUNC_DEF %s ", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+            printf("%s:%u:%u %s %s ", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->type), pc->str.c_str());
 
             /* Context */
             for (chunk_t *tmp = pc;
@@ -50,7 +52,7 @@ void output(void)
                printf("%s", tmp->str.c_str());
                if ((tmp->level == pc->level) &&
                    (tmp->type == CT_FPAREN_CLOSE) &&
-                   (tmp->parent_type == CT_FUNC_DEF))
+                   (tmp->parent_type == pc->type))
                   break;
             }
 
