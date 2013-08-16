@@ -19,28 +19,10 @@ void output(void)
    {
       switch (pc->type)
       {
-         case CT_FUNC_PROTO:
-         {
-            printf("%s:%u:%u FUNC_PROTO %s ", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
-
-            /* Context */
-            for (chunk_t *tmp = pc;
-                 tmp != NULL;
-                 tmp = chunk_get_next(tmp))
-            {
-               printf("%s", tmp->str.c_str());
-               if ((tmp->level == pc->level) &&
-                   (tmp->type == CT_FPAREN_CLOSE) &&
-                   (tmp->parent_type == CT_FUNC_PROTO))
-                  break;
-            }
-
-            printf("\n");
-            break;
-         }
          case CT_MACRO_FUNC:
-            /* Fallthrough */
          case CT_FUNC_DEF:
+         case CT_FUNC_PROTO:
+         case CT_FUNC_CALL:
          {
             printf("%s:%u:%u %s %s ", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->type), pc->str.c_str());
 
@@ -49,7 +31,11 @@ void output(void)
                  tmp != NULL;
                  tmp = chunk_get_next(tmp))
             {
+               if ((tmp->type == CT_WORD) && (tmp->flags & PCF_VAR_DEF) && (tmp->flags & PCF_IN_FCN_DEF))
+                  printf(" ");
                printf("%s", tmp->str.c_str());
+               if ((tmp->type == CT_COMMA) && (tmp->flags & PCF_IN_FCN_DEF))
+                  printf(" ");
                if ((tmp->level == pc->level) &&
                    (tmp->type == CT_FPAREN_CLOSE) &&
                    (tmp->parent_type == pc->type))
@@ -59,22 +45,20 @@ void output(void)
             printf("\n");
             break;
          }
-         case CT_FUNC_CALL:
+         case CT_MACRO:
          {
-            printf("%s:%u:%u FUNC_CALL %s ", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+            printf("%s:%u:%u %s %s #define ", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->type), pc->str.c_str());
 
             /* Context */
             for (chunk_t *tmp = pc;
-                 tmp != NULL;
+                 (tmp != NULL) && (tmp->flags & PCF_IN_PREPROC);
                  tmp = chunk_get_next(tmp))
             {
-               printf("%s", tmp->str.c_str());
-               if ((tmp->level == pc->level) &&
-                   (tmp->type == CT_FPAREN_CLOSE) &&
-                   (tmp->parent_type == CT_FUNC_CALL))
-                  break;
+               if ((tmp->type != CT_NEWLINE) && (tmp->type != CT_NL_CONT) && (tmp->len() != 0))
+               {
+                  printf("%s ", tmp->str.c_str());
+               }
             }
-
             printf("\n");
             break;
          }
@@ -82,7 +66,7 @@ void output(void)
          {
             if (pc->parent_type == CT_TYPEDEF)
             {
-               printf("%s:%u:%u TYPEDEF", cpd.filename, pc->orig_line, pc->orig_col);
+               printf("%s:%u:%u %s", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->parent_type));
                if (pc->flags & PCF_TYPEDEF_STRUCT)
                   printf("_STRUCT");
                else if (pc->flags & PCF_TYPEDEF_UNION)
