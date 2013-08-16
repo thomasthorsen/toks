@@ -76,6 +76,35 @@ void output(void)
             printf("\n");
             break;
          }
+         case CT_TYPE:
+         {
+            if (pc->parent_type == CT_TYPEDEF)
+            {
+               printf("%s:%u:%u TYPEDEF %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+            }
+            if (pc->parent_type == CT_STRUCT ||
+                pc->parent_type == CT_UNION ||
+                pc->parent_type == CT_ENUM)
+            {
+               printf("%s:%u:%u %s", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->parent_type));
+               if (pc->flags & PCF_DEF)
+                  printf("_DEF");
+               else if (pc->flags & PCF_PROTO)
+                  printf("_PROTO");
+               else if (pc->flags & PCF_REF)
+                  printf("_REF");
+               printf(" %s\n", pc->str.c_str());
+            }
+            break;
+         }
+         case CT_WORD:
+         {
+            if (pc->flags & PCF_IN_ENUM)
+            {
+               printf("%s:%u:%u ENUM_VAL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+            }
+            break;
+         }
          default:
             break;
       }

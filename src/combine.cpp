@@ -1805,12 +1805,22 @@ static void fix_enum_struct_union(chunk_t *pc)
          next->parent_type = pc->type;
          next = chunk_get_next_ncnl(next);
       }
+      if (prev != NULL)
+      {
+         prev->flags |= PCF_DEF;
+      }
       prev = NULL;
    }
-   /* reset var name parent type */
-   else if (next && prev)
+   else if (prev != NULL)
    {
-      prev->parent_type = CT_NONE;
+      if (!chunk_is_semicolon(next))
+      {
+         prev->flags |= PCF_REF;
+      }
+      else
+      {
+         prev->flags |= PCF_PROTO;
+      }
    }
 
    if ((next == NULL) || (next->type == CT_PAREN_CLOSE))
@@ -1971,7 +1981,7 @@ static void fix_typedef(chunk_t *start)
          /* We have just a regular typedef */
          LOG_FMT(LTYPEDEF, "%s: regular typedef [%s] on line %d\n", __func__,
                  the_type->str.c_str(), the_type->orig_line);
-         the_type->flags |= PCF_ANCHOR;
+         the_type->parent_type = CT_TYPEDEF;
       }
       return;
    }
@@ -2000,7 +2010,7 @@ static void fix_typedef(chunk_t *start)
    {
       LOG_FMT(LTYPEDEF, "%s: %s typedef [%s] on line %d\n",
               __func__, get_token_name(tag), the_type->str.c_str(), the_type->orig_line);
-      the_type->flags |= PCF_ANCHOR;
+      the_type->parent_type = CT_TYPEDEF;
    }
 }
 

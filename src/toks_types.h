@@ -152,6 +152,9 @@ struct parse_frame
 #define PCF_KEEP_BRACE         PCF_BIT(36)  /* do not remove brace */
 #define PCF_OC_RTYPE           PCF_BIT(37)  /* inside OC return type */
 #define PCF_OC_ATYPE           PCF_BIT(38)  /* inside OC arg type */
+#define PCF_DEF                PCF_BIT(39)  /* struct/union/enum definition */
+#define PCF_PROTO              PCF_BIT(40)  /* struct/union/enum prototype */
+#define PCF_REF                PCF_BIT(41)  /* struct/union/enum reference */
 
 #ifdef DEFINE_PCF_NAMES
 static const char *pcf_names[] =
@@ -195,6 +198,9 @@ static const char *pcf_names[] =
    "KEEP_BRACE",        // 36
    "OC_RTYPE",          // 37
    "OC_ATYPE",          // 38
+   "DEF",               // 39
+   "PROTO",             // 40
+   "REF",               // 41
 };
 #endif
 
