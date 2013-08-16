@@ -1304,7 +1304,7 @@ static bool mark_function_type(chunk_t *pc)
    {
       if (pc->flags & PCF_IN_TYPEDEF)
       {
-         varcnk->type = CT_TYPE;
+         varcnk->type = CT_FUNC_TYPE;
       }
       else
       {
@@ -2011,6 +2011,12 @@ static void fix_typedef(chunk_t *start)
       LOG_FMT(LTYPEDEF, "%s: %s typedef [%s] on line %d\n",
               __func__, get_token_name(tag), the_type->str.c_str(), the_type->orig_line);
       the_type->parent_type = CT_TYPEDEF;
+      if (tag == CT_STRUCT)
+         the_type->flags |= PCF_TYPEDEF_STRUCT;
+      else if (tag == CT_UNION)
+         the_type->flags |= PCF_TYPEDEF_UNION;
+      else if (tag == CT_ENUM)
+         the_type->flags |= PCF_TYPEDEF_ENUM;
    }
 }
 

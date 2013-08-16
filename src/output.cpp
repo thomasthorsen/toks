@@ -80,7 +80,14 @@ void output(void)
          {
             if (pc->parent_type == CT_TYPEDEF)
             {
-               printf("%s:%u:%u TYPEDEF %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+               printf("%s:%u:%u TYPEDEF", cpd.filename, pc->orig_line, pc->orig_col);
+               if (pc->flags & PCF_TYPEDEF_STRUCT)
+                  printf("_STRUCT");
+               else if (pc->flags & PCF_TYPEDEF_UNION)
+                  printf("_UNION");
+               else if (pc->flags & PCF_TYPEDEF_ENUM)
+                  printf("_ENUM");
+               printf(" %s\n", pc->str.c_str());
             }
             if (pc->parent_type == CT_STRUCT ||
                 pc->parent_type == CT_UNION ||
@@ -96,6 +103,13 @@ void output(void)
                printf(" %s\n", pc->str.c_str());
             }
             break;
+         }
+         case CT_FUNC_TYPE:
+         {
+            if (pc->parent_type == CT_TYPEDEF)
+            {
+               printf("%s:%u:%u TYPEDEF_FUNC %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+            }
          }
          case CT_WORD:
          {

@@ -155,6 +155,10 @@ struct parse_frame
 #define PCF_DEF                PCF_BIT(39)  /* struct/union/enum definition */
 #define PCF_PROTO              PCF_BIT(40)  /* struct/union/enum prototype */
 #define PCF_REF                PCF_BIT(41)  /* struct/union/enum reference */
+#define PCF_TYPEDEF_STRUCT     PCF_BIT(42)  /* typedef of a struct */
+#define PCF_TYPEDEF_UNION      PCF_BIT(43)  /* typedef of a union */
+#define PCF_TYPEDEF_ENUM       PCF_BIT(44)  /* typedef of an enum */
+
 
 #ifdef DEFINE_PCF_NAMES
 static const char *pcf_names[] =
@@ -201,6 +205,9 @@ static const char *pcf_names[] =
    "DEF",               // 39
    "PROTO",             // 40
    "REF",               // 41
+   "TYPEDEF_STRUCT",    // 42
+   "TYPEDEF_UNION",     // 43
+   "TYPEDEF_ENUM",      // 44
 };
 #endif
 
