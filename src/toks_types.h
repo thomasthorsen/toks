@@ -135,8 +135,7 @@ struct parse_frame
 #define PCF_WAS_ALIGNED        PCF_BIT(21)
 #define PCF_VAR_TYPE           PCF_BIT(22)  /* part of a variable def type */
 #define PCF_VAR_DEF            PCF_BIT(23)  /* variable name in a variable def */
-#define PCF_VAR_1ST            PCF_BIT(24)  /* 1st variable def in a statement */
-#define PCF_VAR_1ST_DEF        (PCF_VAR_DEF | PCF_VAR_1ST)
+#define PCF_VAR_DECL           PCF_BIT(24)  /* variable name in a variable declaration */
 #define PCF_VAR_INLINE         PCF_BIT(25)  /* type was an inline struct/enum/union */
 #define PCF_RIGHT_COMMENT      PCF_BIT(26)
 #define PCF_OLD_FCN_PARAMS     PCF_BIT(27)
@@ -187,7 +186,7 @@ static const char *pcf_names[] =
    "WAS_ALIGNED",       // 21
    "VAR_TYPE",          // 22
    "VAR_DEF",           // 23
-   "VAR_1ST",           // 24
+   "VAR_DECL",          // 24
    "VAR_INLINE",        // 25
    "RIGHT_COMMENT",     // 26
    "OLD_FCN_PARAMS",    // 27

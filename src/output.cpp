@@ -97,11 +97,26 @@ void output(void)
                printf("%s:%u:%u TYPEDEF_FUNC %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
             }
          }
+         case CT_FUNC_VAR:
          case CT_WORD:
          {
-            if (pc->flags & PCF_IN_ENUM)
+            if (pc->parent_type == CT_NONE)
             {
-               printf("%s:%u:%u ENUM_VAL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+               if (pc->flags & PCF_IN_ENUM)
+               {
+                  printf("%s:%u:%u ENUM_VAL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+               }
+               if ((pc->flags & PCF_VAR_DEF) &&
+                   !(pc->flags & PCF_IN_FCN_DEF) &&
+                   (pc->brace_level == 0))
+               {
+                  printf("%s:%u:%u VAR_DEF %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+               }
+               if ((pc->flags & PCF_VAR_DECL) &&
+                   (pc->brace_level == 0))
+               {
+                  printf("%s:%u:%u VAR_DECL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+               }
             }
             break;
          }

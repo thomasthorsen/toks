@@ -27,7 +27,7 @@ static void mark_function(chunk_t *pc);
 static void mark_function_return_type(chunk_t *fname, chunk_t *pc, c_token_t parent_type);
 static bool mark_function_type(chunk_t *pc);
 static void mark_struct_union_body(chunk_t *start);
-static chunk_t *mark_variable_definition(chunk_t *start);
+static chunk_t *mark_variable_definition(chunk_t *start, UINT64 flags);
 
 static void mark_define_expressions(void);
 static void process_returns(void);
@@ -323,7 +323,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
             tmp->parent_type = CT_DELEGATE;
             if (tmp->level == tmp->brace_level)
             {
-               tmp->flags |= PCF_VAR_1ST_DEF;
+               tmp->flags |= PCF_VAR_DEF;
             }
          }
 
@@ -478,7 +478,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
       }
       if ((next != NULL) && (next->type == CT_WORD))
       {
-         next->flags |= PCF_VAR_1ST_DEF;
+         next->flags |= PCF_VAR_DEF;
       }
    }
 
@@ -858,7 +858,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
       }
       if ((tmp != NULL) && (chunk_is_star(tmp) || chunk_is_addr(tmp) || (tmp->type == CT_WORD)))
       {
-         mark_variable_definition(tmp);
+         mark_variable_definition(tmp, PCF_VAR_DEF);
       }
    }
 
@@ -962,7 +962,6 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
             {
                prev->type   = CT_TYPE;
                pc->type     = CT_ADDR;
-               next->flags |= PCF_VAR_1ST;
             }
          }
       }
@@ -1138,13 +1137,13 @@ static void mark_lvalue(chunk_t *pc)
  * @param pc the last chunk of the return type
  * @param parent_type CT_NONE (no change) or the new parent type
  */
-static void mark_function_return_type(chunk_t *fname, chunk_t *pc, c_token_t parent_type)
+static void mark_function_return_type(chunk_t *the_type, chunk_t *pc, c_token_t parent_type)
 {
    if (pc)
    {
       /* Step backwards from pc and mark the parent of the return type */
       LOG_FMT(LFCNR, "%s: (backwards) return type for '%s' @ %d:%d", __func__,
-              fname->text(), fname->orig_line, fname->orig_col);
+              the_type->text(), the_type->orig_line, the_type->orig_col);
 
       while (pc)
       {
@@ -1157,6 +1156,14 @@ static void mark_function_return_type(chunk_t *fname, chunk_t *pc, c_token_t par
             break;
          }
          LOG_FMT(LFCNR, " [%s|%s]", pc->text(), get_token_name(pc->type));
+
+         if ((pc->type == CT_QUALIFIER) &&
+             (the_type->flags & PCF_VAR_DEF) &&
+             (strcmp(pc->text(), "extern") == 0))
+         {
+             the_type->flags &= ~PCF_VAR_DEF;
+             the_type->flags |= PCF_VAR_DECL;
+         }
 
          if (parent_type != CT_NONE)
          {
@@ -1308,8 +1315,8 @@ static bool mark_function_type(chunk_t *pc)
       }
       else
       {
-         varcnk->type   = CT_FUNC_VAR;;
-         varcnk->flags |= PCF_VAR_1ST_DEF;
+         varcnk->type   = CT_FUNC_VAR;
+         varcnk->flags |= PCF_VAR_DEF;
       }
    }
    pc->type        = CT_TPAREN_CLOSE;
@@ -1343,7 +1350,7 @@ static bool mark_function_type(chunk_t *pc)
       {
          if ((pc->flags & PCF_IN_TYPEDEF) == 0)
          {
-            tmp->flags      |= PCF_VAR_1ST_DEF;
+            tmp->flags      |= PCF_VAR_DEF;
          }
          tmp->type        = CT_TPAREN_OPEN;
          tmp->parent_type = ptp;
@@ -1358,7 +1365,7 @@ static bool mark_function_type(chunk_t *pc)
                 (tmp->type == CT_FUNC_PROTO))
             {
                tmp->type   = CT_TYPE;
-               tmp->flags &= ~PCF_VAR_1ST_DEF;
+               tmp->flags &= ~PCF_VAR_DEF;
             }
          }
          mark_function_return_type(varcnk, tmp, ptp);
@@ -1744,7 +1751,7 @@ static void fix_enum_struct_union(chunk_t *pc)
 {
    chunk_t *next;
    chunk_t *prev        = NULL;
-   int     flags        = PCF_VAR_1ST_DEF;
+   int     flags        = PCF_VAR_DEF;
    int     in_fcn_paren = pc->flags & PCF_IN_FCN_DEF;
 
    /* Make sure this wasn't a cast */
@@ -1855,7 +1862,6 @@ static void fix_enum_struct_union(chunk_t *pc)
          if (next->type == CT_WORD)
          {
             next->flags |= flags;
-            flags       &= ~PCF_VAR_1ST; /* clear the first flag for the next items */
          }
 
          if (next->type == CT_STAR)
@@ -1931,7 +1937,7 @@ static void fix_typedef(chunk_t *start)
          {
             the_type = next;
          }
-         next->flags &= ~PCF_VAR_1ST_DEF;
+         next->flags &= ~PCF_VAR_DEF;
          if (*next->str == '(')
          {
             last_op = next;
@@ -2372,6 +2378,7 @@ static chunk_t *fix_var_def(chunk_t *start)
    chunk_t    *tmp_pc;
    ChunkStack cs;
    int        idx, ref_idx;
+   UINT64     flags = PCF_VAR_DEF;
 
    LOG_FMT(LFVD, "%s: start[%d:%d]", __func__, pc->orig_line, pc->orig_col);
 
@@ -2387,6 +2394,12 @@ static chunk_t *fix_var_def(chunk_t *start)
    {
       LOG_FMT(LFVD, " %s[%s]", pc->str.c_str(), get_token_name(pc->type));
       cs.Push_Back(pc);
+
+      if ((pc->type == CT_QUALIFIER) && (strcmp(pc->str.c_str(), "extern") == 0))
+      {
+          flags = PCF_VAR_DECL;
+      }
+
       pc = chunk_get_next_ncnl(pc);
 
       /* Skip templates and attributes */
@@ -2463,7 +2476,7 @@ static chunk_t *fix_var_def(chunk_t *start)
    /**
     * OK we have two or more items, mark types up to the end.
     */
-   mark_variable_definition(cs.Get(cs.Len() - 1)->m_pc);
+   mark_variable_definition(cs.Get(cs.Len() - 1)->m_pc, flags);
    if (end->type == CT_COMMA)
    {
       return(chunk_get_next_ncnl(end));
@@ -2495,7 +2508,7 @@ static chunk_t *skip_expression(chunk_t *start)
 
 /**
  * We are on the first word of a variable definition.
- * Mark all the variable names with PCF_VAR_1ST and PCF_VAR_DEF as appropriate.
+ * Mark all the variable names with PCF_VAR_DECL or PCF_VAR_DEF as appropriate.
  * Also mark any '*' encountered as a CT_PTR_TYPE.
  * Skip over []. Go until a ';' is hit.
  *
@@ -2505,10 +2518,9 @@ static chunk_t *skip_expression(chunk_t *start)
  * struct {...} *a, *b;                ## called with 'a' or '*'
  * myclass a(4);
  */
-static chunk_t *mark_variable_definition(chunk_t *start)
+static chunk_t *mark_variable_definition(chunk_t *start, UINT64 flags)
 {
    chunk_t *pc   = start;
-   int     flags = PCF_VAR_1ST_DEF;
 
    if (start == NULL)
    {
@@ -2531,7 +2543,6 @@ static chunk_t *mark_variable_definition(chunk_t *start)
          {
             pc->flags |= flags;
          }
-         flags &= ~PCF_VAR_1ST;
 
          LOG_FMT(LVARDEF, "%s:%d marked '%s'[%s] in col %d flags: %#" PRIx64 " -> %#" PRIx64 "\n",
                  __func__, pc->orig_line, pc->str.c_str(),
@@ -2918,10 +2929,10 @@ static void mark_function(chunk_t *pc)
 
          pc->type   = CT_TYPE;
          tmp1->type = CT_PTR_TYPE;
-         pc->flags &= ~PCF_VAR_1ST_DEF;
+         pc->flags &= ~PCF_VAR_DEF;
          if (tmp2 != NULL)
          {
-            tmp2->flags |= PCF_VAR_1ST_DEF;
+            tmp2->flags |= PCF_VAR_DEF;
          }
          flag_parens(tmp, 0, CT_FPAREN_OPEN, CT_FUNC_PROTO, false);
          fix_fcn_def_params(tmp);
@@ -3303,7 +3314,7 @@ static void mark_function(chunk_t *pc)
 
    if (pc->type == CT_FUNC_CTOR_VAR)
    {
-      pc->flags |= PCF_VAR_1ST_DEF;
+      pc->flags |= PCF_VAR_DEF;
       return;
    }
 
