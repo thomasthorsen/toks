@@ -1897,7 +1897,6 @@ static void fix_typedef(chunk_t *start)
 {
    chunk_t   *next;
    chunk_t   *the_type = NULL;
-   chunk_t   *open_paren;
    chunk_t   *last_op = NULL;
    c_token_t tag;
 
@@ -1945,11 +1944,9 @@ static void fix_typedef(chunk_t *start)
       flag_parens(last_op, 0, CT_FPAREN_OPEN, CT_TYPEDEF, false);
       fix_fcn_def_params(last_op);
 
-      open_paren = NULL;
       the_type = chunk_get_prev_ncnl(last_op, CNAV_PREPROC);
       if (chunk_is_paren_close(the_type))
       {
-         open_paren = chunk_skip_to_match_rev(the_type);
          mark_function_type(the_type);
          the_type = chunk_get_prev_ncnl(the_type, CNAV_PREPROC);
       }
