@@ -8,9 +8,9 @@ toks is a developer's tool for analyzing source code. Much like a normal compile
  * Type definitions
  * struct/union/enum definitions
  * enum value definitions
- * Variable definitions
+ * Variable definitions/declarations
 
-However, unlike a normal compiler it uses fuzzy logic and heuristics to avoid the need for setting up compiler options and include paths (for languages that use such features), thus making it easy and quick to use on an unknown code base with a complicated build system. Currently, the following languages are supported:
+However, unlike a normal compiler it uses fuzzy parsing and heuristics to avoid the need for setting up compiler options and include paths (for languages that use such features), thus making it easy and quick to use on an unknown code base with a complicated build system. Currently, the following languages are supported:
 
  * C
  * C++
