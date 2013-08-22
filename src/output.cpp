@@ -12,91 +12,211 @@
 #include "unc_ctype.h"
 #include <cstdlib>
 
+/*
+   Definitions:
+      MACRO             MACRO
+      MACRO_FUNC        MACRO_FUNCTION
+      FUNC_DEF          FUNCTION
+      TYPEDEF_STRUCT    STRUCT_TYPE
+      TYPEDEF_UNION     UNION_TYPE
+      TYPEDEF_ENUM      ENUM_TYPE
+      TYPEDEF_FUNC      FUNCTION_TYPE
+      TYPEDEF           TYPE
+      STRUCT_DEF        STRUCT
+      UNION_DEF         UNION
+      ENUM_DEF          ENUM
+      ENUM_VAL          ENUM_VAL
+      VAR_DEF           VAR
+
+   Declarations:
+      FUNC_PROTO        FUNCTION
+      STRUCT_PROTO      STRUCT
+      UNION_PROTO       UNION
+      ENUM_PROTO        ENUM
+      VAR_DECL          VAR
+
+   References:
+      FUNC_CALL         FUNCTION
+      STRUCT_REF        STRUCT
+      UNION_REF         UNION
+      ENUM_REF          ENUM
+
+   Scopes:
+      <global>
+      <file>
+      <function>
+*/
+
+typedef enum
+{
+   IT_UNKNOWN,
+   IT_MACRO,
+   IT_MACRO_FUNCTION,
+   IT_FUNCTION,
+   IT_STRUCT,
+   IT_UNION,
+   IT_ENUM,
+   IT_ENUM_VAL,
+   IT_STRUCT_TYPE,
+   IT_UNION_TYPE,
+   IT_ENUM_TYPE,
+   IT_FUNCTION_TYPE,
+   IT_TYPE,
+   IT_VAR,
+} id_type;
+
+typedef enum
+{
+   IST_UNKNOWN,
+   IST_DEFINITION,
+   IST_DECLARATION,
+   IST_REFERENCE,
+} id_sub_type;
+
+typedef enum
+{
+   IS_UNKNOWN,
+   IS_GLOBAL,
+   IS_FILE,
+   IS_FUNCTION,
+} id_scope;
+
+const char *type_strings[] =
+{
+   "UNKNOWN",
+   "MACRO",
+   "MACRO_FUNCTION",
+   "FUNCTION",
+   "STRUCT",
+   "UNION",
+   "ENUM",
+   "ENUM_VAL",
+   "STRUCT_TYPE",
+   "UNION_TYPE",
+   "ENUM_TYPE",
+   "FUNCTION_TYPE",
+   "TYPE",
+   "VAR",
+};
+
+const char *sub_type_strings[] =
+{
+   "UNKNOWN",
+   "DEF",
+   "DECL",
+   "REF",
+};
+
+const char *scope_strings[] =
+{
+   "<unknown>",
+   "<global>",
+   "<file>",
+   "<function>",
+};
+
+void output_identifier(
+   const char *file,
+   unsigned int line,
+   int column_start,
+   int column_end,
+   id_scope scope,
+   id_type type,
+   id_sub_type sub_type,
+   const char *identifier)
+{
+   printf("%s:%u", file, line);
+   if (column_start != -1)
+      printf(":%d", column_start);
+   if (column_end != -1)
+      printf(":%d", column_end);
+   printf(" %s %s %s %s\n", scope_strings[scope], type_strings[type], sub_type_strings[sub_type], identifier);
+}
+
 void output(void)
 {
    chunk_t *pc;
+   id_type type;
+   id_sub_type sub_type;
+   id_scope scope;
+
    for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
    {
+      type = IT_UNKNOWN;
+      sub_type = IST_UNKNOWN;
+      scope = IS_UNKNOWN;
+
       switch (pc->type)
       {
-         case CT_MACRO_FUNC:
          case CT_FUNC_DEF:
+            type = IT_FUNCTION;
+            sub_type = IST_DEFINITION;
+            scope = IS_GLOBAL;
+            break;
          case CT_FUNC_PROTO:
+            type = IT_FUNCTION;
+            sub_type = IST_DECLARATION;
+            scope = IS_GLOBAL;
+            break;
          case CT_FUNC_CALL:
-         {
-            printf("%s:%u:%u %s %s ", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->type), pc->str.c_str());
-
-            /* Context */
-            for (chunk_t *tmp = pc;
-                 tmp != NULL;
-                 tmp = chunk_get_next(tmp))
-            {
-               if ((tmp->type == CT_WORD) && (tmp->flags & PCF_VAR_DEF) && (tmp->flags & PCF_IN_FCN_DEF))
-                  printf(" ");
-               printf("%s", tmp->str.c_str());
-               if ((tmp->type == CT_COMMA) && (tmp->flags & PCF_IN_FCN_DEF))
-                  printf(" ");
-               if ((tmp->level == pc->level) &&
-                   (tmp->type == CT_FPAREN_CLOSE) &&
-                   (tmp->parent_type == pc->type))
-                  break;
-            }
-
-            printf("\n");
+            type = IT_FUNCTION;
+            sub_type = IST_REFERENCE;
+            scope = IS_GLOBAL;
             break;
-         }
+         case CT_MACRO_FUNC:
+            type = IT_MACRO_FUNCTION;
+            sub_type = IST_DEFINITION;
+            scope = IS_GLOBAL;
+            break;
          case CT_MACRO:
-         {
-            printf("%s:%u:%u %s %s #define ", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->type), pc->str.c_str());
-
-            /* Context */
-            for (chunk_t *tmp = pc;
-                 (tmp != NULL) && (tmp->flags & PCF_IN_PREPROC);
-                 tmp = chunk_get_next(tmp))
-            {
-               if ((tmp->type != CT_NEWLINE) && (tmp->type != CT_NL_CONT) && (tmp->len() != 0))
-               {
-                  printf("%s ", tmp->str.c_str());
-               }
-            }
-            printf("\n");
+            type = IT_MACRO;
+            sub_type = IST_DEFINITION;
+            scope = IS_GLOBAL;
             break;
-         }
          case CT_TYPE:
          {
             if (pc->parent_type == CT_TYPEDEF)
             {
-               printf("%s:%u:%u %s", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->parent_type));
                if (pc->flags & PCF_TYPEDEF_STRUCT)
-                  printf("_STRUCT");
+                  type = IT_STRUCT_TYPE;
                else if (pc->flags & PCF_TYPEDEF_UNION)
-                  printf("_UNION");
+                  type = IT_UNION_TYPE;
                else if (pc->flags & PCF_TYPEDEF_ENUM)
-                  printf("_ENUM");
-               printf(" %s\n", pc->str.c_str());
+                  type = IT_ENUM_TYPE;
+               else
+                  type = IT_TYPE;
+               sub_type = IST_DEFINITION;
+               scope = IS_GLOBAL;
             }
-            if (pc->parent_type == CT_STRUCT ||
-                pc->parent_type == CT_UNION ||
-                pc->parent_type == CT_ENUM)
+            else if (pc->parent_type == CT_STRUCT ||
+                     pc->parent_type == CT_UNION ||
+                     pc->parent_type == CT_ENUM)
             {
-               printf("%s:%u:%u %s", cpd.filename, pc->orig_line, pc->orig_col, get_token_name(pc->parent_type));
+               if (pc->parent_type == CT_STRUCT)
+                  type = IT_STRUCT;
+               else if (pc->parent_type == CT_UNION)
+                  type = IT_UNION;
+               else if (pc->parent_type == CT_ENUM)
+                  type = IT_ENUM;
                if (pc->flags & PCF_DEF)
-                  printf("_DEF");
+                  sub_type = IST_DEFINITION;
                else if (pc->flags & PCF_PROTO)
-                  printf("_PROTO");
+                  sub_type = IST_DECLARATION;
                else if (pc->flags & PCF_REF)
-                  printf("_REF");
-               printf(" %s\n", pc->str.c_str());
+                  sub_type = IST_REFERENCE;
+               else
+                  continue;
+               scope = IS_GLOBAL;
             }
+            else
+               continue;
             break;
          }
          case CT_FUNC_TYPE:
-         {
-            if (pc->parent_type == CT_TYPEDEF)
-            {
-               printf("%s:%u:%u TYPEDEF_FUNC %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
-            }
-         }
+            type = IT_FUNCTION_TYPE;
+            sub_type = IST_DEFINITION;
+            scope = IS_GLOBAL;
+            break;
          case CT_FUNC_VAR:
          case CT_WORD:
          {
@@ -104,25 +224,44 @@ void output(void)
             {
                if (pc->flags & PCF_IN_ENUM)
                {
-                  printf("%s:%u:%u ENUM_VAL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+                  type = IT_ENUM_VAL;
+                  sub_type = IST_DEFINITION;
+                  scope = IS_GLOBAL;
                }
-               if ((pc->flags & PCF_VAR_DEF) &&
-                   !(pc->flags & PCF_IN_FCN_DEF) &&
-                   (pc->brace_level == 0))
+               else if ((pc->flags & PCF_VAR_DEF) &&
+                        !(pc->flags & PCF_IN_FCN_DEF) &&
+                        (pc->brace_level == 0))
                {
-                  printf("%s:%u:%u VAR_DEF %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+                  type = IT_VAR;
+                  sub_type = IST_DEFINITION;
+                  scope = IS_GLOBAL;
                }
-               if ((pc->flags & PCF_VAR_DECL) &&
-                   (pc->brace_level == 0))
+               else if ((pc->flags & PCF_VAR_DECL) &&
+                        (pc->brace_level == 0))
                {
-                  printf("%s:%u:%u VAR_DECL %s\n", cpd.filename, pc->orig_line, pc->orig_col, pc->str.c_str());
+                  type = IT_VAR;
+                  sub_type = IST_DEFINITION;
+                  scope = IS_GLOBAL;
                }
+               else
+                  continue;
             }
+            else
+               continue;
             break;
          }
          default:
-            break;
+            continue;
       }
+
+      output_identifier(cpd.filename,
+                        pc->orig_line,
+                        pc->orig_col,
+                        pc->orig_col_end,
+                        scope,
+                        type,
+                        sub_type,
+                        pc->str.c_str());
    }
 }
 
