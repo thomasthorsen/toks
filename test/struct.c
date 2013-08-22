@@ -55,3 +55,37 @@ void function(void)
     struct struh h3; /* REF */
     struct {int a; int b;} i1, *i2;
 }
+
+typedef struct strui /* DEF */
+{
+    int a;
+#if defined(DEFINE)
+    struct struj /* DEF */
+    {
+        int a;
+    } e;
+#else
+    struct struj /* DEF */
+    {
+        int a;
+        int b;
+    } e;
+#endif
+} strui;
+
+typedef struct struk /* DEF */
+{
+#if defined(DEFINE)
+    int a;
+    struct strul /* DEF */
+    {
+        int a;
+    } e;
+#else
+    int a;
+    struct strul /* DEF */
+    {
+        int a;
+    } e;
+#endif
+} struk;

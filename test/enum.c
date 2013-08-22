@@ -33,3 +33,14 @@ void function(void)
     enum enuh h3; /* REF */
     enum {ENUI_A, ENUI_B} i1, *i2;
 }
+
+typedef enum enud
+{
+    ENUD_A,
+#if defined(DEFINE)
+    ENUD_B1,
+#else
+    ENUD_B2,
+#endif
+    ENUD_C,
+} enud;
