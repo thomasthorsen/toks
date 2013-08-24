@@ -142,6 +142,9 @@ void output(void)
 
    for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
    {
+      if (pc->flags & PCF_PUNCTUATOR)
+         continue;
+
       type = IT_UNKNOWN;
       sub_type = IST_UNKNOWN;
       scope = IS_UNKNOWN;
@@ -175,6 +178,9 @@ void output(void)
             break;
          case CT_TYPE:
          {
+            if (pc->flags & PCF_KEYWORD)
+               continue;
+
             if (pc->parent_type == CT_TYPEDEF)
             {
                if (pc->flags & PCF_TYPEDEF_STRUCT)
@@ -209,7 +215,11 @@ void output(void)
                scope = IS_GLOBAL;
             }
             else
-               continue;
+            {
+               type = IT_UNKNOWN;
+               sub_type = IST_REFERENCE;
+               scope = IS_UNKNOWN;
+            }
             break;
          }
          case CT_FUNC_TYPE:
@@ -226,25 +236,26 @@ void output(void)
                {
                   type = IT_ENUM_VAL;
                   sub_type = IST_DEFINITION;
-                  scope = IS_GLOBAL;
+                  scope = IS_UNKNOWN;
                }
-               else if ((pc->flags & PCF_VAR_DEF) &&
-                        !(pc->flags & PCF_IN_FCN_DEF) &&
-                        (pc->brace_level == 0))
+               else if (pc->flags & PCF_VAR_DEF)
                {
                   type = IT_VAR;
                   sub_type = IST_DEFINITION;
-                  scope = IS_GLOBAL;
+                  scope = IS_UNKNOWN;
                }
-               else if ((pc->flags & PCF_VAR_DECL) &&
-                        (pc->brace_level == 0))
+               else if (pc->flags & PCF_VAR_DECL)
                {
                   type = IT_VAR;
-                  sub_type = IST_DEFINITION;
-                  scope = IS_GLOBAL;
+                  sub_type = IST_DECLARATION;
+                  scope = IS_UNKNOWN;
                }
                else
-                  continue;
+               {
+                  type = IT_UNKNOWN;
+                  sub_type = IST_REFERENCE;
+                  scope = IS_UNKNOWN;
+               }
             }
             else
                continue;

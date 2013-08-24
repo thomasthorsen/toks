@@ -56,7 +56,7 @@ chunk_t *skip_attribute_prev(chunk_t *fp_close);
  *  tokenize.cpp
  */
 
-void tokenize(const deque<int>& data, chunk_t *ref);
+void tokenize(const deque<int>& data);
 
 
 /*

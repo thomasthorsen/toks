@@ -512,7 +512,7 @@ static void toks_start(const deque<int>& data)
    /**
     * Parse the text into chunks
     */
-   tokenize(data, NULL);
+   tokenize(data);
 
    /**
     * Change certain token types based on simple sequence.

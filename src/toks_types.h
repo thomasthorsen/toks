@@ -145,7 +145,7 @@ struct parse_frame
 #define PCF_EMPTY_BODY         PCF_BIT(30)
 #define PCF_ANCHOR             PCF_BIT(31)  /* aligning anchor */
 #define PCF_PUNCTUATOR         PCF_BIT(32)
-#define PCF_INSERTED           PCF_BIT(33)  /* chunk was inserted from another file */
+#define PCF_KEYWORD            PCF_BIT(33)  /* is a recognized keyword */
 #define PCF_LONG_BLOCK         PCF_BIT(34)  /* the block is 'long' by some measure */
 #define PCF_OC_BOXED           PCF_BIT(35)  /* inside OC boxed expression */
 #define PCF_KEEP_BRACE         PCF_BIT(36)  /* do not remove brace */
@@ -195,7 +195,7 @@ static const char *pcf_names[] =
    "EMPTY_BODY",        // 30
    "ANCHOR",            // 31
    "PUNCTUATOR",        // 32
-   "INSERTED",          // 33
+   "KEYWORD",           // 33
    "LONG_BLOCK",        // 34
    "OC_BOXED",          // 35
    "KEEP_BRACE",        // 36

@@ -931,6 +931,10 @@ bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
       {
          /* Turn it into a keyword now */
          pc.type = find_keyword_type(pc.str.c_str(), pc.str.size());
+         if (pc.type != CT_WORD)
+         {
+             pc.flags |= PCF_KEYWORD;
+         }
       }
    }
 
@@ -1303,10 +1307,8 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
  *  - trailing whitespace are removed.
  *  - leading space & tabs are converted to the appropriate format.
  *
- * All the tokens are inserted before ref. If ref is NULL, they are inserted
- * at the end of the list.  Line numbers are relative to the start of the data.
  */
-void tokenize(const deque<int>& data, chunk_t *ref)
+void tokenize(const deque<int>& data)
 {
    tok_ctx            ctx(data);
    chunk_t            chunk;
@@ -1376,15 +1378,7 @@ void tokenize(const deque<int>& data, chunk_t *ref)
             pc->flags &= ~PCF_IN_PREPROC;
          }
       }
-      if (ref != NULL)
-      {
-         chunk.flags |= PCF_INSERTED;
-      }
-      else
-      {
-         chunk.flags &= ~PCF_INSERTED;
-      }
-      pc = chunk_add_before(&chunk, ref);
+      pc = chunk_add_before(&chunk, NULL);
 
       /* A newline marks the end of a preprocessor */
       if (pc->type == CT_NEWLINE) // || (pc->type == CT_COMMENT_MULTI))
