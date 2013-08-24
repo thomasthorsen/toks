@@ -151,9 +151,9 @@ struct parse_frame
 #define PCF_KEEP_BRACE         PCF_BIT(36)  /* do not remove brace */
 #define PCF_OC_RTYPE           PCF_BIT(37)  /* inside OC return type */
 #define PCF_OC_ATYPE           PCF_BIT(38)  /* inside OC arg type */
-#define PCF_DEF                PCF_BIT(39)  /* struct/union/enum definition */
-#define PCF_PROTO              PCF_BIT(40)  /* struct/union/enum prototype */
-#define PCF_REF                PCF_BIT(41)  /* struct/union/enum reference */
+#define PCF_DEF                PCF_BIT(39)  /* struct/union/enum/class definition */
+#define PCF_PROTO              PCF_BIT(40)  /* struct/union/enum/class prototype */
+#define PCF_REF                PCF_BIT(41)  /* struct/union/enum/class reference */
 #define PCF_TYPEDEF_STRUCT     PCF_BIT(42)  /* typedef of a struct */
 #define PCF_TYPEDEF_UNION      PCF_BIT(43)  /* typedef of a union */
 #define PCF_TYPEDEF_ENUM       PCF_BIT(44)  /* typedef of an enum */

@@ -3495,6 +3495,7 @@ static void mark_class_ctor(chunk_t *start)
       {
          LOG_FMT(LFTOR, "%s: bailed on semicolon on line %d\n",
                  __func__, pc->orig_line);
+         pclass->flags |= PCF_PROTO;
          return;
       }
       pc = chunk_get_next_ncnl(pc, CNAV_PREPROC);
@@ -3505,6 +3506,8 @@ static void mark_class_ctor(chunk_t *start)
       LOG_FMT(LFTOR, "%s: bailed on NULL\n", __func__);
       return;
    }
+
+   pclass->flags |= PCF_DEF;
 
    set_paren_parent(pc, start->type);
 

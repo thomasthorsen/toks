@@ -12,57 +12,24 @@
 #include "unc_ctype.h"
 #include <cstdlib>
 
-/*
-   Definitions:
-      MACRO             MACRO
-      MACRO_FUNC        MACRO_FUNCTION
-      FUNC_DEF          FUNCTION
-      TYPEDEF_STRUCT    STRUCT_TYPE
-      TYPEDEF_UNION     UNION_TYPE
-      TYPEDEF_ENUM      ENUM_TYPE
-      TYPEDEF_FUNC      FUNCTION_TYPE
-      TYPEDEF           TYPE
-      STRUCT_DEF        STRUCT
-      UNION_DEF         UNION
-      ENUM_DEF          ENUM
-      ENUM_VAL          ENUM_VAL
-      VAR_DEF           VAR
-
-   Declarations:
-      FUNC_PROTO        FUNCTION
-      STRUCT_PROTO      STRUCT
-      UNION_PROTO       UNION
-      ENUM_PROTO        ENUM
-      VAR_DECL          VAR
-
-   References:
-      FUNC_CALL         FUNCTION
-      STRUCT_REF        STRUCT
-      UNION_REF         UNION
-      ENUM_REF          ENUM
-
-   Scopes:
-      <global>
-      <file>
-      <function>
-*/
 
 typedef enum
 {
    IT_UNKNOWN,
-   IT_MACRO,
-   IT_MACRO_FUNCTION,
-   IT_FUNCTION,
-   IT_STRUCT,
-   IT_UNION,
-   IT_ENUM,
-   IT_ENUM_VAL,
-   IT_STRUCT_TYPE,
-   IT_UNION_TYPE,
-   IT_ENUM_TYPE,
-   IT_FUNCTION_TYPE,
-   IT_TYPE,
-   IT_VAR,
+   IT_MACRO,             // preprocessor macro
+   IT_MACRO_FUNCTION,    // function like preprocessor macro
+   IT_FUNCTION,          // functions
+   IT_STRUCT,            // struct <tag>
+   IT_UNION,             // union <tag>
+   IT_ENUM,              // enum <tag>
+   IT_ENUM_VAL,          // values of an enum
+   IT_CLASS,             // class
+   IT_STRUCT_TYPE,       // typedef alias of a struct
+   IT_UNION_TYPE,        // typedef alias of a union
+   IT_ENUM_TYPE,         // typedef alias of an enum
+   IT_FUNCTION_TYPE,     // typedef of a function or function ptr
+   IT_TYPE,              // a type
+   IT_VAR,               // a variable
 } id_type;
 
 typedef enum
@@ -91,6 +58,7 @@ const char *type_strings[] =
    "UNION",
    "ENUM",
    "ENUM_VAL",
+   "CLASS",
    "STRUCT_TYPE",
    "UNION_TYPE",
    "ENUM_TYPE",
@@ -154,17 +122,22 @@ void output(void)
          case CT_FUNC_DEF:
             type = IT_FUNCTION;
             sub_type = IST_DEFINITION;
-            scope = IS_GLOBAL;
+            scope = IS_UNKNOWN;
             break;
          case CT_FUNC_PROTO:
             type = IT_FUNCTION;
             sub_type = IST_DECLARATION;
-            scope = IS_GLOBAL;
+            scope = IS_UNKNOWN;
             break;
          case CT_FUNC_CALL:
             type = IT_FUNCTION;
             sub_type = IST_REFERENCE;
-            scope = IS_GLOBAL;
+            scope = IS_UNKNOWN;
+            break;
+         case CT_FUNC_CLASS:
+            type = IT_FUNCTION;
+            sub_type = IST_UNKNOWN;
+            scope = IS_UNKNOWN;
             break;
          case CT_MACRO_FUNC:
             type = IT_MACRO_FUNCTION;
@@ -192,7 +165,7 @@ void output(void)
                else
                   type = IT_TYPE;
                sub_type = IST_DEFINITION;
-               scope = IS_GLOBAL;
+               scope = IS_UNKNOWN;
             }
             else if (pc->parent_type == CT_STRUCT ||
                      pc->parent_type == CT_UNION ||
@@ -211,8 +184,21 @@ void output(void)
                else if (pc->flags & PCF_REF)
                   sub_type = IST_REFERENCE;
                else
-                  continue;
-               scope = IS_GLOBAL;
+                  sub_type = IST_UNKNOWN;
+               scope = IS_UNKNOWN;
+            }
+            else if (pc->parent_type == CT_CLASS)
+            {
+               type = IT_CLASS;
+               if (pc->flags & PCF_DEF)
+                  sub_type = IST_DEFINITION;
+               else if (pc->flags & PCF_PROTO)
+                  sub_type = IST_DECLARATION;
+               else if (pc->flags & PCF_REF)
+                  sub_type = IST_REFERENCE;
+               else
+                  sub_type = IST_UNKNOWN;
+               scope = IS_UNKNOWN;
             }
             else
             {
@@ -225,7 +211,7 @@ void output(void)
          case CT_FUNC_TYPE:
             type = IT_FUNCTION_TYPE;
             sub_type = IST_DEFINITION;
-            scope = IS_GLOBAL;
+            scope = IS_UNKNOWN;
             break;
          case CT_FUNC_VAR:
          case CT_WORD:
