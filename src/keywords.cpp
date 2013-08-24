@@ -34,6 +34,7 @@ static const chunk_tag_t keywords[] =
    { "@finally",         CT_FINALLY,      LANG_OC | LANG_CPP | LANG_C                                                 },
    { "@implementation",  CT_OC_IMPL,      LANG_OC | LANG_CPP | LANG_C                                                 },
    { "@interface",       CT_OC_INTF,      LANG_OC | LANG_CPP | LANG_C                                                 },
+   { "@interface",       CT_CLASS,        LANG_JAVA                                                                   },
    { "@private",         CT_PRIVATE,      LANG_OC | LANG_CPP | LANG_C                                                 },
    { "@property",        CT_OC_PROPERTY,  LANG_OC | LANG_CPP | LANG_C                                                 },
    { "@protocol",        CT_OC_PROTOCOL,  LANG_OC | LANG_CPP | LANG_C                                                 },
@@ -100,6 +101,7 @@ static const chunk_tag_t keywords[] =
    { "dchar",            CT_TYPE,         LANG_D                                                                      },
    { "debug",            CT_DEBUG,        LANG_D                                                                      },
    { "debugger",         CT_DEBUGGER,     LANG_ECMA                                                                   },
+   { "decltype",         CT_SIZEOF,       LANG_CPP                                                                    },
    { "default",          CT_DEFAULT,      LANG_ALL                                                                    }, // PAWN
    { "define",           CT_PP_DEFINE,    LANG_ALL | FLAG_PP                                                          }, // PAWN
    { "defined",          CT_DEFINED,      LANG_PAWN                                                                   }, // PAWN
