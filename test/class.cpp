@@ -15,6 +15,18 @@ class classa
     int c;
 };
 
+classa::classa(): b(NULL), c(0)
+{
+}
+
+void classa::functiona(int a)
+{
+}
+
+void classa::functionb(std::ostream &b) const
+{
+}
+
 void function(void)
 {
     classa a;
