@@ -255,6 +255,7 @@ struct chunk_t
       pp_level = 0;
       after_tab = false;
       str.clear();
+      scope.clear();
    }
    int len()
    {
@@ -263,6 +264,10 @@ struct chunk_t
    const char *text()
    {
       return str.c_str();
+   }
+   const char *scope_text()
+   {
+      return scope.c_str();
    }
 
    chunk_t      *next;
@@ -285,6 +290,7 @@ struct chunk_t
    int          pp_level;         /* nest level in #if stuff */
    bool         after_tab;        /* whether this token was after a tab */
    unc_text     str;              /* the token text */
+   unc_text     scope;            /* the scope of the token */
 };
 
 enum

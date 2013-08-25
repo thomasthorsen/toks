@@ -23,6 +23,7 @@ src/md5.cpp
 src/output.cpp
 src/parse_frame.cpp
 src/punctuators.cpp
+src/scope.cpp
 src/tokenize_cleanup.cpp
 src/tokenize.cpp
 src/toks.cpp

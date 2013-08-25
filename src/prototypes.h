@@ -125,6 +125,12 @@ bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEnco
 void encode_utf8(int ch, vector<UINT8>& res);
 
 
+/*
+ * scope.cpp
+ */
+void assign_scope(void);
+
+
 /* Options we couldn't quite get rid of */
 #define UO_input_tab_size 8
 #define UO_indent_else_if false

@@ -3334,18 +3334,7 @@ static void mark_function(chunk_t *pc)
    /* Find the brace pair and set the parent */
    if (pc->type == CT_FUNC_DEF)
    {
-      tmp = chunk_get_next_ncnl(paren_close);
-      while ((tmp != NULL) &&
-             (tmp->type != CT_BRACE_OPEN))
-      {
-         //LOG_FMT(LNOTE, "%s: set parent to FUNC_DEF on line %d: [%s]\n", __func__, tmp->orig_line, tmp->str.c_str());
-         tmp->parent_type = CT_FUNC_DEF;
-         if (!chunk_is_semicolon(tmp))
-         {
-            tmp->flags |= PCF_OLD_FCN_PARAMS;
-         }
-         tmp = chunk_get_next_ncnl(tmp);
-      }
+      tmp = chunk_get_next_ncnl(paren_close, CNAV_PREPROC);
       if ((tmp != NULL) && (tmp->type == CT_BRACE_OPEN))
       {
          tmp->parent_type = CT_FUNC_DEF;

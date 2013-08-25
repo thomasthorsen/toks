@@ -543,6 +543,11 @@ static void toks_start(const deque<int>& data)
     * Look at all colons ':' and mark labels, :? sequences, etc.
     */
    combine_labels();
+
+   /**
+    * Assign scope information
+    */
+   assign_scope();
 }
 
 
