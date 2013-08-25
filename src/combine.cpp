@@ -2436,20 +2436,24 @@ static chunk_t *fix_var_def(chunk_t *start)
       idx = cs.Len() - 2;
       while (idx > 0)
       {
-         tmp_pc = cs.Get(idx)->m_pc;
-         if ((tmp_pc->type != CT_DC_MEMBER) &&
-             (tmp_pc->type != CT_MEMBER))
+         chunk_t *tmp_pc1 = cs.Get(idx)->m_pc;
+         if ((tmp_pc1->type != CT_DC_MEMBER) &&
+             (tmp_pc1->type != CT_MEMBER))
          {
             break;
          }
          idx--;
-         tmp_pc = cs.Get(idx)->m_pc;
-         if ((tmp_pc->type != CT_WORD) &&
-             (tmp_pc->type != CT_TYPE))
+         chunk_t *tmp_pc2 = cs.Get(idx)->m_pc;
+         if ((tmp_pc2->type != CT_WORD) &&
+             (tmp_pc2->type != CT_TYPE))
          {
             break;
          }
-         make_type(tmp_pc);
+         if (tmp_pc1->type == CT_DC_MEMBER)
+         {
+            LOG_FMT(LFVD, " make_type %s[%s]\n", tmp_pc2->str.c_str(), get_token_name(tmp_pc2->type));
+            make_type(tmp_pc2);
+         }
          idx--;
       }
       ref_idx = idx + 1;

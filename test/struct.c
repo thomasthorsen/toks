@@ -54,6 +54,9 @@ void function(void)
     struct struh {int a; int b;} h1, *h2; /* DEF */
     struct struh h3; /* REF */
     struct {int a; int b;} i1, *i2;
+
+    a2.a = 5;
+    f1.e.a = a2.a;
 }
 
 typedef struct strui /* DEF */

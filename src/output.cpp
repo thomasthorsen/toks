@@ -202,7 +202,7 @@ void output(void)
             }
             else
             {
-               type = IT_UNKNOWN;
+               type = IT_TYPE;
                sub_type = IST_REFERENCE;
                scope = IS_UNKNOWN;
             }
@@ -238,7 +238,7 @@ void output(void)
                }
                else
                {
-                  type = IT_UNKNOWN;
+                  type = IT_VAR;
                   sub_type = IST_REFERENCE;
                   scope = IS_UNKNOWN;
                }
