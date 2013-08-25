@@ -213,6 +213,7 @@ void output(void)
             sub_type = IST_DEFINITION;
             scope = IS_UNKNOWN;
             break;
+         case CT_FUNC_CTOR_VAR:
          case CT_FUNC_VAR:
          case CT_WORD:
          {
