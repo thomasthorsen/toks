@@ -254,7 +254,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
 {
    chunk_t *tmp;
 
-   // LOG_FMT(LSYS, " %3d > ['%s' %s] ['%s' %s] ['%s' %s]\n",
+   // LOG_FMT(LNOTE, " %3d > ['%s' %s] ['%s' %s] ['%s' %s]\n",
    //         pc->orig_line,
    //         prev->str.c_str(), get_token_name(prev->type),
    //         pc->str.c_str(), get_token_name(pc->type),
@@ -2970,11 +2970,11 @@ static void mark_function(chunk_t *pc)
       if ((prev != NULL) && (prev->type == CT_DC_MEMBER))
       {
          prev = chunk_get_prev_ncnlnp(prev);
-         // LOG_FMT(LSYS, "%s: prev1 = %s (%s)\n", __func__,
+         // LOG_FMT(LNOTE, "%s: prev1 = %s (%s)\n", __func__,
          //         get_token_name(prev->type), prev->str.c_str());
          prev = skip_template_prev(prev);
          prev = skip_attribute_prev(prev);
-         // LOG_FMT(LSYS, "%s: prev2 = %s [%d](%s) pc = %s [%d](%s)\n", __func__,
+         // LOG_FMT(LNOTE, "%s: prev2 = %s [%d](%s) pc = %s [%d](%s)\n", __func__,
          //         get_token_name(prev->type), prev->len, prev->str.c_str(),
          //         get_token_name(pc->type), pc->len, pc->str.c_str());
          if ((prev != NULL) && ((prev->type == CT_WORD) || (prev->type == CT_TYPE)))
@@ -3334,7 +3334,7 @@ static void mark_function(chunk_t *pc)
       while ((tmp != NULL) &&
              (tmp->type != CT_BRACE_OPEN))
       {
-         //LOG_FMT(LSYS, "%s: set parent to FUNC_DEF on line %d: [%s]\n", __func__, tmp->orig_line, tmp->str.c_str());
+         //LOG_FMT(LNOTE, "%s: set parent to FUNC_DEF on line %d: [%s]\n", __func__, tmp->orig_line, tmp->str.c_str());
          tmp->parent_type = CT_FUNC_DEF;
          if (!chunk_is_semicolon(tmp))
          {
@@ -3631,7 +3631,7 @@ static void mark_struct_union_body(chunk_t *start)
           (pc->level >= start->level) &&
           !((pc->level == start->level) && (pc->type == CT_BRACE_CLOSE)))
    {
-      // LOG_FMT(LSYS, "%s: %d:%d %s:%s\n", __func__, pc->orig_line, pc->orig_col,
+      // LOG_FMT(LNOTE, "%s: %d:%d %s:%s\n", __func__, pc->orig_line, pc->orig_col,
       //         pc->str.c_str(), get_token_name(pc->parent_type));
       if ((pc->type == CT_BRACE_OPEN) ||
           (pc->type == CT_BRACE_CLOSE) ||

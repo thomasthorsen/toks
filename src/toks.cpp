@@ -207,21 +207,16 @@ int main(int argc, char *argv[])
        ((p_arg = arg.Param("--log")) != NULL))
    {
       logmask_from_string(p_arg, mask);
+      log_set_mask(mask);
    }
-   else
-   {
-      logmask_from_string("", mask);
-   }
-   log_set_mask(mask);
 
    if (arg.Present("--decode"))
    {
-      logmask_from_string("0", mask);
-      log_set_mask(mask);
+      log_set_mask(LNOTE);
       idx = 1;
       while ((p_arg = arg.Unused(idx)) != NULL)
       {
-         log_pcf_flags(LSYS, strtoul(p_arg, NULL, 16));
+         log_pcf_flags(LNOTE, strtoul(p_arg, NULL, 16));
       }
       return EXIT_SUCCESS;
    }
@@ -274,8 +269,8 @@ int main(int argc, char *argv[])
    /* Grab the output override */
    output_file = arg.Param("-o");
 
-   LOG_FMT(LDATA, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
-   LOG_FMT(LDATA, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
+   LOG_FMT(LNOTE, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
+   LOG_FMT(LNOTE, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
 
    /*
     *  Done parsing args
@@ -305,7 +300,7 @@ int main(int argc, char *argv[])
       cpd.filename = "stdin";
 
       /* Done reading from stdin */
-      LOG_FMT(LSYS, "Parsing: %d bytes (%d chars) from stdin as language %s\n",
+      LOG_FMT(LNOTE, "Parsing: %d bytes (%d chars) from stdin as language %s\n",
               (int)fm.raw.size(), (int)fm.data.size(),
               language_to_string(cpd.lang_flags));
 
@@ -499,7 +494,7 @@ static void do_source_file(const char *filename_in, bool dump)
       return;
    }
 
-   LOG_FMT(LSYS, "Parsing: %s as language %s\n",
+   LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
            filename_in, language_to_string(cpd.lang_flags));
 
    cpd.filename = filename_in;

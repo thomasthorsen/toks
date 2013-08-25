@@ -20,7 +20,7 @@
 /** Private log structure */
 struct log_buf
 {
-   log_buf() : log_file(0), sev(LSYS), in_log(0), buf_len(0), show_hdr(false)
+   log_buf() : log_file(0), sev(LERR), in_log(0), buf_len(0), show_hdr(false)
    {
    }
 
@@ -37,17 +37,15 @@ static struct log_buf g_log;
 
 /**
  * Initializes the log subsystem - call this first.
- * This function sets the log stream and enables the top 3 sevs (0-2).
+ * This function sets the log stream and enables the top severity (LERR)
  *
  * @param log_file   NULL for stderr or the FILE stream for logs.
  */
 void log_init(FILE *log_file)
 {
-   /* set the top 3 severities */
+   /* set the top severity */
    logmask_set_all(g_log.mask, false);
-   log_set_sev(LSYS, true);
    log_set_sev(LERR, true);
-   log_set_sev(LWARN, true);
 
    g_log.log_file = (log_file != NULL) ? log_file : stderr;
 }

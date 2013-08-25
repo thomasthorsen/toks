@@ -150,7 +150,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
    chunk_t *pc;
    chunk_t *fcn = NULL;
 
-   //LOG_FMT(LSYS, "%s: %d - %s\n", __func__,
+   //LOG_FMT(LNOTE, "%s: %d - %s\n", __func__,
    //        start->orig_line, start->str.c_str());
 
    if ((start->type == CT_NEW) ||
@@ -189,7 +189,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
 
    if (fcn != NULL)
    {
-      //LOG_FMT(LSYS, "FUNCTION: %s\n", fcn->str.c_str());
+      //LOG_FMT(LNOTE, "FUNCTION: %s\n", fcn->str.c_str());
       return(pawn_mark_function0(start, fcn));
    }
 
@@ -199,7 +199,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
       return(pc);
    }
 
-   //LOG_FMT(LSYS, "%s: Don't understand line %d, starting with '%s' [%s]\n",
+   //LOG_FMT(LNOTE, "%s: Don't understand line %d, starting with '%s' [%s]\n",
    //        __func__, start->orig_line, start->str.c_str(), get_token_name(start->type));
    return(start);
 }
