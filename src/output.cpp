@@ -85,6 +85,18 @@ const char *scope_strings[] =
    "<function>",
 };
 
+static id_sub_type sub_type_from_flags(chunk_t *pc)
+{
+   if (pc->flags & PCF_DEF)
+      return IST_DEFINITION;
+   else if (pc->flags & PCF_PROTO)
+      return IST_DECLARATION;
+   else if (pc->flags & PCF_REF)
+      return IST_REFERENCE;
+   else
+      return IST_UNKNOWN;
+}
+
 void output_identifier(
    const char *file,
    unsigned int line,
@@ -179,27 +191,13 @@ void output(void)
                   type = IT_UNION;
                else if (pc->parent_type == CT_ENUM)
                   type = IT_ENUM;
-               if (pc->flags & PCF_DEF)
-                  sub_type = IST_DEFINITION;
-               else if (pc->flags & PCF_PROTO)
-                  sub_type = IST_DECLARATION;
-               else if (pc->flags & PCF_REF)
-                  sub_type = IST_REFERENCE;
-               else
-                  sub_type = IST_UNKNOWN;
+               sub_type = sub_type_from_flags(pc);
                scope = IS_UNKNOWN;
             }
             else if (pc->parent_type == CT_CLASS)
             {
                type = IT_CLASS;
-               if (pc->flags & PCF_DEF)
-                  sub_type = IST_DEFINITION;
-               else if (pc->flags & PCF_PROTO)
-                  sub_type = IST_DECLARATION;
-               else if (pc->flags & PCF_REF)
-                  sub_type = IST_REFERENCE;
-               else
-                  sub_type = IST_UNKNOWN;
+               sub_type = sub_type_from_flags(pc);
                scope = IS_UNKNOWN;
             }
             else
@@ -249,14 +247,7 @@ void output(void)
             else if (pc->parent_type == CT_NAMESPACE)
             {
                type = IT_NAMESPACE;
-               if (pc->flags & PCF_DEF)
-                  sub_type = IST_DEFINITION;
-               else if (pc->flags & PCF_PROTO)
-                  sub_type = IST_DECLARATION;
-               else if (pc->flags & PCF_REF)
-                  sub_type = IST_REFERENCE;
-               else
-                  sub_type = IST_UNKNOWN;
+               sub_type = sub_type_from_flags(pc);
                scope = IS_UNKNOWN;
             }
             break;
