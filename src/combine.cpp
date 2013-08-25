@@ -3572,6 +3572,13 @@ static void mark_namespace(chunk_t *pns)
    }
 
    pc = chunk_get_next_ncnl(pns);
+   if (pc->type == CT_WORD)
+   {
+      if (is_using)
+         pc->flags |= PCF_REF;
+      else
+         pc->flags |= PCF_DEF;
+   }
    while (pc != NULL)
    {
       pc->parent_type = CT_NAMESPACE;

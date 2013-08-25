@@ -30,6 +30,7 @@ typedef enum
    IT_FUNCTION_TYPE,     // typedef of a function or function ptr
    IT_TYPE,              // a type
    IT_VAR,               // a variable
+   IT_NAMESPACE,         // a namespace
 } id_type;
 
 typedef enum
@@ -65,6 +66,7 @@ const char *type_strings[] =
    "FUNCTION_TYPE",
    "TYPE",
    "VAR",
+   "NAMESPACE",
 };
 
 const char *sub_type_strings[] =
@@ -244,8 +246,19 @@ void output(void)
                   scope = IS_UNKNOWN;
                }
             }
-            else
-               continue;
+            else if (pc->parent_type == CT_NAMESPACE)
+            {
+               type = IT_NAMESPACE;
+               if (pc->flags & PCF_DEF)
+                  sub_type = IST_DEFINITION;
+               else if (pc->flags & PCF_PROTO)
+                  sub_type = IST_DECLARATION;
+               else if (pc->flags & PCF_REF)
+                  sub_type = IST_REFERENCE;
+               else
+                  sub_type = IST_UNKNOWN;
+               scope = IS_UNKNOWN;
+            }
             break;
          }
          default:
