@@ -4,18 +4,38 @@ class classa;
 
 class classa
 {
-    public:
+public:
     classa();
+    ~classa();
     void functiona(int a);
     void functionb(std::ostream &b) const;
 
-  private:
+private:
     static const int SIZE = 10;
     int *b;
     int c;
 };
 
+class classb
+{
+public:
+    classb(): b(5)
+    {
+        c = b;
+    }
+    ~classb()
+    {
+    }
+private:
+    int b;
+    int c;
+};
+
 classa::classa(): b(NULL), c(0)
+{
+}
+
+classa::~classa()
 {
 }
 
