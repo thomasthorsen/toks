@@ -3354,18 +3354,17 @@ static void mark_cpp_constructor(chunk_t *pc)
    chunk_t *tmp;
    chunk_t *after;
    chunk_t *var;
-   bool    is_destr = false;
 
    tmp = chunk_get_prev_ncnl(pc);
    if (tmp->type == CT_INV)
    {
       tmp->type       = CT_DESTRUCTOR;
       pc->parent_type = CT_DESTRUCTOR;
-      is_destr        = true;
    }
 
-   LOG_FMT(LFTOR, "FOUND %sSTRUCTOR for %s[%s] ",
-           is_destr ? "DE" : "CON",
+   LOG_FMT(LFTOR, "%d:%d FOUND %sSTRUCTOR for %s[%s]",
+           pc->orig_line, pc->orig_col,
+           tmp->type == CT_DESTRUCTOR ? "DE" : "CON",
            pc->str.c_str(), get_token_name(pc->type));
 
    paren_open = skip_template_next(chunk_get_next_ncnl(pc));
@@ -3412,6 +3411,11 @@ static void mark_cpp_constructor(chunk_t *pc)
    if ((tmp != NULL) && (tmp->type == CT_BRACE_OPEN))
    {
       set_paren_parent(tmp, CT_FUNC_CLASS);
+      pc->flags |= PCF_DEF;
+   }
+   else
+   {
+      pc->flags |= PCF_PROTO;
    }
 }
 

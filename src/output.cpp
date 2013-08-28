@@ -130,7 +130,7 @@ void output(void)
             break;
          case CT_FUNC_CLASS:
             type = IT_FUNCTION;
-            sub_type = IST_UNKNOWN;
+            sub_type = sub_type_from_flags(pc);
             break;
          case CT_MACRO_FUNC:
             type = IT_MACRO_FUNCTION;
