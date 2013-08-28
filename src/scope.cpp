@@ -25,7 +25,7 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope)
    {
       if (pc->scope.size() > 0)
       {
-         pc->scope.append(".");
+         pc->scope.append(":");
       }
       pc->scope.append(scope->text());
 
