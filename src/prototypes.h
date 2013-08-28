@@ -117,10 +117,6 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc);
 /*
  * unicode.cpp
  */
-void write_bom(FILE *pf, CharEncoding enc);
-void write_char(FILE *pf, int ch, CharEncoding enc);
-void write_string(FILE *pf, const deque<int>& text, CharEncoding enc);
-void write_string(FILE *pf, const char *ascii_text, CharEncoding enc);
 bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc, bool& has_bom);
 void encode_utf8(int ch, vector<UINT8>& res);
 
