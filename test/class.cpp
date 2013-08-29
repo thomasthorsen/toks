@@ -25,6 +25,8 @@ public:
     }
     ~classb()
     {
+        c = 5;
+        b = 3;
     }
 private:
     int b;
@@ -33,10 +35,12 @@ private:
 
 classa::classa(): b(NULL), c(0)
 {
+    int y;
 }
 
 classa::~classa()
 {
+    int x;
 }
 
 void classa::functiona(int a)

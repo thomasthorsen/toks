@@ -27,6 +27,11 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope)
       {
          pc->scope.append(":");
       }
+      if ((scope->type == CT_FUNC_CLASS) &&
+          (scope->parent_type == CT_DESTRUCTOR))
+      {
+         pc->scope.append("~");
+      }
       pc->scope.append(scope->text());
 
       if (((pc->type == (cur->type + 1)) && ((pc->level == cur->level) || (cur->level < 0))))
@@ -94,6 +99,30 @@ void assign_scope()
          if (next->type == CT_BRACE_OPEN)
          {
             mark_scope(next, pc);
+         }
+      }
+
+      /* Constructor/destructor */
+      if ((pc->type == CT_FUNC_CLASS) &&
+          (pc->flags & (PCF_DEF | PCF_PROTO)))
+      {
+         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+
+         if (next->type == CT_FPAREN_OPEN)
+         {
+            next = mark_scope(next, pc);
+         }
+
+         if (pc->flags & PCF_DEF)
+         {
+            next = chunk_get_next_type(next,
+                                       CT_BRACE_OPEN,
+                                       pc->level,
+                                       CNAV_PREPROC);
+            if (next != NULL)
+            {
+               mark_scope(next, pc);
+            }
          }
       }
 
