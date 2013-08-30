@@ -93,6 +93,12 @@ public:
    void append(const char *ascii_text);
    void append(const value_type& data, int idx = 0, int len = -1);
 
+   void prepend(int ch);
+   void prepend(const unc_text& ref);
+   void prepend(const string& ascii_text);
+   void prepend(const char *ascii_text);
+   void prepend(const value_type& data, int idx = 0, int len = -1);
+
    unc_text& operator +=(int ch)
    {
       append(ch);

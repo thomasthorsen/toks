@@ -235,6 +235,36 @@ void unc_text::append(const value_type& data, int idx, int len)
    append(tmp);
 }
 
+void unc_text::prepend(int ch)
+{
+   m_chars.push_front(ch);
+   m_logok = false;
+}
+
+void unc_text::prepend(const unc_text& ref)
+{
+   m_chars.insert(m_chars.begin(), ref.m_chars.begin(), ref.m_chars.end());
+   m_logok = false;
+}
+
+void unc_text::prepend(const string& ascii_text)
+{
+   unc_text tmp(ascii_text);
+   prepend(tmp);
+}
+
+void unc_text::prepend(const char *ascii_text)
+{
+   unc_text tmp(ascii_text);
+   prepend(tmp);
+}
+
+void unc_text::prepend(const value_type& data, int idx, int len)
+{
+   unc_text tmp(data, idx, len);
+   prepend(tmp);
+}
+
 bool unc_text::startswith(const char *text, int idx) const
 {
    bool match = false;
