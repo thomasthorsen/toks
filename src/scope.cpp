@@ -17,7 +17,7 @@
 #include "unc_ctype.h"
 #include <cassert>
 
-static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope)
+static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope, const char *decoration)
 {
    chunk_t *pc = cur;
 
@@ -27,12 +27,19 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope)
       {
          pc->scope.append(":");
       }
+
       if ((scope->type == CT_FUNC_CLASS) &&
           (scope->parent_type == CT_DESTRUCTOR))
       {
          pc->scope.append("~");
       }
+
       pc->scope.append(scope->text());
+
+      if (decoration != NULL)
+      {
+         pc->scope.append(decoration);
+      }
 
       if (((pc->type == (cur->type + 1)) && ((pc->level == cur->level) || (cur->level < 0))))
       {
@@ -58,7 +65,7 @@ void assign_scope()
 
          if (next->type == CT_BRACE_OPEN)
          {
-            mark_scope(next, pc);
+            mark_scope(next, pc, "{}");
          }
       }
 
@@ -69,7 +76,7 @@ void assign_scope()
 
          if (next->type == CT_FPAREN_OPEN)
          {
-            mark_scope(next, pc);
+            mark_scope(next, pc, "()");
          }
       }
 
@@ -80,14 +87,14 @@ void assign_scope()
 
          if (next->type == CT_FPAREN_OPEN)
          {
-            next = mark_scope(next, pc);
+            next = mark_scope(next, pc, "()");
          }
 
          next = chunk_get_next_ncnl(next, CNAV_PREPROC);
 
          if (next->type == CT_BRACE_OPEN)
          {
-            mark_scope(next, pc);
+            mark_scope(next, pc, "(){}");
          }
       }
 
@@ -98,7 +105,7 @@ void assign_scope()
 
          if (next->type == CT_BRACE_OPEN)
          {
-            mark_scope(next, pc);
+            mark_scope(next, pc, "{}");
          }
       }
 
@@ -110,7 +117,7 @@ void assign_scope()
 
          if (next->type == CT_FPAREN_OPEN)
          {
-            next = mark_scope(next, pc);
+            next = mark_scope(next, pc, "()");
          }
 
          if (pc->flags & PCF_DEF)
@@ -121,7 +128,7 @@ void assign_scope()
                                        CNAV_PREPROC);
             if (next != NULL)
             {
-               mark_scope(next, pc);
+               mark_scope(next, pc, "(){}");
             }
          }
       }
