@@ -7,7 +7,7 @@
  */
 #include "toks_types.h"
 #include "chunk_list.h"
-#include "ChunkStack.h"
+#include "unc_text.h"
 #include "prototypes.h"
 
 #include <cstdio>
@@ -17,7 +17,23 @@
 #include "unc_ctype.h"
 #include <cassert>
 
-static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope, const char *decoration)
+static void mark_resolved_scopes(chunk_t *pc, unc_text& res_scopes)
+{
+   if (res_scopes.size() > 0)
+   {
+      if (pc->scope.size() > 0)
+      {
+         pc->scope.append(":");
+      }
+      pc->scope.append(res_scopes);
+   }
+}
+
+static chunk_t *mark_scope(
+   chunk_t *cur,
+   chunk_t *scope,
+   const char *decoration,
+   unc_text& res_scopes)
 {
    chunk_t *pc = cur;
 
@@ -25,6 +41,12 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope, const char *decoration)
    {
       if (pc->scope.size() > 0)
       {
+         pc->scope.append(":");
+      }
+
+      if (res_scopes.size() > 0)
+      {
+         pc->scope.append(res_scopes);
          pc->scope.append(":");
       }
 
@@ -41,7 +63,9 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope, const char *decoration)
          pc->scope.append(decoration);
       }
 
-      if (((pc->type == (cur->type + 1)) && ((pc->level == cur->level) || (cur->level < 0))))
+      if (((pc->type == (cur->type + 1)) &&
+          ((pc->level == cur->level) ||
+          (cur->level < 0))))
       {
          break;
       }
@@ -52,72 +76,121 @@ static chunk_t *mark_scope(chunk_t *cur, chunk_t *scope, const char *decoration)
    return pc;
 }
 
+
+static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
+{
+   chunk_t *prev = chunk_get_prev_ncnl(scope, CNAV_PREPROC);
+   bool first = true;
+
+   res_scopes.clear();
+
+   if ((scope->type == CT_FUNC_CLASS) &&
+       (scope->parent_type == CT_DESTRUCTOR))
+   {
+      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+   }
+
+   while ((prev != NULL) && (prev->type == CT_DC_MEMBER))
+   {
+      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+      if (prev->type != CT_TYPE)
+         break;
+      if (!first)
+      {
+         res_scopes.prepend(":");
+      }
+      first = false;
+      res_scopes.prepend(prev->str);
+      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+   }
+}
+
+
 void assign_scope()
 {
    chunk_t *pc = chunk_get_head();
+   unc_text res_scopes;
 
    while (pc != NULL)
    {
+      get_resolved_scopes(pc, res_scopes);
+
       /* Namespace */
-      if ((pc->type == CT_WORD) && (pc->parent_type == CT_NAMESPACE) && (pc->flags & PCF_DEF))
+      if ((pc->type == CT_WORD) &&
+          (pc->parent_type == CT_NAMESPACE) &&
+          (pc->flags & PCF_DEF))
       {
          chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+         mark_resolved_scopes(pc, res_scopes);
+
          if (next->type == CT_BRACE_OPEN)
          {
-            mark_scope(next, pc, "{}");
+            mark_scope(next, pc, NULL, res_scopes);
          }
       }
 
       /* Function prototype */
-      if (pc->type == CT_FUNC_PROTO)
+      else if (pc->type == CT_FUNC_PROTO)
       {
          chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+         mark_resolved_scopes(pc, res_scopes);
+
          if (next->type == CT_FPAREN_OPEN)
          {
-            mark_scope(next, pc, "()");
+            mark_scope(next, pc, "()", res_scopes);
          }
       }
 
       /* Function definition */
-      if (pc->type == CT_FUNC_DEF)
+      else if (pc->type == CT_FUNC_DEF)
       {
          chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+         mark_resolved_scopes(pc, res_scopes);
+
          if (next->type == CT_FPAREN_OPEN)
          {
-            next = mark_scope(next, pc, "()");
+            next = mark_scope(next, pc, "()", res_scopes);
          }
 
-         next = chunk_get_next_ncnl(next, CNAV_PREPROC);
-
-         if (next->type == CT_BRACE_OPEN)
+         next = chunk_get_next_type(next,
+                                    CT_BRACE_OPEN,
+                                    pc->level,
+                                    CNAV_PREPROC);
+         if (next != NULL)
          {
-            mark_scope(next, pc, "(){}");
+            mark_scope(next, pc, "{}", res_scopes);
          }
       }
 
       /* Class definition */
-      if ((pc->type == CT_TYPE) && (pc->parent_type == CT_CLASS) && (pc->flags & PCF_DEF))
+      else if ((pc->type == CT_TYPE) &&
+               (pc->parent_type == CT_CLASS) &&
+               (pc->flags & PCF_DEF))
       {
          chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+         mark_resolved_scopes(pc, res_scopes);
+
          if (next->type == CT_BRACE_OPEN)
          {
-            mark_scope(next, pc, "{}");
+            mark_scope(next, pc, NULL, res_scopes);
          }
       }
 
       /* Constructor/destructor */
-      if ((pc->type == CT_FUNC_CLASS) &&
-          (pc->flags & (PCF_DEF | PCF_PROTO)))
+      else if ((pc->type == CT_FUNC_CLASS) &&
+               (pc->flags & (PCF_DEF | PCF_PROTO)))
       {
          chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+         mark_resolved_scopes(pc, res_scopes);
+
          if (next->type == CT_FPAREN_OPEN)
          {
-            next = mark_scope(next, pc, "()");
+            next = mark_scope(next, pc, "()", res_scopes);
          }
 
          if (pc->flags & PCF_DEF)
@@ -128,9 +201,14 @@ void assign_scope()
                                        CNAV_PREPROC);
             if (next != NULL)
             {
-               mark_scope(next, pc, "(){}");
+               mark_scope(next, pc, "{}", res_scopes);
             }
          }
+      }
+
+      else if (pc->flags & (PCF_DEF | PCF_PROTO))
+      {
+         mark_resolved_scopes(pc, res_scopes);
       }
 
       if (pc->scope.size() == 0)
