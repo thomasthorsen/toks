@@ -8,10 +8,11 @@ namespace first /* DEF */
     namespace second /* DEF */
     {
         double var = 3.1416;
+        void function(int x);
     }
 }
 
-void function()
+void first::second::function(int x)
 {
     int a = first::var;
     double b = second::var;
