@@ -1159,7 +1159,7 @@ static void mark_function_return_type(chunk_t *the_type, chunk_t *pc, c_token_t 
 
          if ((pc->type == CT_QUALIFIER) &&
              (the_type->flags & PCF_VAR_DEF) &&
-             (strcmp(pc->text(), "extern") == 0))
+             chunk_is_str(pc, "extern", 6))
          {
              the_type->flags &= ~PCF_VAR_DEF;
              the_type->flags |= PCF_VAR_DECL;
@@ -2395,7 +2395,8 @@ static chunk_t *fix_var_def(chunk_t *start)
       LOG_FMT(LFVD, " %s[%s]", pc->str.c_str(), get_token_name(pc->type));
       cs.Push_Back(pc);
 
-      if ((pc->type == CT_QUALIFIER) && (strcmp(pc->str.c_str(), "extern") == 0))
+      if ((pc->type == CT_QUALIFIER) &&
+          chunk_is_str(pc, "extern", 6))
       {
           flags = PCF_VAR_DECL;
       }
