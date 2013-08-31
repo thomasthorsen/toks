@@ -3,7 +3,7 @@ extern int globvara; /* DECL */
 
 int globvara; /* DEF */
 
-int globvarb = 1234; /* DEF */
+static int globvarb = 1234; /* DEF */
 
 int globarraya[1234]; /* DEF */
 
