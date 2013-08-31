@@ -148,7 +148,7 @@ struct parse_frame
 #define PCF_KEYWORD            PCF_BIT(33)  /* is a recognized keyword */
 #define PCF_LONG_BLOCK         PCF_BIT(34)  /* the block is 'long' by some measure */
 #define PCF_OC_BOXED           PCF_BIT(35)  /* inside OC boxed expression */
-#define PCF_KEEP_BRACE         PCF_BIT(36)  /* do not remove brace */
+#define PCF_STATIC             PCF_BIT(36)  /* static storage class */
 #define PCF_OC_RTYPE           PCF_BIT(37)  /* inside OC return type */
 #define PCF_OC_ATYPE           PCF_BIT(38)  /* inside OC arg type */
 #define PCF_DEF                PCF_BIT(39)  /* struct/union/enum/class/namespace definition */
@@ -198,7 +198,7 @@ static const char *pcf_names[] =
    "KEYWORD",           // 33
    "LONG_BLOCK",        // 34
    "OC_BOXED",          // 35
-   "KEEP_BRACE",        // 36
+   "STATIC",            // 36
    "OC_RTYPE",          // 37
    "OC_ATYPE",          // 38
    "DEF",               // 39

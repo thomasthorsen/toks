@@ -1157,12 +1157,20 @@ static void mark_function_return_type(chunk_t *the_type, chunk_t *pc, c_token_t 
          }
          LOG_FMT(LFCNR, " [%s|%s]", pc->text(), get_token_name(pc->type));
 
-         if ((pc->type == CT_QUALIFIER) &&
-             (the_type->flags & PCF_VAR_DEF) &&
-             chunk_is_str(pc, "extern", 6))
+         if (pc->type == CT_QUALIFIER)
          {
-             the_type->flags &= ~PCF_VAR_DEF;
-             the_type->flags |= PCF_VAR_DECL;
+            if (chunk_is_str(pc, "extern", 6))
+            {
+               if (the_type->flags & PCF_VAR_DEF)
+               {
+                  the_type->flags &= ~PCF_VAR_DEF;
+                  the_type->flags |= PCF_VAR_DECL;
+               }
+            }
+            else if (chunk_is_str(pc, "static", 6))
+            {
+               the_type->flags |= PCF_STATIC;
+            }
          }
 
          if (parent_type != CT_NONE)
@@ -2395,10 +2403,17 @@ static chunk_t *fix_var_def(chunk_t *start)
       LOG_FMT(LFVD, " %s[%s]", pc->str.c_str(), get_token_name(pc->type));
       cs.Push_Back(pc);
 
-      if ((pc->type == CT_QUALIFIER) &&
-          chunk_is_str(pc, "extern", 6))
+      if (pc->type == CT_QUALIFIER)
       {
-          flags = PCF_VAR_DECL;
+         if (chunk_is_str(pc, "extern", 6))
+         {
+            flags &= PCF_VAR_DEF;
+            flags |= PCF_VAR_DECL;
+         }
+         else if (chunk_is_str(pc, "static", 6))
+         {
+            flags |= PCF_STATIC;
+         }
       }
 
       pc = chunk_get_next_ncnl(pc);

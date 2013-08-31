@@ -218,7 +218,14 @@ void assign_scope()
 
       if (pc->scope.size() == 0)
       {
-         pc->scope.set("<global>");
+         if (pc->flags & PCF_STATIC)
+         {
+            pc->scope.set("<local>");
+         }
+         else
+         {
+            pc->scope.set("<global>");
+         }
       }
 
       pc = chunk_get_next(pc);
