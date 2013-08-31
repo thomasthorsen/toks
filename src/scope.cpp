@@ -115,86 +115,66 @@ void assign_scope()
    {
       get_resolved_scopes(pc, res_scopes);
 
-      /* Namespace */
-      if ((pc->type == CT_WORD) &&
-          (pc->parent_type == CT_NAMESPACE) &&
-          (pc->flags & PCF_DEF))
+      switch (pc->type)
       {
-         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
-
-         mark_resolved_scopes(pc, res_scopes);
-
-         if (next->type == CT_BRACE_OPEN)
+         case CT_WORD:
          {
-            mark_scope(next, pc, NULL, res_scopes);
+            if ((pc->parent_type != CT_NAMESPACE) &&
+                (pc->flags & PCF_DEF))
+            {
+               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+
+               mark_resolved_scopes(pc, res_scopes);
+
+               if (next->type == CT_BRACE_OPEN)
+               {
+                  mark_scope(next, pc, NULL, res_scopes);
+               }
+            }
+            break;
          }
-      }
-
-      /* Function prototype */
-      else if (pc->type == CT_FUNC_PROTO)
-      {
-         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
-
-         mark_resolved_scopes(pc, res_scopes);
-
-         if (next->type == CT_FPAREN_OPEN)
+         case CT_TYPE:
          {
-            mark_scope(next, pc, "()", res_scopes);
+            if (((pc->parent_type == CT_CLASS) ||
+                 (pc->parent_type == CT_STRUCT) ||
+                 (pc->parent_type == CT_UNION) ||
+                 (pc->parent_type == CT_ENUM)) &&
+                (pc->flags & PCF_DEF))
+            {
+               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+
+               mark_resolved_scopes(pc, res_scopes);
+
+               if (next->type == CT_BRACE_OPEN)
+               {
+                  mark_scope(next, pc, NULL, res_scopes);
+               }
+            }
+            break;
          }
-      }
-
-      /* Function definition */
-      else if (pc->type == CT_FUNC_DEF)
-      {
-         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
-
-         mark_resolved_scopes(pc, res_scopes);
-
-         if (next->type == CT_FPAREN_OPEN)
+         case CT_FUNC_PROTO:
          {
-            next = mark_scope(next, pc, "()", res_scopes);
+            chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+
+            mark_resolved_scopes(pc, res_scopes);
+
+            if (next->type == CT_FPAREN_OPEN)
+            {
+               mark_scope(next, pc, "()", res_scopes);
+            }
+            break;
          }
-
-         next = chunk_get_next_type(next,
-                                    CT_BRACE_OPEN,
-                                    pc->level,
-                                    CNAV_PREPROC);
-         if (next != NULL)
+         case CT_FUNC_DEF:
          {
-            mark_scope(next, pc, "{}", res_scopes);
-         }
-      }
+            chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
-      /* Class definition */
-      else if ((pc->type == CT_TYPE) &&
-               (pc->parent_type == CT_CLASS) &&
-               (pc->flags & PCF_DEF))
-      {
-         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+            mark_resolved_scopes(pc, res_scopes);
 
-         mark_resolved_scopes(pc, res_scopes);
+            if (next->type == CT_FPAREN_OPEN)
+            {
+               next = mark_scope(next, pc, "()", res_scopes);
+            }
 
-         if (next->type == CT_BRACE_OPEN)
-         {
-            mark_scope(next, pc, NULL, res_scopes);
-         }
-      }
-
-      /* Constructor/destructor */
-      else if ((pc->type == CT_FUNC_CLASS) &&
-               (pc->flags & (PCF_DEF | PCF_PROTO)))
-      {
-         chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
-
-         mark_resolved_scopes(pc, res_scopes);
-
-         if (next->type == CT_FPAREN_OPEN)
-         {
-            next = mark_scope(next, pc, "()", res_scopes);
-         }
-
-         if (pc->flags & PCF_DEF)
-         {
             next = chunk_get_next_type(next,
                                        CT_BRACE_OPEN,
                                        pc->level,
@@ -203,12 +183,37 @@ void assign_scope()
             {
                mark_scope(next, pc, "{}", res_scopes);
             }
+            break;
          }
-      }
+         case CT_FUNC_CLASS:
+         {
+            if (pc->flags & (PCF_DEF | PCF_PROTO))
+            {
+               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
-      else if (pc->flags & (PCF_DEF | PCF_PROTO))
-      {
-         mark_resolved_scopes(pc, res_scopes);
+               mark_resolved_scopes(pc, res_scopes);
+
+               if (next->type == CT_FPAREN_OPEN)
+               {
+                  next = mark_scope(next, pc, "()", res_scopes);
+               }
+
+               if (pc->flags & PCF_DEF)
+               {
+                  next = chunk_get_next_type(next,
+                                             CT_BRACE_OPEN,
+                                             pc->level,
+                                             CNAV_PREPROC);
+                  if (next != NULL)
+                  {
+                     mark_scope(next, pc, "{}", res_scopes);
+                  }
+               }
+            }
+            break;
+         }
+         default:
+            break;
       }
 
       if (pc->scope.size() == 0)
