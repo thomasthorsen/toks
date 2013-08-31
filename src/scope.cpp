@@ -236,6 +236,10 @@ void assign_scope()
          {
             pc->scope.set("<local>");
          }
+         else if (pc->flags & PCF_IN_PREPROC)
+         {
+            pc->scope.set("<preproc>");
+         }
          else
          {
             pc->scope.set("<global>");
