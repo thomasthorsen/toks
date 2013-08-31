@@ -29,43 +29,50 @@ static void mark_resolved_scopes(chunk_t *pc, unc_text& res_scopes)
    }
 }
 
-static chunk_t *mark_scope(
-   chunk_t *cur,
-   chunk_t *scope,
-   const char *decoration,
-   unc_text& res_scopes)
+static void mark_scope_single(chunk_t *pc,
+                              chunk_t *scope,
+                              const char *decoration,
+                              unc_text& res_scopes)
 {
-   chunk_t *pc = cur;
+   if (pc->scope.size() > 0)
+   {
+      pc->scope.append(":");
+   }
+
+   if (res_scopes.size() > 0)
+   {
+      pc->scope.append(res_scopes);
+      pc->scope.append(":");
+   }
+
+   if ((scope->type == CT_FUNC_CLASS) &&
+       (scope->parent_type == CT_DESTRUCTOR))
+   {
+      pc->scope.append("~");
+   }
+
+   pc->scope.append(scope->text());
+
+   if (decoration != NULL)
+   {
+      pc->scope.append(decoration);
+   }
+}
+
+static chunk_t *mark_scope(chunk_t *popen,
+                           chunk_t *scope,
+                           const char *decoration,
+                           unc_text& res_scopes)
+{
+   chunk_t *pc = popen;
 
    while (pc != NULL)
    {
-      if (pc->scope.size() > 0)
-      {
-         pc->scope.append(":");
-      }
+      mark_scope_single(pc, scope, decoration, res_scopes);
 
-      if (res_scopes.size() > 0)
-      {
-         pc->scope.append(res_scopes);
-         pc->scope.append(":");
-      }
-
-      if ((scope->type == CT_FUNC_CLASS) &&
-          (scope->parent_type == CT_DESTRUCTOR))
-      {
-         pc->scope.append("~");
-      }
-
-      pc->scope.append(scope->text());
-
-      if (decoration != NULL)
-      {
-         pc->scope.append(decoration);
-      }
-
-      if (((pc->type == (cur->type + 1)) &&
-          ((pc->level == cur->level) ||
-          (cur->level < 0))))
+      if (((pc->type == (popen->type + 1)) &&
+          ((pc->level == popen->level) ||
+          (popen->level < 0))))
       {
          break;
       }
@@ -175,11 +182,15 @@ void assign_scope()
                next = mark_scope(next, pc, "()", res_scopes);
             }
 
-            next = chunk_get_next_type(next,
-                                       CT_BRACE_OPEN,
-                                       pc->level,
-                                       CNAV_PREPROC);
-            if (next != NULL)
+            next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+
+            /* Skip const/volatile */
+            while ((next != NULL) && (next->type == CT_QUALIFIER))
+            {
+               next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+            }
+
+            if ((next != NULL) && (next->type == CT_BRACE_OPEN))
             {
                mark_scope(next, pc, "{}", res_scopes);
             }
@@ -200,11 +211,14 @@ void assign_scope()
 
                if (pc->flags & PCF_DEF)
                {
-                  next = chunk_get_next_type(next,
-                                             CT_BRACE_OPEN,
-                                             pc->level,
-                                             CNAV_PREPROC);
-                  if (next != NULL)
+                  /* Skip default args (while marking them) */
+                  while ((next != NULL) && (next->flags & PCF_IN_CONST_ARGS))
+                  {
+                     mark_scope_single(next, pc, "()", res_scopes);
+                     next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+                  }
+
+                  if ((next != NULL) && (next->type == CT_BRACE_OPEN))
                   {
                      mark_scope(next, pc, "{}", res_scopes);
                   }
