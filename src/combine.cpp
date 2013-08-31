@@ -3408,7 +3408,7 @@ static void mark_cpp_constructor(chunk_t *pc)
       tmp         = chunk_get_next_ncnl(tmp);
       if (chunk_is_str(tmp, ":", 1) && (tmp->level == paren_open->level))
       {
-         tmp->type = CT_CLASS_COLON;
+         tmp->type = CT_CONSTR_COLON;
          hit_colon = true;
       }
       if (hit_colon &&
@@ -3493,6 +3493,7 @@ static void mark_class_ctor(chunk_t *start)
    }
 
    /* Find the open brace, abort on semicolon */
+   int flags = 0;
    while ((pc != NULL) && (pc->type != CT_BRACE_OPEN))
    {
       LOG_FMT(LFTOR, " [%s]", pc->str.c_str());
@@ -3500,6 +3501,7 @@ static void mark_class_ctor(chunk_t *start)
       if (chunk_is_str(pc, ":", 1))
       {
          pc->type = CT_CLASS_COLON;
+         flags |= PCF_IN_CLASS_BASE;
          LOG_FMT(LFTOR, "%s: class colon on line %d\n",
                  __func__, pc->orig_line);
       }
@@ -3511,6 +3513,7 @@ static void mark_class_ctor(chunk_t *start)
          pclass->flags |= PCF_PROTO;
          return;
       }
+      pc->flags |= flags;
       pc = chunk_get_next_ncnl(pc, CNAV_PREPROC);
    }
 
