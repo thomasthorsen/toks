@@ -1334,11 +1334,7 @@ void tokenize(const deque<int>& data)
          continue;
       }
 
-      if (chunk.type == CT_NEWLINE)
-      {
-         chunk.str.clear();
-      }
-      else if (chunk.type == CT_NL_CONT)
+      if (chunk.type == CT_NL_CONT)
       {
          chunk.str       = "\\\n";
       }
