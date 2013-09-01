@@ -38,7 +38,6 @@ struct cp_data cpd;
 static int language_from_tag(const char *tag);
 static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
-static bool read_stdin(file_mem& fm);
 static void toks_start(const deque<int>& data);
 static void toks_end();
 static void toks_file(const file_mem& fm, bool dump);
@@ -113,15 +112,8 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Usage:\n"
            "%s [options] [files ...]\n"
            "\n"
-           "If no input files are specified, the input is read from stdin\n"
-           "If reading from stdin, you should specify the language using -l\n"
-           "\n"
-           "The output is dumped to stdout, unless redirected with -o FILE.\n"
-           "\n"
-           "Errors are always dumped to stderr\n"
-           "\n"
            "Basic Options:\n"
-           " -o FILE      : Redirect stdout to FILE\n"
+           " -o FILE      : Redirect output to FILE\n"
            " -F FILE      : read files to process from FILE, one filename per line (- is stdin)\n"
            " files        : files to process (can be combined with -F)\n"
            " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
@@ -284,32 +276,11 @@ int main(int argc, char *argv[])
 
    if ((source_list == NULL) && (p_arg == NULL))
    {
-      /* no input specified, so use stdin */
-      if (cpd.lang_flags == 0)
-      {
-         cpd.lang_flags = LANG_C;
-      }
-
-      file_mem fm;
-      if (!read_stdin(fm))
-      {
-         LOG_FMT(LERR, "Failed to read stdin\n");
-         return(100);
-      }
-
-      cpd.filename = "stdin";
-
-      /* Done reading from stdin */
-      LOG_FMT(LNOTE, "Parsing: %d bytes (%d chars) from stdin as language %s\n",
-              (int)fm.raw.size(), (int)fm.data.size(),
-              language_to_string(cpd.lang_flags));
-
-      toks_file(fm, dump);
+      /* no input specified */
+      usage_exit(NULL, argv[0], EXIT_SUCCESS);
    }
    else
    {
-      /* Doing multiple files */
-
       /* Do the files on the command line first */
       idx = 1;
       while ((p_arg = arg.Unused(idx)) != NULL)
@@ -382,32 +353,6 @@ static void process_source_list(const char *source_list, bool dump)
    {
       fclose(p_file);
    }
-}
-
-
-static bool read_stdin(file_mem& fm)
-{
-   deque<UINT8> dq;
-   char         buf[4096];
-   int          len;
-   int          idx;
-
-   fm.raw.clear();
-   fm.data.clear();
-   fm.enc = ENC_ASCII;
-
-   while (!feof(stdin))
-   {
-      len = fread(buf, 1, sizeof(buf), stdin);
-      for (idx = 0; idx < len; idx++)
-      {
-         dq.push_back(buf[idx]);
-      }
-   }
-
-   /* Copy the raw data from the deque to the vector */
-   fm.raw.insert(fm.raw.end(), dq.begin(), dq.end());
-   return(decode_unicode(fm.raw, fm.data, fm.enc, fm.bom));
 }
 
 
