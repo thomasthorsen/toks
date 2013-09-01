@@ -30,8 +30,6 @@ static void mark_struct_union_body(chunk_t *start);
 static chunk_t *mark_variable_definition(chunk_t *start, UINT64 flags);
 
 static void mark_define_expressions(void);
-static void process_returns(void);
-static chunk_t *process_return(chunk_t *pc);
 static void mark_class_ctor(chunk_t *pclass);
 static void mark_namespace(chunk_t *pns);
 static void mark_cpp_constructor(chunk_t *pc);
@@ -1046,7 +1044,6 @@ void fix_symbols(void)
    }
 
    pawn_add_virtual_semicolons();
-   process_returns();
 
    /**
     * 2nd pass - handle variable definitions
@@ -1391,66 +1388,6 @@ nogo_exit:
       flag_parens(tmp, 0, CT_FPAREN_OPEN, CT_FUNC_CALL, false);
    }
    return false;
-}
-
-
-static void process_returns(void)
-{
-   chunk_t *pc;
-
-   pc = chunk_get_head();
-   while (pc != NULL)
-   {
-      if ((pc->type != CT_RETURN) || (pc->flags & PCF_IN_PREPROC))
-      {
-         pc = chunk_get_next_type(pc, CT_RETURN, -1);
-         continue;
-      }
-
-      pc = process_return(pc);
-   }
-}
-
-
-/**
- * Processes a return statement, labeling the parens and marking the parent.
- * May remove or add parens around the return statement
- *
- * @param pc   Pointer to the return chunk
- */
-static chunk_t *process_return(chunk_t *pc)
-{
-   chunk_t *next;
-   chunk_t *semi;
-   chunk_t *cpar;
-   chunk_t chunk;
-
-   /* grab next and bail if it is a semicolon */
-   next = chunk_get_next_ncnl(pc);
-   if ((next == NULL) || chunk_is_semicolon(next))
-   {
-      return(next);
-   }
-
-   if (next->type == CT_PAREN_OPEN)
-   {
-      /* See if the return is fully paren'd */
-      cpar = chunk_get_next_type(next, CT_PAREN_CLOSE, next->level);
-      semi = chunk_get_next_ncnl(cpar);
-      if (chunk_is_semicolon(semi))
-      {
-         LOG_FMT(LRETURN, "%s: keeping parens on line %d\n",
-                 __func__, pc->orig_line);
-
-         /* mark & keep them */
-         next->parent_type = CT_RETURN;
-         cpar->parent_type = CT_RETURN;
-
-         return(semi);
-      }
-   }
-
-   return(next);
 }
 
 
