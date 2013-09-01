@@ -985,7 +985,6 @@ static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
       pc.str.clear();
       pc.nl_count  = nl_count;
       pc.type      = nl_count ? CT_NEWLINE : CT_WHITESPACE;
-      pc.after_tab = (ctx.c.last_ch == '\t');
       return(true);
    }
    return(false);
@@ -1315,7 +1314,6 @@ void tokenize(const deque<int>& data)
    chunk_t            *pc    = NULL;
    chunk_t            *rprev = NULL;
    struct parse_frame frm;
-   bool               last_was_tab = false;
 
    memset(&frm, 0, sizeof(frm));
 
@@ -1333,26 +1331,16 @@ void tokenize(const deque<int>& data)
       /* Don't create an entry for whitespace */
       if (chunk.type == CT_WHITESPACE)
       {
-         last_was_tab = chunk.after_tab;
          continue;
       }
 
       if (chunk.type == CT_NEWLINE)
       {
-         last_was_tab    = chunk.after_tab;
-         chunk.after_tab = false;
          chunk.str.clear();
       }
       else if (chunk.type == CT_NL_CONT)
       {
-         last_was_tab    = chunk.after_tab;
-         chunk.after_tab = false;
          chunk.str       = "\\\n";
-      }
-      else
-      {
-         chunk.after_tab = last_was_tab;
-         last_was_tab    = false;
       }
 
       /* Strip trailing whitespace (for CPP comments and PP blocks) */

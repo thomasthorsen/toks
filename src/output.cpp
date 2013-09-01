@@ -244,12 +244,12 @@ void output_parsed(FILE *pfile)
    fprintf(pfile, "# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
    for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
    {
-      fprintf(pfile, "\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%10" PRIx64 "][%d-%d]",
+      fprintf(pfile, "\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%10" PRIx64 "][%d]",
               pc->orig_line, get_token_name(pc->type),
               get_token_name(pc->parent_type), pc->scope_text(),
               pc->column, pc->orig_col, pc->orig_col_end,
               pc->brace_level, pc->level, pc->pp_level,
-              pc->flags, pc->nl_count, pc->after_tab);
+              pc->flags, pc->nl_count);
 
       tolog = NULL;
       for (int i = 0; i < (int)ARRAY_SIZE(pcf_names); i++)

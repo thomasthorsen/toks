@@ -254,7 +254,6 @@ struct chunk_t
       level = 0;
       brace_level = 0;
       pp_level = 0;
-      after_tab = false;
       str.clear();
       scope.clear();
    }
@@ -289,7 +288,6 @@ struct chunk_t
    int          level;            /* nest level in {, (, or [ */
    int          brace_level;      /* nest level in braces only */
    int          pp_level;         /* nest level in #if stuff */
-   bool         after_tab;        /* whether this token was after a tab */
    unc_text     str;              /* the token text */
    unc_text     scope;            /* the scope of the token */
 };
