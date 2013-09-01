@@ -120,8 +120,6 @@ void assign_scope()
 
    while (pc != NULL)
    {
-      get_resolved_scopes(pc, res_scopes);
-
       switch (pc->type)
       {
          case CT_WORD:
@@ -131,6 +129,7 @@ void assign_scope()
             {
                chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+               get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
 
                if (next->type == CT_BRACE_OPEN)
@@ -150,6 +149,7 @@ void assign_scope()
             {
                chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+               get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
 
                if (next->type == CT_BRACE_OPEN)
@@ -163,6 +163,7 @@ void assign_scope()
          {
             chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+            get_resolved_scopes(pc, res_scopes);
             mark_resolved_scopes(pc, res_scopes);
 
             if (next->type == CT_FPAREN_OPEN)
@@ -175,6 +176,7 @@ void assign_scope()
          {
             chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+            get_resolved_scopes(pc, res_scopes);
             mark_resolved_scopes(pc, res_scopes);
 
             if (next->type == CT_FPAREN_OPEN)
@@ -202,6 +204,7 @@ void assign_scope()
             {
                chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
 
+               get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
 
                if (next->type == CT_FPAREN_OPEN)
