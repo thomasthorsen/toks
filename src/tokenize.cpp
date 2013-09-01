@@ -1039,12 +1039,6 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
    const chunk_tag_t *punc;
    int ch, ch1;
 
-   if (!ctx.more())
-   {
-      //fprintf(stderr, "All done!\n");
-      return(false);
-   }
-
    /* Save off the current column */
    pc.orig_line = ctx.c.row;
    pc.column    = ctx.c.col;
