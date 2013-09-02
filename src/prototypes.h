@@ -127,6 +127,12 @@ void encode_utf8(int ch, vector<UINT8>& res);
 void assign_scope(void);
 
 
+/*
+ * version_check.cpp
+ */
+bool version_check(void);
+
+
 /* Options we couldn't quite get rid of */
 #define UO_input_tab_size 8
 #define UO_indent_else_if false

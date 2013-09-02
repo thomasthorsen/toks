@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "log_levels.h"
 #include "md5.h"
+#include "sqlite3080001.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -113,11 +114,11 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "%s [options] [files ...]\n"
            "\n"
            "Basic Options:\n"
+           " -F FILE      : Read files to process from FILE, one filename per line (- is stdin)\n"
+           " -i FILE      : Use FILE as index (default: TOKS)\n"
            " -o FILE      : Redirect output to FILE\n"
-           " -F FILE      : read files to process from FILE, one filename per line (- is stdin)\n"
-           " files        : files to process (can be combined with -F)\n"
-           " -l           : language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
-           " -t           : load a file with types (usually not needed)\n"
+           " -l           : Language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
+           " -t           : Load a file with types (usually not needed)\n"
            "\n"
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
@@ -130,7 +131,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " --decode     : decode remaining args (chunk flags) and exit\n"
            "\n"
            "Usage Examples\n"
-           "cat foo.d | toks -l d\n"
            "toks foo.d\n"
            "toks -L0-2,20-23,51 foo.d\n"
            "toks -o foo.out foo.d\n"
@@ -166,15 +166,14 @@ static void redir_stdout(const char *output_file)
    }
 }
 
-
 int main(int argc, char *argv[])
 {
-   const char *output_file = NULL;
-   const char *source_list = NULL;
+   const char *output_file, *source_list, *index_file;
    log_mask_t mask;
-   int        idx;
+   int idx;
    const char *p_arg;
    bool dump = false;
+   int retval;
 
    Args arg(argc, argv);
 
@@ -252,23 +251,31 @@ int main(int argc, char *argv[])
       }
    }
 
-   if (((source_list = arg.Param("--files")) == NULL) &&
-       ((source_list = arg.Param("-F")) == NULL))
-   {
-      // not using a file list, source_list is NULL
-   }
-
-   /* Grab the output override */
+   source_list = arg.Param("-F");
    output_file = arg.Param("-o");
+   index_file = arg.Param("-i");
 
    LOG_FMT(LNOTE, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LNOTE, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
+   LOG_FMT(LNOTE, "index_file = %s\n", (index_file != NULL) ? index_file : "null");
 
    /*
     *  Done parsing args
     */
 
    redir_stdout(output_file);
+
+   retval = sqlite3_open(index_file != NULL ? index_file : "TOKS", &cpd.index);
+   if ((retval != SQLITE_OK) || (cpd.index == NULL))
+   {
+      LOG_FMT(LERR, "Unable to open index (%d)\n", retval);
+      return EXIT_FAILURE;
+   }
+
+   if (!version_check())
+   {
+      return EXIT_FAILURE;
+   }
 
    /* Check for unused args (ignore them) */
    idx   = 1;

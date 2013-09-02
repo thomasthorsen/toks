@@ -18,6 +18,7 @@ using namespace std;
 #include "log_levels.h"
 #include "logger.h"
 #include "unc_text.h"
+#include "sqlite3080001.h"
 #include <cstdio>
 #include <assert.h>
 
@@ -390,6 +391,8 @@ struct cp_data
    struct parse_frame frames[16];
    int                frame_count;
    int                pp_level;
+
+   sqlite3            *index;
 };
 
 extern struct cp_data cpd;
