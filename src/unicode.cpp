@@ -12,41 +12,6 @@
 #include <cstdlib>
 
 
-/**
- * See if all characters are ASCII (0-127)
- */
-bool is_ascii(const vector<UINT8>& data, int& non_ascii_cnt, int& zero_cnt)
-{
-   non_ascii_cnt = zero_cnt = 0;
-   for (int idx = 0; idx < (int)data.size(); idx++)
-   {
-      if (data[idx] & 0x80)
-      {
-         non_ascii_cnt++;
-      }
-      if (!data[idx])
-      {
-         zero_cnt++;
-      }
-   }
-   return((non_ascii_cnt + zero_cnt) == 0);
-}
-
-
-/**
- * Convert the array of bytes into an array of ints
- */
-bool decode_bytes(const vector<UINT8>& in_data, deque<int>& out_data)
-{
-   out_data.resize(in_data.size());
-   for (int idx = 0; idx < (int)in_data.size(); idx++)
-   {
-      out_data[idx] = in_data[idx];
-   }
-   return true;
-}
-
-
 void encode_utf8(int ch, vector<UINT8>& res)
 {
    if (ch < 0)
@@ -109,20 +74,6 @@ bool decode_utf8(const vector<UINT8>& in_data, deque<int>& out_data)
 {
    int idx = 0;
    int ch, tmp, cnt;
-
-   out_data.clear();
-
-   /* check for UTF-8 BOM silliness and skip */
-   if (in_data.size() >= 3)
-   {
-      if ((in_data[0] == 0xef) &&
-          (in_data[1] == 0xbb) &&
-          (in_data[2] == 0xbf))
-      {
-         /* skip it */
-         idx = 3;
-      }
-   }
 
    while (idx < (int)in_data.size())
    {
@@ -209,56 +160,22 @@ static int get_word(const vector<UINT8>& in_data, int& idx, bool be)
 
 
 /**
- * Deocde a UTF-16 sequence.
- * Sets enc based on the BOM.
- * Must have the BOM as the first two bytes.
+ * Decode a UTF-16 sequence.
  */
-bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc)
+bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding enc)
 {
-   out_data.clear();
+   int idx = 0;
 
    if (in_data.size() & 1)
    {
-      /* can't have and odd length */
+      /* can't have an odd length */
       return false;
    }
 
    if (in_data.size() < 2)
    {
-      /* we require the BOM or at least 1 char */
+      /* we require at least 1 char */
       return false;
-   }
-
-   int idx = 2;
-   if ((in_data[0] == 0xfe) && (in_data[1] == 0xff))
-   {
-      enc = ENC_UTF16_BE;
-   }
-   else if ((in_data[0] == 0xff) && (in_data[1] == 0xfe))
-   {
-      enc = ENC_UTF16_LE;
-   }
-   else
-   {
-      /* If we have a few words, we can take a guess, assuming the first few
-       * chars are ASCII */
-      enc = ENC_ASCII;
-      idx = 0;
-      if (in_data.size() >= 6)
-      {
-         if ((in_data[0] == 0) && (in_data[2] == 0) && (in_data[4] == 0))
-         {
-            enc = ENC_UTF16_BE;
-         }
-         else if ((in_data[1] == 0) && (in_data[3] == 0) && (in_data[5] == 0))
-         {
-            enc = ENC_UTF16_LE;
-         }
-      }
-      if (enc == ENC_ASCII)
-      {
-         return false;
-      }
    }
 
    bool be = (enc == ENC_UTF16_BE);
@@ -294,83 +211,51 @@ bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncodi
 
 
 /**
- * Looks for the BOM of UTF-16 BE/LE and UTF-8.
- * If found, set enc and return true.
- * Sets enc to ENC_ASCII and returns false if not found.
+ * Looks for the BOM of UTF-16 and UTF-8.
+ * On return the p_file position indicator will be past any bom found.
  */
-bool decode_bom(const vector<UINT8>& in_data, CharEncoding& enc)
+CharEncoding decode_bom(FILE *p_file)
 {
-   enc = ENC_ASCII;
-   if (in_data.size() >= 2)
+   CharEncoding enc = ENC_UTF8;
+   unsigned char data[6];
+   int len, skip = 0;
+
+   len = fread(data, 1, 6, p_file);
+
+   if (len >= 2)
    {
-      if ((in_data[0] == 0xfe) && (in_data[1] == 0xff))
+      if ((data[0] == 0xfe) && (data[1] == 0xff))
+      {
+         skip = 2;
+         enc = ENC_UTF16_BE;
+      }
+      else if ((data[0] == 0xff) && (data[1] == 0xfe))
+      {
+         skip = 2;
+         enc = ENC_UTF16_LE;
+      }
+      else if ((len >= 3) &&
+               (data[0] == 0xef) &&
+               (data[1] == 0xbb) &&
+               (data[2] == 0xbf))
+      {
+         skip = 3;
+      }
+   }
+
+   if ((len >= 6) && (enc == ENC_UTF8))
+   {
+      if ((data[0] == 0) && (data[2] == 0) && (data[4] == 0))
       {
          enc = ENC_UTF16_BE;
-         return true;
       }
-      else if ((in_data[0] == 0xff) && (in_data[1] == 0xfe))
+      else if ((data[1] == 0) && (data[3] == 0) && (data[5] == 0))
       {
          enc = ENC_UTF16_LE;
-         return true;
-      }
-      else if ((in_data.size() >= 3) &&
-               (in_data[0] == 0xef) &&
-               (in_data[1] == 0xbb) &&
-               (in_data[2] == 0xbf))
-      {
-         enc = ENC_UTF8;
-         return true;
       }
    }
-   return false;
+
+   fseek(p_file, skip, SEEK_SET);
+   return enc;
 }
 
-
-/**
- * Figure out the encoding and convert to an int sequence
- */
-bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc)
-{
-   /* check for a BOM */
-   if (decode_bom(in_data, enc))
-   {
-      if (enc == ENC_UTF8)
-      {
-         return decode_utf8(in_data, out_data);
-      }
-      else
-      {
-         return decode_utf16(in_data, out_data, enc);
-      }
-   }
-
-   /* Check for simple ASCII */
-   int non_ascii_cnt;
-   int zero_cnt;
-   if (is_ascii(in_data, non_ascii_cnt, zero_cnt))
-   {
-      enc = ENC_ASCII;
-      return decode_bytes(in_data, out_data);
-   }
-
-   /* There are alot of 0's in UTF-16 (~50%) */
-   if ((zero_cnt > ((int)in_data.size() / 4)) &&
-       (zero_cnt <= ((int)in_data.size() / 2)))
-   {
-      /* likely is UTF-16 */
-      if (decode_utf16(in_data, out_data, enc))
-      {
-         return true;
-      }
-   }
-
-   if (decode_utf8(in_data, out_data))
-   {
-      enc = ENC_UTF8;
-      return true;
-   }
-
-   /* it is an unrecognized byte sequence */
-   enc = ENC_BYTE;
-   return decode_bytes(in_data, out_data);
-}

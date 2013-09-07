@@ -44,7 +44,7 @@ static void toks_end();
 static void do_source_file(const char *filename_in, bool dump);
 static void process_source_list(const char *source_list, bool dump);
 
-static int load_mem_file(const char *filename, file_mem& fm);
+static bool load_mem_file(const char *filename, file_mem& fm);
 
 
 /**
@@ -365,57 +365,63 @@ static void process_source_list(const char *source_list, bool dump)
 /**
  * Loads a file into memory
  */
-static int load_mem_file(const char *filename, file_mem& fm)
+static bool load_mem_file(const char *filename, file_mem& fm)
 {
-   int         retval = -1;
+   bool retval = false;
    struct stat my_stat;
    FILE        *p_file;
 
    fm.raw.clear();
    fm.data.clear();
-   fm.enc = ENC_ASCII;
 
-   /* Grab the stat info for the file */
-   if (stat(filename, &my_stat) < 0)
+   /* Grab the stat info for the file and open it*/
+   if ((stat(filename, &my_stat) < 0) ||
+       ((p_file = fopen(filename, "rb")) == NULL))
    {
-      return(-1);
+      LOG_FMT(LERR, "%s: %s\n",
+              filename, strerror(errno));
+      return retval;
    }
 
-   /* Try to read in the file */
-   p_file = fopen(filename, "rb");
-   if (p_file == NULL)
-   {
-      return(-1);
-   }
-
-   fm.raw.resize(my_stat.st_size);
    if (my_stat.st_size == 0)
    {
       /* Empty file */
-      retval = 0;
-      fm.enc = ENC_ASCII;
-      fm.data.clear();
+      retval = true;
    }
    else
    {
-      /* read the raw data */
+      /* Determine encoding and skip any bom */
+      CharEncoding enc = decode_bom(p_file);
+
+      fm.raw.resize(my_stat.st_size - ftell(p_file));
       if (fread(&fm.raw[0], fm.raw.size(), 1, p_file) != 1)
       {
-         LOG_FMT(LERR, "%s: fread(%s) failed: %s (%d)\n",
-                 __func__, filename, strerror(errno), errno);
-         cpd.error_count++;
-      }
-      else if (!decode_unicode(fm.raw, fm.data, fm.enc))
-      {
-         LOG_FMT(LERR, "%s: failed to decode the file '%s'\n", __func__, filename);
+         LOG_FMT(LERR, "%s: %s\n",
+                 filename, strerror(errno));
       }
       else
       {
-         LOG_FMT(LNOTE, "%s: '%s' encoding looks like %d\n", __func__, filename, fm.enc);
-         retval = 0;
+         if (enc == ENC_UTF8)
+         {
+            retval = decode_utf8(fm.raw, fm.data);
+            if (!retval)
+            {
+               LOG_FMT(LERR, "UTF-8 decoding error");
+            }
+         }
+         else if ((enc == ENC_UTF16_LE) || (enc == ENC_UTF16_BE))
+         {
+            retval = decode_utf16(fm.raw, fm.data, enc);
+            if (!retval)
+            {
+               LOG_FMT(LERR, "UTF-16 decoding error");
+            }
+         }
       }
+
       MD5::Calc(&fm.raw[0], fm.raw.size(), fm.digest);
    }
+
    fclose(p_file);
    return(retval);
 }
@@ -438,9 +444,8 @@ static void do_source_file(const char *filename_in, bool dump)
    }
 
    /* Try to read in the source file */
-   if (load_mem_file(filename_in, fm) < 0)
+   if (!load_mem_file(filename_in, fm))
    {
-      LOG_FMT(LERR, "Failed to load (%s)\n", filename_in);
       cpd.error_count++;
       return;
    }

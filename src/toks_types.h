@@ -42,8 +42,6 @@ enum brstage_e
 
 enum CharEncoding
 {
-   ENC_ASCII,     /* 0-127 */
-   ENC_BYTE,      /* 0-255, not UTF-8 */
    ENC_UTF8,
    ENC_UTF16_LE,
    ENC_UTF16_BE,
@@ -352,7 +350,6 @@ struct file_mem
 {
    vector<UINT8>  raw;
    deque<int>     data;
-   CharEncoding   enc;
    UINT8          digest[16];
 };
 
