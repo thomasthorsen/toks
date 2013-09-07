@@ -329,12 +329,11 @@ bool decode_bom(const vector<UINT8>& in_data, CharEncoding& enc)
 /**
  * Figure out the encoding and convert to an int sequence
  */
-bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc, bool& has_bom)
+bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc)
 {
    /* check for a BOM */
    if (decode_bom(in_data, enc))
    {
-      has_bom = true;
       if (enc == ENC_UTF8)
       {
          return decode_utf8(in_data, out_data);
@@ -344,7 +343,6 @@ bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEnco
          return decode_utf16(in_data, out_data, enc);
       }
    }
-   has_bom = false;
 
    /* Check for simple ASCII */
    int non_ascii_cnt;

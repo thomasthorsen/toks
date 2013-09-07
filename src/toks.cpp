@@ -41,7 +41,6 @@ static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
 static void toks_start(const deque<int>& data);
 static void toks_end();
-static void toks_file(const file_mem& fm, bool dump);
 static void do_source_file(const char *filename_in, bool dump);
 static void process_source_list(const char *source_list, bool dump);
 
@@ -394,7 +393,6 @@ static int load_mem_file(const char *filename, file_mem& fm)
    {
       /* Empty file */
       retval = 0;
-      fm.bom = false;
       fm.enc = ENC_ASCII;
       fm.data.clear();
    }
@@ -407,7 +405,7 @@ static int load_mem_file(const char *filename, file_mem& fm)
                  __func__, filename, strerror(errno), errno);
          cpd.error_count++;
       }
-      else if (!decode_unicode(fm.raw, fm.data, fm.enc, fm.bom))
+      else if (!decode_unicode(fm.raw, fm.data, fm.enc))
       {
          LOG_FMT(LERR, "%s: failed to decode the file '%s'\n", __func__, filename);
       }
@@ -416,6 +414,7 @@ static int load_mem_file(const char *filename, file_mem& fm)
          LOG_FMT(LNOTE, "%s: '%s' encoding looks like %d\n", __func__, filename, fm.enc);
          retval = 0;
       }
+      MD5::Calc(&fm.raw[0], fm.raw.size(), fm.digest);
    }
    fclose(p_file);
    return(retval);
@@ -450,7 +449,18 @@ static void do_source_file(const char *filename_in, bool dump)
            filename_in, language_to_string(cpd.lang_flags));
 
    cpd.filename = filename_in;
-   toks_file(fm, dump);
+
+   toks_start(fm.data);
+
+   /* Special hook for dumping parsed data for debugging */
+   if (dump)
+   {
+      output_parsed(stdout);
+   }
+
+   output();
+
+   toks_end();
 }
 
 
@@ -500,37 +510,6 @@ static void toks_start(const deque<int>& data)
     * Assign scope information
     */
    assign_scope();
-}
-
-
-static void toks_file(const file_mem& fm, bool dump)
-{
-   const deque<int>& data = fm.data;
-
-   /* Check for embedded 0's (represents a decoding failure or corrupt file) */
-   for (int idx = 0; idx < (int)data.size() - 1; idx++)
-   {
-      if (data[idx] == 0)
-      {
-         LOG_FMT(LERR, "An embedded 0 was found in '%s'.\n", cpd.filename);
-         LOG_FMT(LERR, "The file may be encoded in an unsupported Unicode format.\n");
-         LOG_FMT(LERR, "Aborting.\n");
-         cpd.error_count++;
-         return;
-      }
-   }
-
-   toks_start(data);
-
-   /* Special hook for dumping parsed data for debugging */
-   if (dump)
-   {
-      output_parsed(stdout);
-   }
-
-   output();
-
-   toks_end();
 }
 
 

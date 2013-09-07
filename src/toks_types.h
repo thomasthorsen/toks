@@ -352,8 +352,8 @@ struct file_mem
 {
    vector<UINT8>  raw;
    deque<int>     data;
-   bool           bom;
    CharEncoding   enc;
+   UINT8          digest[16];
 };
 
 struct cp_data

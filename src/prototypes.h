@@ -117,7 +117,7 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc);
 /*
  * unicode.cpp
  */
-bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc, bool& has_bom);
+bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc);
 void encode_utf8(int ch, vector<UINT8>& res);
 
 
