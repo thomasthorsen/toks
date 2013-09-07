@@ -23,9 +23,9 @@ static void mark_resolved_scopes(chunk_t *pc, unc_text& res_scopes)
    {
       if (pc->scope.size() > 0)
       {
-         pc->scope.append(":");
+         pc->scope += ":";
       }
-      pc->scope.append(res_scopes);
+      pc->scope += res_scopes;
    }
 }
 
@@ -36,26 +36,26 @@ static void mark_scope_single(chunk_t *pc,
 {
    if (pc->scope.size() > 0)
    {
-      pc->scope.append(":");
+      pc->scope += ":";
    }
 
    if (res_scopes.size() > 0)
    {
-      pc->scope.append(res_scopes);
-      pc->scope.append(":");
+      pc->scope += res_scopes;
+      pc->scope += ":";
    }
 
    if ((scope->type == CT_FUNC_CLASS) &&
        (scope->parent_type == CT_DESTRUCTOR))
    {
-      pc->scope.append("~");
+      pc->scope += "~";
    }
 
-   pc->scope.append(scope->text());
+   pc->scope += scope->str;
 
    if (decoration != NULL)
    {
-      pc->scope.append(decoration);
+      pc->scope += decoration;
    }
 }
 
