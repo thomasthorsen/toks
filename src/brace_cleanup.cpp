@@ -214,8 +214,8 @@ static void push_fmr_pse(struct parse_frame *frm, chunk_t *pc,
    }
    else
    {
-      LOG_FMT(LWARN, "%s:%d Error: Frame stack overflow,  Unable to properly process this file.\n",
-              cpd.filename, cpd.line_number);
+      LOG_FMT(LWARN, "%s: Error: Frame stack overflow,  Unable to properly process this file.\n",
+              cpd.filename);
       cpd.error_count++;
    }
 }
@@ -950,7 +950,7 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
  *
  * @return     true - done with this chunk, false - keep processing
  */
-bool close_statement(struct parse_frame *frm, chunk_t *pc)
+static bool close_statement(struct parse_frame *frm, chunk_t *pc)
 {
    chunk_t *vbc = pc;
 

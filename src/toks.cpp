@@ -464,11 +464,8 @@ static void toks_end()
    }
 
    /* Clean up some state variables */
-   cpd.al_cnt      = 0;
-   cpd.did_newline = true;
    cpd.frame_count = 0;
    cpd.pp_level    = 0;
-   cpd.changes     = 0;
    cpd.in_preproc  = CT_NONE;
    cpd.consumed    = false;
    cpd.preproc_ncnl_count = 0;

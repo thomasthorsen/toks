@@ -354,35 +354,16 @@ struct file_mem
 
 struct cp_data
 {
-   FILE               *fout;
-   int                last_char;
-
    UINT32             error_count;
    const char         *filename;
 
    int                lang_flags; // LANG_xxx
    bool               lang_forced;
 
-   UINT32             line_number;
-   UINT16             column;  /* column for parsing */
-   UINT16             spaces;  /* space count on output */
-
    bool               consumed;
 
-   int                did_newline;
    c_token_t          in_preproc;
    int                preproc_ncnl_count;
-
-   /* bumped up when a line is split or indented */
-   int                changes;
-   int                pass_count;
-
-   struct align_t     al[80];
-   int                al_cnt;
-   bool               al_c99_array;
-
-   /* Here are all the settings */
-   int                max_option_name_len;
 
    struct parse_frame frames[16];
    int                frame_count;

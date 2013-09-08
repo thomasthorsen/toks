@@ -340,7 +340,6 @@ static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
             pc.str.append(ctx.get());
          }
          pc.nl_count++;
-         cpd.did_newline = true;
       }
    }
    else if (!ctx.more())
@@ -884,7 +883,7 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
  * @param pc   The structure to update, str is an input.
  * @return     Whether a word was parsed (always true)
  */
-bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
+static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
 {
    int             ch;
    static unc_text interface("@interface");
