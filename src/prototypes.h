@@ -130,6 +130,7 @@ void assign_scope(void);
  * index.cpp
  */
 bool index_check(void);
+bool index_prepare_for_file(const char digest[33], const char *filename);
 
 
 /* Options we couldn't quite get rid of */

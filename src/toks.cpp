@@ -385,6 +385,8 @@ static void do_source_file(const char *filename, bool dump)
    /* Calculate MD5 digest */
    MD5::Calc(&fm.data[0], fm.data.size(), fm.digest);
 
+   (void) index_prepare_for_file(fm.digest, filename);
+
    LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
            filename, language_to_string(cpd.lang_flags));
 
