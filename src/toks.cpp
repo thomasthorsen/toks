@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   if (!version_check())
+   if (!index_check())
    {
       return EXIT_FAILURE;
    }

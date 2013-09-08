@@ -17,7 +17,7 @@ static int version_check_callback(void *version, int argc, char **argv, char **a
    return 0;
 }
 
-bool version_check(void)
+bool index_check(void)
 {
    int retval;
    int version = 0;
@@ -53,6 +53,26 @@ bool version_check(void)
          retval = sqlite3_exec(
             cpd.index,
             "INSERT INTO Version VALUES (" xstr(INDEX_VERSION) ")",
+            NULL,
+            NULL,
+            &errmsg);
+      }
+
+      if (retval == SQLITE_OK)
+      {
+         retval = sqlite3_exec(
+            cpd.index,
+            "CREATE TABLE Files(Digest TEXT, Filename TEXT)",
+            NULL,
+            NULL,
+            &errmsg);
+      }
+
+      if (retval == SQLITE_OK)
+      {
+         retval = sqlite3_exec(
+            cpd.index,
+            "CREATE TABLE Entries(Digest TEXT, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Context TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
             NULL,
             NULL,
             &errmsg);

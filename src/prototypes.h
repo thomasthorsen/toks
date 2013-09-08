@@ -127,9 +127,9 @@ void assign_scope(void);
 
 
 /*
- * version_check.cpp
+ * index.cpp
  */
-bool version_check(void);
+bool index_check(void);
 
 
 /* Options we couldn't quite get rid of */

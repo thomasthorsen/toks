@@ -19,6 +19,7 @@ src/brace_cleanup.cpp
 src/chunk_list.cpp
 src/ChunkStack.cpp
 src/combine.cpp
+src/index.cpp
 src/keywords.cpp
 src/lang_pawn.cpp
 src/logger.cpp
@@ -32,7 +33,6 @@ src/tokenize_cleanup.cpp
 src/tokenize.cpp
 src/toks.cpp
 src/unc_text.cpp
-src/unicode.cpp
-src/version_check.cpp)
+src/unicode.cpp)
 
 target_link_libraries(toks ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
