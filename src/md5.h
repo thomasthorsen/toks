@@ -19,12 +19,12 @@ public:
    void Init();
    void Update(const void *data, UINT32 len);
 
-   void Final(UINT8 digest[16]);
+   void Final(char digest[33]);
 
    /* internal function */
    static void Transform(UINT32 buf[4], UINT32 in_data[16]);
 
-   static void Calc(const void *data, UINT32 length, UINT8 digest[16]);
+   static void Calc(const void *data, UINT32 length, char digest[33]);
 
 private:
    UINT32 m_buf[4];

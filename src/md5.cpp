@@ -19,6 +19,7 @@
 
 #include "md5.h"
 #include <string.h>               /* memcpy, memset */
+#include <stdio.h>
 
 
 /**
@@ -162,7 +163,7 @@ void MD5::Update(const void *data, UINT32 len)
  * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void MD5::Final(UINT8 digest[16])
+void MD5::Final(char digest[33])
 {
    UINT32 count;
    UINT8  *p;
@@ -211,7 +212,12 @@ void MD5::Final(UINT8 digest[16])
    {
       reverse_u32((UINT8 *)m_buf, 4);
    }
-   memcpy(digest, m_buf, 16);
+
+   for (int i = 0; i < 16; i++)
+   {
+      snprintf(&digest[i * 2], 20, "%02x", ((unsigned char *) m_buf)[i]);
+   }
+   digest[32] = 0;
 }
 
 
@@ -316,7 +322,7 @@ void MD5::Transform(UINT32 buf[4], UINT32 in_data[16])
 }
 
 
-void MD5::Calc(const void *data, UINT32 length, UINT8 digest[16])
+void MD5::Calc(const void *data, UINT32 length, char digest[33])
 {
    MD5 md5;
 

@@ -308,7 +308,7 @@ struct lookup_entry_t
 struct file_mem
 {
    vector<UINT8>  data;
-   UINT8          digest[16];
+   char           digest[33];
 };
 
 struct cp_data
