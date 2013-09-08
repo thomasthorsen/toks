@@ -51,18 +51,6 @@ struct chunk_t;
 
 
 /**
- * Sort of like the aligning stuff, but the token indent is relative to the
- * indent of another chunk. This is needed, as that chunk may be aligned and
- * so the indent cannot be determined in the indent code.
- */
-struct indent_ptr_t
-{
-   chunk_t *ref;
-   int     delta;
-};
-
-
-/**
  * Structure for counting nested level
  */
 struct paren_stack_entry
@@ -81,7 +69,6 @@ struct paren_stack_entry
    brstage_e    stage;
    bool         in_preproc;   /**< whether this was created in a preprocessor */
    bool         non_vardef;   /**< Hit a non-vardef line */
-   indent_ptr_t ip;
 };
 
 /* TODO: put this on a linked list */
@@ -210,23 +197,6 @@ static const char *pcf_names[] =
 };
 #endif
 
-struct align_ptr_t
-{
-   chunk_t *next;       /* NULL or the chunk that should be under this one */
-   bool    right_align; /* AlignStack.m_right_align */
-   int     star_style;  /* AlignStack.m_star_style */
-   int     amp_style;   /* AlignStack.m_amp_style */
-   int     gap;         /* AlignStack.m_gap */
-
-   /* col_adj is the amount to alter the column for the token.
-    * For example, a dangling '*' would be set to -1.
-    * A right-aligned word would be a positive value.
-    */
-   int     col_adj;
-   chunk_t *ref;
-   chunk_t *start;
-};
-
 
 /** This is the main type of this program */
 struct chunk_t
@@ -237,8 +207,6 @@ struct chunk_t
    }
    void reset()
    {
-      memset(&align, 0, sizeof(align));
-      memset(&indent, 0, sizeof(indent));
       next = 0;
       prev = 0;
       type = CT_NONE;
@@ -271,8 +239,6 @@ struct chunk_t
 
    chunk_t      *next;
    chunk_t      *prev;
-   align_ptr_t  align;
-   indent_ptr_t indent;
    c_token_t    type;
    c_token_t    parent_type;      /* usually CT_NONE */
    UINT32       orig_line;
@@ -337,13 +303,6 @@ struct lookup_entry_t
    char              left_in_group;
    UINT16            next_idx;
    const chunk_tag_t *tag;
-};
-
-struct align_t
-{
-   int       col;
-   c_token_t type;
-   int       len;    // of the token + space
 };
 
 struct file_mem

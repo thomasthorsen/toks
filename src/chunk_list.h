@@ -41,8 +41,6 @@ chunk_t *chunk_get_tail(void);
 chunk_t *chunk_get_next(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 
-void chunk_swap(chunk_t *pc1, chunk_t *pc2);
-void chunk_swap_lines(chunk_t *pc1, chunk_t *pc2);
 chunk_t *chunk_first_on_line(chunk_t *pc);
 
 chunk_t *chunk_get_next_nl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
