@@ -6,7 +6,7 @@
  * @license GPL v2+
  */
 #include "unc_text.h"
-#include "prototypes.h" /* encode_utf8() */
+#include "prototypes.h"
 
 static void fix_len_idx(int size, int& idx, int& len)
 {
@@ -45,14 +45,14 @@ void unc_text::update_logtext()
 {
    if (!m_logok)
    {
-      /* make a pessimistic guess at the size */
+      int idx;
       m_logtext.clear();
-      m_logtext.reserve(m_chars.size() * 3);
-      for (value_type::iterator it = m_chars.begin(); it != m_chars.end(); ++it)
+      m_logtext.resize(m_chars.size() + 1);
+      for (idx = 0; idx < (int) m_chars.size(); ++idx)
       {
-         encode_utf8(*it, m_logtext);
+         m_logtext[idx] = m_chars[idx];
       }
-      m_logtext.push_back(0);
+      m_logtext[idx] = 0;
       m_logok = true;
    }
 }

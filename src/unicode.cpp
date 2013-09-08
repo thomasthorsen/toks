@@ -8,11 +8,14 @@
 #include "toks_types.h"
 #include "prototypes.h"
 #include "unc_ctype.h"
+#include "logger.h"
 #include <cstring>
 #include <cstdlib>
+#include <cerrno>
+#include <sys/stat.h>
 
 
-void encode_utf8(int ch, vector<UINT8>& res)
+static void encode_utf8(int ch, vector<UINT8>& res)
 {
    if (ch < 0)
    {
@@ -67,75 +70,6 @@ void encode_utf8(int ch, vector<UINT8>& res)
 
 
 /**
- * Decode UTF-8 sequences from in_data and put the chars in out_data.
- * If there are any decoding errors, then return false.
- */
-bool decode_utf8(const vector<UINT8>& in_data, deque<int>& out_data)
-{
-   int idx = 0;
-   int ch, tmp, cnt;
-
-   while (idx < (int)in_data.size())
-   {
-      ch = in_data[idx++];
-      if (ch < 0x80)                   /* 1-byte sequence */
-      {
-         out_data.push_back(ch);
-         continue;
-      }
-      else if ((ch & 0xE0) == 0xC0)    /* 2-byte sequence */
-      {
-         ch &= 0x1F;
-         cnt = 1;
-      }
-      else if ((ch & 0xF0) == 0xE0)    /* 3-byte sequence */
-      {
-         ch &= 0x0F;
-         cnt = 2;
-      }
-      else if ((ch & 0xF8) == 0xF0)    /* 4-byte sequence */
-      {
-         ch &= 0x07;
-         cnt = 3;
-      }
-      else if ((ch & 0xFC) == 0xF8)    /* 5-byte sequence */
-      {
-         ch &= 0x03;
-         cnt = 4;
-      }
-      else if ((ch & 0xFE) == 0xFC)    /* 6-byte sequence */
-      {
-         ch &= 0x01;
-         cnt = 5;
-      }
-      else
-      {
-         /* invalid UTF-8 sequence */
-         return false;
-      }
-
-      while ((cnt-- > 0) && (idx < (int)in_data.size()))
-      {
-         tmp = in_data[idx++];
-         if ((tmp & 0xC0) != 0x80)
-         {
-            /* invalid UTF-8 sequence */
-            return false;
-         }
-         ch = (ch << 6) | (tmp & 0x3f);
-      }
-      if (cnt >= 0)
-      {
-         /* short UTF-8 sequence */
-         return false;
-      }
-      out_data.push_back(ch);
-   }
-   return true;
-}
-
-
-/**
  * Extract 2 bytes from the stream and increment idx by 2
  */
 static int get_word(const vector<UINT8>& in_data, int& idx, bool be)
@@ -160,9 +94,9 @@ static int get_word(const vector<UINT8>& in_data, int& idx, bool be)
 
 
 /**
- * Decode a UTF-16 sequence.
+ * Decode a UTF-16 sequence and convert to UTF-8.
  */
-bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding enc)
+static bool decode_utf16_to_utf8(const vector<UINT8>& in_data, vector<UINT8>& out_data, CharEncoding enc)
 {
    int idx = 0;
 
@@ -194,11 +128,11 @@ bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncodi
          }
          ch |= (tmp & 0x3ff);
          ch += 0x10000;
-         out_data.push_back(ch);
+         encode_utf8(ch, out_data);
       }
       else if (((ch >= 0) && (ch < 0xD800)) || (ch >= 0xE000))
       {
-         out_data.push_back(ch);
+         encode_utf8(ch, out_data);
       }
       else
       {
@@ -214,7 +148,7 @@ bool decode_utf16(const vector<UINT8>& in_data, deque<int>& out_data, CharEncodi
  * Looks for the BOM of UTF-16 and UTF-8.
  * On return the p_file position indicator will be past any bom found.
  */
-CharEncoding decode_bom(FILE *p_file)
+static CharEncoding decode_bom(FILE *p_file)
 {
    CharEncoding enc = ENC_UTF8;
    unsigned char data[6];
@@ -259,3 +193,66 @@ CharEncoding decode_bom(FILE *p_file)
    return enc;
 }
 
+/* Decode any supported file to UTF-8 */
+bool decode_file(vector<UINT8>& out_data, const char *filename)
+{
+   bool retval = false;
+   struct stat my_stat;
+   FILE *p_file;
+
+   /* Grab the stat info for the file and open it */
+   if ((stat(filename, &my_stat) < 0) ||
+       ((p_file = fopen(filename, "rb")) == NULL))
+   {
+      LOG_FMT(LERR, "%s: %s\n",
+              filename, strerror(errno));
+      return retval;
+   }
+
+   if (my_stat.st_size == 0)
+   {
+      /* Empty file */
+      retval = true;
+   }
+   else
+   {
+      /* Determine encoding and skip any bom */
+      CharEncoding enc = decode_bom(p_file);
+
+      if (enc == ENC_UTF8)
+      {
+         out_data.resize(my_stat.st_size - ftell(p_file));
+         if (fread(&out_data[0], out_data.size(), 1, p_file) == 1)
+         {
+            retval = true;
+         }
+         else
+         {
+            LOG_FMT(LERR, "%s: %s\n",
+                    filename, strerror(errno));
+         }
+      }
+      else if ((enc == ENC_UTF16_LE) || (enc == ENC_UTF16_BE))
+      {
+         vector<UINT8> in_data;
+         in_data.resize(my_stat.st_size - ftell(p_file));
+         if (fread(&in_data[0], in_data.size(), 1, p_file) == 1)
+         {
+            out_data.reserve(in_data.size());
+            retval = decode_utf16_to_utf8(in_data, out_data, enc);
+            if (!retval)
+            {
+               LOG_FMT(LERR, "%s: UTF-16 decoding error\n", filename);
+            }
+         }
+         else
+         {
+            LOG_FMT(LERR, "%s: %s\n",
+                    filename, strerror(errno));
+         }
+      }
+   }
+
+   fclose(p_file);
+   return(retval);
+}

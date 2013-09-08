@@ -27,7 +27,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "unc_ctype.h"
-#include <sys/stat.h>
 #include <strings.h>  /* strcasecmp() */
 #include <vector>
 #include <deque>
@@ -39,12 +38,10 @@ struct cp_data cpd;
 static int language_from_tag(const char *tag);
 static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
-static void toks_start(const deque<int>& data);
+static void toks_start(const vector<UINT8>& data);
 static void toks_end();
 static void do_source_file(const char *filename_in, bool dump);
 static void process_source_list(const char *source_list, bool dump);
-
-static bool load_mem_file(const char *filename, file_mem& fm);
 
 
 /**
@@ -363,76 +360,11 @@ static void process_source_list(const char *source_list, bool dump)
 
 
 /**
- * Loads a file into memory
- */
-static bool load_mem_file(const char *filename, file_mem& fm)
-{
-   bool retval = false;
-   struct stat my_stat;
-   FILE        *p_file;
-
-   fm.raw.clear();
-   fm.data.clear();
-
-   /* Grab the stat info for the file and open it*/
-   if ((stat(filename, &my_stat) < 0) ||
-       ((p_file = fopen(filename, "rb")) == NULL))
-   {
-      LOG_FMT(LERR, "%s: %s\n",
-              filename, strerror(errno));
-      return retval;
-   }
-
-   if (my_stat.st_size == 0)
-   {
-      /* Empty file */
-      retval = true;
-   }
-   else
-   {
-      /* Determine encoding and skip any bom */
-      CharEncoding enc = decode_bom(p_file);
-
-      fm.raw.resize(my_stat.st_size - ftell(p_file));
-      if (fread(&fm.raw[0], fm.raw.size(), 1, p_file) != 1)
-      {
-         LOG_FMT(LERR, "%s: %s\n",
-                 filename, strerror(errno));
-      }
-      else
-      {
-         if (enc == ENC_UTF8)
-         {
-            retval = decode_utf8(fm.raw, fm.data);
-            if (!retval)
-            {
-               LOG_FMT(LERR, "UTF-8 decoding error");
-            }
-         }
-         else if ((enc == ENC_UTF16_LE) || (enc == ENC_UTF16_BE))
-         {
-            retval = decode_utf16(fm.raw, fm.data, enc);
-            if (!retval)
-            {
-               LOG_FMT(LERR, "UTF-16 decoding error");
-            }
-         }
-      }
-
-      MD5::Calc(&fm.raw[0], fm.raw.size(), fm.digest);
-   }
-
-   fclose(p_file);
-   return(retval);
-}
-
-
-/**
  * Does a source file.
  *
- * @param filename_in  the file to read
+ * @param filename the file to read
  */
-static void do_source_file(const char *filename_in, bool dump)
+static void do_source_file(const char *filename, bool dump)
 {
    file_mem fm;
    string   filename_tmp;
@@ -440,20 +372,23 @@ static void do_source_file(const char *filename_in, bool dump)
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
    {
-      cpd.lang_flags = language_from_filename(filename_in);
+      cpd.lang_flags = language_from_filename(filename);
    }
 
-   /* Try to read in the source file */
-   if (!load_mem_file(filename_in, fm))
+   /* Read in the source file */
+   if (!decode_file(fm.data, filename))
    {
       cpd.error_count++;
       return;
    }
 
-   LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
-           filename_in, language_to_string(cpd.lang_flags));
+   /* Calculate MD5 digest */
+   MD5::Calc(&fm.data[0], fm.data.size(), fm.digest);
 
-   cpd.filename = filename_in;
+   LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
+           filename, language_to_string(cpd.lang_flags));
+
+   cpd.filename = filename;
 
    toks_start(fm.data);
 
@@ -469,7 +404,7 @@ static void do_source_file(const char *filename_in, bool dump)
 }
 
 
-static void toks_start(const deque<int>& data)
+static void toks_start(const vector<UINT8>& data)
 {
    /**
     * Parse the text into chunks

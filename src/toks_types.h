@@ -348,8 +348,7 @@ struct align_t
 
 struct file_mem
 {
-   vector<UINT8>  raw;
-   deque<int>     data;
+   vector<UINT8>  data;
    UINT8          digest[16];
 };
 

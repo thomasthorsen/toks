@@ -19,7 +19,7 @@ using namespace std;
 class unc_text
 {
 public:
-   typedef deque<int> value_type;
+   typedef deque<UINT8> value_type;
 
 public:
    unc_text() : m_logok(false)
@@ -149,22 +149,22 @@ public:
    }
 
    /* throws an exception if out of bounds */
-   int& at(int idx)
+   UINT8& at(int idx)
    {
       return m_chars.at(idx);
    }
 
-   const int& at(int idx) const
+   const UINT8& at(int idx) const
    {
       return m_chars.at(idx);
    }
 
-   const int& back() const
+   const UINT8& back() const
    {
       return m_chars.back();
    }
 
-   int& back()
+   UINT8& back()
    {
       return m_chars.back();
    }

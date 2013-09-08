@@ -30,7 +30,7 @@ struct tok_info
 
 struct tok_ctx
 {
-   tok_ctx(const deque<int>& d) : data(d)
+   tok_ctx(const vector<UINT8>& d) : data(d)
    {
    }
 
@@ -95,7 +95,9 @@ struct tok_ctx
             break;
 
          default:
-            c.col++;
+            /* skip continuation bytes in surrogate pairs */
+            if ((ch & 0xC0) != 0x80)
+               c.col++;
             break;
          }
          c.last_ch = ch;
@@ -114,7 +116,7 @@ struct tok_ctx
       return false;
    }
 
-   const deque<int>& data;
+   const vector<UINT8>& data;
    tok_info          c; /* current */
    tok_info          s; /* saved */
 };
@@ -796,7 +798,7 @@ static bool parse_cs_string(tok_ctx& ctx, chunk_t& pc)
 }
 
 
-static bool tag_compare(const deque<int>& d, int a_idx, int b_idx, int len)
+static bool tag_compare(const vector<UINT8>& d, int a_idx, int b_idx, int len)
 {
    if (a_idx != b_idx)
    {
@@ -1301,7 +1303,7 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
  *  - leading space & tabs are converted to the appropriate format.
  *
  */
-void tokenize(const deque<int>& data)
+void tokenize(const vector<UINT8>& data)
 {
    tok_ctx            ctx(data);
    chunk_t            chunk;
