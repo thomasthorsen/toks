@@ -368,7 +368,6 @@ static void do_source_file(const char *filename, bool dump)
 {
    vector<UINT8> data;
    char digest[33];
-   string filename_tmp;
 
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
