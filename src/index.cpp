@@ -25,6 +25,7 @@ bool index_check(void)
 {
    int result;
    int version = 0;
+   bool retval = true;
 
    result = sqlite3_exec(
      cpd.index,
@@ -38,12 +39,12 @@ bool index_check(void)
       if (version != INDEX_VERSION)
       {
          LOG_FMT(LERR, "Wrong index format version, delete it to continue\n");
-         return false;
+         retval = false;
       }
    }
    else
    {
-      char *errmsg;
+      char *errmsg = NULL;
 
       result = sqlite3_exec(
          cpd.index,
@@ -85,13 +86,19 @@ bool index_check(void)
       if (result != SQLITE_OK)
       {
          LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
-         return false;
+         retval = false;
       }
+
+      sqlite3_free(errmsg);
    }
-   return true;
+
+   return retval;
 }
 
-static int index_insert_file(const char *digest, const char *filename)
+static int index_insert_file(
+   const char *digest,
+   const char *filename,
+   sqlite3_int64 *filerow)
 {
    sqlite3_stmt *stmt_insert_file = NULL;
    int result;
@@ -123,6 +130,7 @@ static int index_insert_file(const char *digest, const char *filename)
    if (result == SQLITE_OK)
    {
       result = sqlite3_step(stmt_insert_file);
+      *filerow = sqlite3_last_insert_rowid(cpd.index);
    }
 
    (void) sqlite3_finalize(stmt_insert_file);
@@ -198,7 +206,10 @@ static int index_replace_file(const char *digest, const char *filename)
 }
 
 /* Returns true if the file needs to be analyzed */
-bool index_prepare_for_file(const char *digest, const char *filename)
+bool index_prepare_for_file(
+   const char *digest,
+   const char *filename,
+   sqlite3_int64 *filerow)
 {
    sqlite3_stmt *stmt_lookup_file = NULL;
    int result;
@@ -226,30 +237,30 @@ bool index_prepare_for_file(const char *digest, const char *filename)
 
    if (result == SQLITE_ROW)
    {
-      sqlite3_int64 filerow = sqlite3_column_int64(stmt_lookup_file, 0);
+      *filerow = sqlite3_column_int64(stmt_lookup_file, 0);
       const char *ingest =
          (const char *) sqlite3_column_text(stmt_lookup_file, 1);
 
       if (strcmp(digest, ingest) == 0)
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", filename, digest, filerow);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", filename, digest, *filerow);
          result = SQLITE_DONE;
          retval = false;
       }
       else
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, filerow, ingest);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, *filerow, ingest);
          result = index_replace_file(digest, filename);
          if (result == SQLITE_DONE)
          {
-            result = index_prune_entries(filerow);
+            result = index_prune_entries(*filerow);
          }
       }
    }
    else
    {
       LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", filename, digest);
-      result = index_insert_file(digest, filename);
+      result = index_insert_file(digest, filename, filerow);
    }
 
    if (result != SQLITE_DONE)

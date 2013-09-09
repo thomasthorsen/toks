@@ -368,6 +368,7 @@ static void do_source_file(const char *filename, bool dump)
 {
    vector<UINT8> data;
    char digest[33];
+   sqlite3_int64 filerow;
 
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
@@ -385,7 +386,7 @@ static void do_source_file(const char *filename, bool dump)
    /* Calculate MD5 digest */
    MD5::Calc(&data[0], data.size(), digest);
 
-   if (index_prepare_for_file(digest, filename))
+   if (index_prepare_for_file(digest, filename, &filerow))
    {
       LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
               filename, language_to_string(cpd.lang_flags));
