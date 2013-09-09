@@ -386,24 +386,25 @@ static void do_source_file(const char *filename, bool dump)
    /* Calculate MD5 digest */
    MD5::Calc(&data[0], data.size(), digest);
 
-   (void) index_prepare_for_file(digest, filename);
-
-   LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
-           filename, language_to_string(cpd.lang_flags));
-
-   cpd.filename = filename;
-
-   toks_start(data);
-
-   /* Special hook for dumping parsed data for debugging */
-   if (dump)
+   if (index_prepare_for_file(digest, filename))
    {
-      output_parsed(stdout);
+      LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
+              filename, language_to_string(cpd.lang_flags));
+
+      cpd.filename = filename;
+
+      toks_start(data);
+
+      /* Special hook for dumping parsed data for debugging */
+      if (dump)
+      {
+         output_parsed(stdout);
+      }
+
+      output();
+
+      toks_end();
    }
-
-   output();
-
-   toks_end();
 }
 
 

@@ -193,6 +193,7 @@ static int replace_file(const char *digest, const char *filename)
    return result;
 }
 
+/* Returns true if the file needs to be analyzed */
 bool index_prepare_for_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_lookup_file = NULL;
@@ -251,6 +252,7 @@ bool index_prepare_for_file(const char *digest, const char *filename)
    {
       const char *errmsg = sqlite3_errmsg(cpd.index);
       LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
+      cpd.error_count++;
       retval = false;
    }
 
