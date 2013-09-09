@@ -62,7 +62,7 @@ bool index_check(void)
       {
          result = sqlite3_exec(
             cpd.index,
-            "CREATE TABLE Files(Digest TEXT, Filename TEXT PRIMARY KEY)",
+            "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE)",
             NULL,
             NULL,
             &errmsg);
@@ -72,7 +72,7 @@ bool index_check(void)
       {
          result = sqlite3_exec(
             cpd.index,
-            "CREATE TABLE Entries(Digest TEXT, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Context TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
+            "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Context TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
             NULL,
             NULL,
             &errmsg);
@@ -87,7 +87,7 @@ bool index_check(void)
    return true;
 }
 
-static int insert_file(const char digest[33], const char *filename)
+static int insert_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_insert_file = NULL;
    int result;
@@ -126,24 +126,22 @@ static int insert_file(const char digest[33], const char *filename)
    return result;
 }
 
-static int prune_entries(const char digest[33])
+static int prune_entries(sqlite3_int64 filerow)
 {
    sqlite3_stmt *stmt_prune_entries = NULL;
    int result;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "DELETE FROM Entries WHERE Digest=?",
+                               "DELETE FROM Entries WHERE Filerow=?",
                                -1,
                                &stmt_prune_entries,
                                NULL);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_text(stmt_prune_entries,
-                                 1,
-                                 digest,
-                                 -1,
-                                 SQLITE_STATIC);
+      result = sqlite3_bind_int64(stmt_prune_entries,
+                                  1,
+                                  filerow);
    }
 
    if (result == SQLITE_OK)
@@ -156,7 +154,7 @@ static int prune_entries(const char digest[33])
    return result;
 }
 
-static int replace_file(const char digest[33], const char *filename)
+static int replace_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_change_digest = NULL;
    int result;
@@ -195,14 +193,14 @@ static int replace_file(const char digest[33], const char *filename)
    return result;
 }
 
-bool index_prepare_for_file(const char digest[33], const char *filename)
+bool index_prepare_for_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_lookup_file = NULL;
    int result;
    bool retval = true;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT Digest FROM Files WHERE Filename=?",
+                               "SELECT rowid,Digest FROM Files WHERE Filename=?",
                                -1,
                                &stmt_lookup_file,
                                NULL);
@@ -223,20 +221,23 @@ bool index_prepare_for_file(const char digest[33], const char *filename)
 
    if (result == SQLITE_ROW)
    {
-      const char *ingest = (const char *) sqlite3_column_text(stmt_lookup_file, 0);
+      sqlite3_int64 filerow = sqlite3_column_int64(stmt_lookup_file, 0);
+      const char *ingest =
+         (const char *) sqlite3_column_text(stmt_lookup_file, 1);
+
       if (strcmp(digest, ingest) == 0)
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index with same digest\n", filename, digest);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", filename, digest, filerow);
          result = SQLITE_DONE;
          retval = false;
       }
       else
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index with different digest (%s)\n", filename, digest, ingest);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, filerow, ingest);
          result = replace_file(digest, filename);
          if (result == SQLITE_DONE)
          {
-            result = prune_entries(ingest);
+            result = prune_entries(filerow);
          }
       }
    }
