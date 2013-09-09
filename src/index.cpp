@@ -10,7 +10,11 @@
 #define xstr(a) str(a)
 #define str(a) #a
 
-static int version_check_callback(void *version, int argc, char **argv, char **azColName)
+static int index_version_check_callback(
+   void *version,
+   int argc,
+   char **argv,
+   char **azColName)
 {
    if ((argc == 1) && (argv[0] != NULL))
       *((int *) version) = atoi(argv[0]);
@@ -25,7 +29,7 @@ bool index_check(void)
    result = sqlite3_exec(
      cpd.index,
      "SELECT Version FROM Version",
-     version_check_callback,
+     index_version_check_callback,
      &version,
      NULL);
 
@@ -87,7 +91,7 @@ bool index_check(void)
    return true;
 }
 
-static int insert_file(const char *digest, const char *filename)
+static int index_insert_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_insert_file = NULL;
    int result;
@@ -126,7 +130,7 @@ static int insert_file(const char *digest, const char *filename)
    return result;
 }
 
-static int prune_entries(sqlite3_int64 filerow)
+static int index_prune_entries(sqlite3_int64 filerow)
 {
    sqlite3_stmt *stmt_prune_entries = NULL;
    int result;
@@ -154,7 +158,7 @@ static int prune_entries(sqlite3_int64 filerow)
    return result;
 }
 
-static int replace_file(const char *digest, const char *filename)
+static int index_replace_file(const char *digest, const char *filename)
 {
    sqlite3_stmt *stmt_change_digest = NULL;
    int result;
@@ -235,17 +239,17 @@ bool index_prepare_for_file(const char *digest, const char *filename)
       else
       {
          LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, filerow, ingest);
-         result = replace_file(digest, filename);
+         result = index_replace_file(digest, filename);
          if (result == SQLITE_DONE)
          {
-            result = prune_entries(filerow);
+            result = index_prune_entries(filerow);
          }
       }
    }
    else
    {
       LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", filename, digest);
-      result = insert_file(digest, filename);
+      result = index_insert_file(digest, filename);
    }
 
    if (result != SQLITE_DONE)
@@ -259,4 +263,4 @@ bool index_prepare_for_file(const char *digest, const char *filename)
    (void) sqlite3_finalize(stmt_lookup_file);
 
    return retval;
- }
+}
