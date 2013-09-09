@@ -366,8 +366,9 @@ static void process_source_list(const char *source_list, bool dump)
  */
 static void do_source_file(const char *filename, bool dump)
 {
-   file_mem fm;
-   string   filename_tmp;
+   vector<UINT8> data;
+   char digest[33];
+   string filename_tmp;
 
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
@@ -376,23 +377,23 @@ static void do_source_file(const char *filename, bool dump)
    }
 
    /* Read in the source file */
-   if (!decode_file(fm.data, filename))
+   if (!decode_file(data, filename))
    {
       cpd.error_count++;
       return;
    }
 
    /* Calculate MD5 digest */
-   MD5::Calc(&fm.data[0], fm.data.size(), fm.digest);
+   MD5::Calc(&data[0], data.size(), digest);
 
-   (void) index_prepare_for_file(fm.digest, filename);
+   (void) index_prepare_for_file(digest, filename);
 
    LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
            filename, language_to_string(cpd.lang_flags));
 
    cpd.filename = filename;
 
-   toks_start(fm.data);
+   toks_start(data);
 
    /* Special hook for dumping parsed data for debugging */
    if (dump)

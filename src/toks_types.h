@@ -305,12 +305,6 @@ struct lookup_entry_t
    const chunk_tag_t *tag;
 };
 
-struct file_mem
-{
-   vector<UINT8>  data;
-   char           digest[33];
-};
-
 struct cp_data
 {
    UINT32             error_count;
