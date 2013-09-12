@@ -314,8 +314,8 @@ bool index_prepare_for_file(
 
    if (result != SQLITE_OK)
    {
-      const char *errmsg = sqlite3_errmsg(cpd.index);
-      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
       cpd.error_count++;
       retval = false;
    }
