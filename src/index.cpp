@@ -95,10 +95,44 @@ bool index_check(void)
    return retval;
 }
 
+static int index_lookup_filerow(const char *filename, sqlite3_int64 *filerow)
+{
+   sqlite3_stmt *stmt_lookup_filerow = NULL;
+   int result;
+
+   result = sqlite3_prepare_v2(cpd.index,
+                               "SELECT rowid FROM Files WHERE Filename=?",
+                               -1,
+                               &stmt_lookup_filerow,
+                               NULL);
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_text(stmt_lookup_filerow,
+                                 1,
+                                 filename,
+                                 -1,
+                                 SQLITE_STATIC);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_step(stmt_lookup_filerow);
+      if (result == SQLITE_ROW)
+      {
+         *filerow = sqlite3_column_int64(stmt_lookup_filerow, 0);
+         result = SQLITE_OK;
+      }
+   }
+
+   (void) sqlite3_finalize(stmt_lookup_filerow);
+
+   return result;
+}
+
 static int index_insert_file(
    const char *digest,
-   const char *filename,
-   sqlite3_int64 *filerow)
+   const char *filename)
 {
    sqlite3_stmt *stmt_insert_file = NULL;
    int result;
@@ -130,7 +164,10 @@ static int index_insert_file(
    if (result == SQLITE_OK)
    {
       result = sqlite3_step(stmt_insert_file);
-      *filerow = sqlite3_last_insert_rowid(cpd.index);
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
    }
 
    (void) sqlite3_finalize(stmt_insert_file);
@@ -159,6 +196,10 @@ static int index_prune_entries(sqlite3_int64 filerow)
    if (result == SQLITE_OK)
    {
       result = sqlite3_step(stmt_prune_entries);
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
    }
 
    (void) sqlite3_finalize(stmt_prune_entries);
@@ -198,6 +239,10 @@ static int index_replace_file(const char *digest, const char *filename)
    if (result == SQLITE_OK)
    {
       result = sqlite3_step(stmt_change_digest);
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
    }
 
    (void) sqlite3_finalize(stmt_change_digest);
@@ -244,14 +289,14 @@ bool index_prepare_for_file(
       if (strcmp(digest, ingest) == 0)
       {
          LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", filename, digest, *filerow);
-         result = SQLITE_DONE;
+         result = SQLITE_OK;
          retval = false;
       }
       else
       {
          LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, *filerow, ingest);
          result = index_replace_file(digest, filename);
-         if (result == SQLITE_DONE)
+         if (result == SQLITE_OK)
          {
             result = index_prune_entries(*filerow);
          }
@@ -260,10 +305,14 @@ bool index_prepare_for_file(
    else
    {
       LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", filename, digest);
-      result = index_insert_file(digest, filename, filerow);
+      result = index_insert_file(digest, filename);
+      if (result == SQLITE_OK)
+      {
+         result = index_lookup_filerow(filename, filerow);
+      }
    }
 
-   if (result != SQLITE_DONE)
+   if (result != SQLITE_OK)
    {
       const char *errmsg = sqlite3_errmsg(cpd.index);
       LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
