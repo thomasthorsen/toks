@@ -3,7 +3,17 @@ project(toks C CXX)
 
 find_package(Threads REQUIRED)
 
-set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -g")
+set(SQLITE_FLAGS "-DSQLITE_OMIT_LOAD_EXTENSION")
+
+set(C_FLAGS "-Wall -Werror -O3 -g ${SQLITE_FLAGS}")
+
+# Create a stand-alone executable when compiling for Windows
+if(MINGW)
+    set(C_FLAGS "${C_FLAGS} -static")
+endif()
+
+set(CMAKE_C_FLAGS "${C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${C_FLAGS}")
 
 set(VERSION "0.0")
 
@@ -35,4 +45,4 @@ src/toks.cpp
 src/unc_text.cpp
 src/unicode.cpp)
 
-target_link_libraries(toks ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+target_link_libraries(toks ${CMAKE_THREAD_LIBS_INIT})
