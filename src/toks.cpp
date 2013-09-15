@@ -116,12 +116,15 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -l           : Language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : Load a file with types (usually not needed)\n"
            "\n"
+           "Lookup Options:\n"
+           "--id <identifier> : Lookup specified identifier\n"
+           "\n"
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
            " --version                : print the version and exit\n"
            "\n"
            "Debug Options:\n"
-           " -d           : Dump all tokens\n"
+           " -d           : Dump all tokens after parsing a file\n"
            " -L SEV       : Set the log severity (see log_levels.h)\n"
            " -s           : Show the log severity in the logs\n"
            " --decode     : decode remaining args (chunk flags) and exit\n"
@@ -130,6 +133,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "toks foo.d\n"
            "toks -L0-2,20-23,51 foo.d\n"
            "toks -o foo.out foo.d\n"
+           "toks --id my_identifier\n"
            "\n"
            ,
            path_basename(argv0));
@@ -170,6 +174,7 @@ int main(int argc, char *argv[])
    const char *p_arg;
    bool dump = false;
    int retval;
+   const char *identifier;
 
    Args arg(argc, argv);
 
@@ -251,9 +256,12 @@ int main(int argc, char *argv[])
    output_file = arg.Param("-o");
    index_file = arg.Param("-i");
 
+   identifier = arg.Param("--id");
+
    LOG_FMT(LNOTE, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LNOTE, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
    LOG_FMT(LNOTE, "index_file = %s\n", (index_file != NULL) ? index_file : "null");
+   LOG_FMT(LNOTE, "identifier = %s\n", (identifier != NULL) ? identifier : "null");
 
    /*
     *  Done parsing args
@@ -277,24 +285,32 @@ int main(int argc, char *argv[])
    idx   = 1;
    p_arg = arg.Unused(idx);
 
-   if ((source_list == NULL) && (p_arg == NULL))
-   {
-      /* no input specified */
-      usage_exit(NULL, argv[0], EXIT_SUCCESS);
-   }
-   else
+   if ((source_list != NULL) || (p_arg != NULL) || identifier != NULL)
    {
       /* Do the files on the command line first */
-      idx = 1;
-      while ((p_arg = arg.Unused(idx)) != NULL)
+      if (p_arg != NULL)
       {
-         do_source_file(p_arg, dump);
+         idx = 1;
+         while ((p_arg = arg.Unused(idx)) != NULL)
+         {
+            do_source_file(p_arg, dump);
+         }
       }
 
       if (source_list != NULL)
       {
          process_source_list(source_list, dump);
       }
+
+      if (identifier != NULL)
+      {
+         (void) index_lookup_identifier(identifier);
+      }
+   }
+   else
+   {
+      /* no input specified */
+      usage_exit(NULL, argv[0], EXIT_SUCCESS);
    }
 
    clear_keyword_file();

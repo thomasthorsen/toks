@@ -83,21 +83,16 @@ static id_sub_type sub_type_from_flags(chunk_t *pc)
 }
 
 void output_identifier(
-   const char *file,
-   unsigned int line,
-   int column_start,
-   int column_end,
+   const char *filename,
+   UINT32 line,
+   UINT32 column_start,
+   UINT32 column_end,
    const char *scope,
-   id_type type,
-   id_sub_type sub_type,
+   const char *type,
+   const char *sub_type,
    const char *identifier)
 {
-   printf("%s:%u", file, line);
-   if (column_start != -1)
-      printf(":%d", column_start);
-   if (column_end != -1)
-      printf(":%d", column_end);
-   printf(" %s %s %s %s\n", scope, type_strings[type], sub_type_strings[sub_type], identifier);
+   printf("%s:%u:%d:%d %s %s %s %s\n", filename, line, column_start, column_end, scope, type, sub_type, identifier);
 }
 
 void output(fp_data& fpd)
@@ -223,14 +218,6 @@ void output(fp_data& fpd)
             continue;
       }
 
-      output_identifier(fpd.filename,
-                        pc->orig_line,
-                        pc->orig_col,
-                        pc->orig_col_end,
-                        pc->scope,
-                        type,
-                        sub_type,
-                        pc->str);
       (void) index_insert_entry(fpd,
                                 pc->orig_line,
                                 pc->orig_col,

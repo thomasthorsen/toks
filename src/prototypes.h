@@ -32,6 +32,15 @@ const char *get_file_extension(int& idx);
 
 void output(fp_data& fpd);
 void output_dump_tokens(void);
+void output_identifier(
+   const char *filename,
+   UINT32 line,
+   UINT32 column_start,
+   UINT32 column_end,
+   const char *scope,
+   const char *type,
+   const char *sub_type,
+   const char *identifier);
 
 
 /*
@@ -142,6 +151,7 @@ bool index_insert_entry(
    const char *type,
    const char *sub_type,
    const char *identifier);
+bool index_lookup_identifier(const char *identifier);
 
 
 /* Options we couldn't quite get rid of */

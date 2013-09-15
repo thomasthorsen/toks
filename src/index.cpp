@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "prototypes.h"
 #include "toks_types.h"
 #include "sqlite3080001.h"
 
@@ -438,6 +439,75 @@ bool index_insert_entry(
       cpd.error_count++;
       retval = false;
    }
+
+   return retval;
+}
+
+bool index_lookup_identifier(const char *identifier)
+{
+   bool retval = true;
+   sqlite3_stmt *stmt_lookup_identifier;
+   int result;
+
+   result = sqlite3_prepare_v2(cpd.index,
+                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.ColumnEnd,Entries.Context,Entries.Type,Entries.SubType,Entries.Identifier "
+                               "FROM Files JOIN Entries ON Files.rowid=Entries.Filerow "
+                               "WHERE Entries.Identifier LIKE ?",
+                               -1,
+                               &stmt_lookup_identifier,
+                               NULL);
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_text(stmt_lookup_identifier,
+                                 1,
+                                 identifier,
+                                 -1,
+                                 SQLITE_STATIC);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      do
+      {
+         result = sqlite3_step(stmt_lookup_identifier);
+         if (result == SQLITE_ROW)
+         {
+            const char *filename = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 0));
+            UINT32 line = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 1);
+            UINT32 column_start = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 2);
+            UINT32 column_end = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 3);
+            const char *scope = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 4));
+            const char *type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 5));
+            const char *sub_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 6));
+            const char *identifier = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 7));
+            output_identifier(
+               filename,
+               line,
+               column_start,
+               column_end,
+               scope,
+               type,
+               sub_type,
+               identifier);
+         }
+      } while (result == SQLITE_ROW);
+
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
+   }
+
+   if (result != SQLITE_OK)
+   {
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      cpd.error_count++;
+      retval = false;
+   }
+
+   (void) sqlite3_finalize(stmt_lookup_identifier);
 
    return retval;
 }
