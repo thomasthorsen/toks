@@ -37,14 +37,14 @@ The build system is CMake:
 
 The resulting executable is build/toks.
 
-To use LLVM/Clang, simply set CXX to clang++ when invoking cmake:
+To use LLVM/Clang, use the provided toolchain file:
 
-    toks/build> CXX=clang++ cmake ..
+    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-clang.cmake ..
     toks/build> make
 
 Building for Windows is only supported using the mingw compiler. To cross compile on Linux, use the following commands:
 
-    toks/build> CXX=i586-mingw32msvc-c++ cmake ..
+    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-mingw32.cmake ..
     toks/build> make
 
 
