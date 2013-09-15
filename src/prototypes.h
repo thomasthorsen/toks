@@ -31,7 +31,7 @@ const char *get_file_extension(int& idx);
  */
 
 void output(fp_data& fpd);
-void output_parsed(FILE *pfile);
+void output_dump_tokens(void);
 
 
 /*

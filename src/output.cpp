@@ -242,17 +242,17 @@ void output(fp_data& fpd)
    }
 }
 
-void output_parsed(FILE *pfile)
+void output_dump_tokens()
 {
    chunk_t *pc;
    int     cnt;
    const char *tolog;
 
-   fprintf(pfile, "# -=====-\n");
-   fprintf(pfile, "# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
+   printf("# -=====-\n");
+   printf("# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
    for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
    {
-      fprintf(pfile, "\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%d]",
+      printf("\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%d]",
               pc->orig_line, get_token_name(pc->type),
               get_token_name(pc->parent_type), pc->scope_text(),
               pc->column, pc->orig_col, pc->orig_col_end,
@@ -266,8 +266,8 @@ void output_parsed(FILE *pfile)
        {
           if (tolog != NULL)
           {
-             fprintf(pfile, "%s", tolog);
-             fprintf(pfile, ",");
+             printf("%s", tolog);
+             printf(",");
           }
           tolog = pcf_names[i];
        }
@@ -275,25 +275,25 @@ void output_parsed(FILE *pfile)
 
       if (tolog != NULL)
       {
-       fprintf(pfile, "%s", tolog);
+         printf("%s", tolog);
       }
 
       if ((pc->type != CT_NEWLINE) && (pc->len() != 0))
       {
          for (cnt = 0; cnt < pc->column; cnt++)
          {
-            fprintf(pfile, " ");
+            printf(" ");
          }
          if (pc->type != CT_NL_CONT)
          {
-            fprintf(pfile, "%s", pc->str.c_str());
+            printf("%s", pc->str.c_str());
          }
          else
          {
-            fprintf(pfile, "\\");
+            printf("\\");
          }
       }
    }
-   fprintf(pfile, "\n# -=====-\n");
-   fflush(pfile);
+   printf("\n# -=====-\n");
+   fflush(stdout);
 }

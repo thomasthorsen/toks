@@ -398,7 +398,7 @@ static void do_source_file(const char *filename, bool dump)
       /* Special hook for dumping parsed data for debugging */
       if (dump)
       {
-         output_parsed(stdout);
+         output_dump_tokens();
       }
 
       index_begin_file(fpd);
