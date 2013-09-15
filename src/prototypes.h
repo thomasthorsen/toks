@@ -30,7 +30,7 @@ const char *get_file_extension(int& idx);
  *  output.cpp
  */
 
-void output(void);
+void output(fp_data& fpd);
 void output_parsed(FILE *pfile);
 
 
@@ -130,7 +130,18 @@ void assign_scope(void);
  * index.cpp
  */
 bool index_check(void);
-bool index_prepare_for_file(const char *digest, const char *filename, sqlite3_int64 *filerow);
+bool index_prepare_for_file(fp_data& fpd);
+void index_begin_file(fp_data& fpd);
+void index_end_file(fp_data& fpd);
+bool index_insert_entry(
+   fp_data& fpd,
+   UINT32 line,
+   UINT32 column_start,
+   UINT32 column_end,
+   const char *context,
+   const char *type,
+   const char *sub_type,
+   const char *identifier);
 
 
 /* Options we couldn't quite get rid of */

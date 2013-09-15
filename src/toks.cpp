@@ -366,9 +366,9 @@ static void process_source_list(const char *source_list, bool dump)
  */
 static void do_source_file(const char *filename, bool dump)
 {
-   vector<UINT8> data;
-   char digest[33];
-   sqlite3_int64 filerow;
+   fp_data fpd;
+
+   fpd.filename = filename;
 
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
@@ -377,23 +377,23 @@ static void do_source_file(const char *filename, bool dump)
    }
 
    /* Read in the source file */
-   if (!decode_file(data, filename))
+   if (!decode_file(fpd.data, filename))
    {
       cpd.error_count++;
       return;
    }
 
    /* Calculate MD5 digest */
-   MD5::Calc(&data[0], data.size(), digest);
+   MD5::Calc(&fpd.data[0], fpd.data.size(), fpd.digest);
 
-   if (index_prepare_for_file(digest, filename, &filerow))
+   if (index_prepare_for_file(fpd))
    {
       LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
               filename, language_to_string(cpd.lang_flags));
 
       cpd.filename = filename;
 
-      toks_start(data);
+      toks_start(fpd.data);
 
       /* Special hook for dumping parsed data for debugging */
       if (dump)
@@ -401,7 +401,11 @@ static void do_source_file(const char *filename, bool dump)
          output_parsed(stdout);
       }
 
-      output();
+      index_begin_file(fpd);
+
+      output(fpd);
+
+      index_end_file(fpd);
 
       toks_end();
    }

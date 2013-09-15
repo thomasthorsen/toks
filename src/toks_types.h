@@ -305,6 +305,16 @@ struct lookup_entry_t
    const chunk_tag_t *tag;
 };
 
+struct fp_data
+{
+   const char         *filename;
+   vector<UINT8>      data;
+   char               digest[33];
+   sqlite3_stmt       *stmt_insert_entry;
+   sqlite3_stmt       *stmt_begin;
+   sqlite3_stmt       *stmt_commit;
+};
+
 struct cp_data
 {
    UINT32             error_count;

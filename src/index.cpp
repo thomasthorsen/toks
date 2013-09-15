@@ -251,14 +251,16 @@ static int index_replace_file(const char *digest, const char *filename)
 }
 
 /* Returns true if the file needs to be analyzed */
-bool index_prepare_for_file(
-   const char *digest,
-   const char *filename,
-   sqlite3_int64 *filerow)
+bool index_prepare_for_file(fp_data& fpd)
 {
    sqlite3_stmt *stmt_lookup_file = NULL;
    int result;
    bool retval = true;
+   sqlite3_int64 filerow = 0;
+
+   fpd.stmt_insert_entry = NULL;
+   fpd.stmt_begin = NULL;
+   fpd.stmt_commit = NULL;
 
    result = sqlite3_prepare_v2(cpd.index,
                                "SELECT rowid,Digest FROM Files WHERE Filename=?",
@@ -270,7 +272,7 @@ bool index_prepare_for_file(
    {
       result = sqlite3_bind_text(stmt_lookup_file,
                                  1,
-                                 filename,
+                                 fpd.filename,
                                  -1,
                                  SQLITE_STATIC);
    }
@@ -282,34 +284,68 @@ bool index_prepare_for_file(
 
    if (result == SQLITE_ROW)
    {
-      *filerow = sqlite3_column_int64(stmt_lookup_file, 0);
+      filerow = sqlite3_column_int64(stmt_lookup_file, 0);
       const char *ingest =
          (const char *) sqlite3_column_text(stmt_lookup_file, 1);
 
-      if (strcmp(digest, ingest) == 0)
+      if (strcmp(fpd.digest, ingest) == 0)
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", filename, digest, *filerow);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", fpd.filename, fpd.digest, filerow);
          result = SQLITE_OK;
          retval = false;
       }
       else
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", filename, digest, *filerow, ingest);
-         result = index_replace_file(digest, filename);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", fpd.filename, fpd.digest, filerow, ingest);
+         result = index_replace_file(fpd.digest, fpd.filename);
          if (result == SQLITE_OK)
          {
-            result = index_prune_entries(*filerow);
+            result = index_prune_entries(filerow);
          }
       }
    }
    else
    {
-      LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", filename, digest);
-      result = index_insert_file(digest, filename);
+      LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", fpd.filename, fpd.digest);
+      result = index_insert_file(fpd.digest, fpd.filename);
       if (result == SQLITE_OK)
       {
-         result = index_lookup_filerow(filename, filerow);
+         result = index_lookup_filerow(fpd.filename, &filerow);
       }
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "INSERT INTO Entries VALUES(?,?,?,?,?,?,?,?)",
+                                  -1,
+                                  &fpd.stmt_insert_entry,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_int64(fpd.stmt_insert_entry,
+                                  1,
+                                  filerow);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "BEGIN",
+                                  -1,
+                                  &fpd.stmt_begin,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "COMMIT",
+                                  -1,
+                                  &fpd.stmt_commit,
+                                  NULL);
    }
 
    if (result != SQLITE_OK)
@@ -321,6 +357,87 @@ bool index_prepare_for_file(
    }
 
    (void) sqlite3_finalize(stmt_lookup_file);
+
+   return retval;
+}
+
+void index_begin_file(fp_data& fpd)
+{
+   (void) sqlite3_step(fpd.stmt_begin);
+}
+
+void index_end_file(fp_data& fpd)
+{
+   (void) sqlite3_step(fpd.stmt_commit);
+   sqlite3_finalize(fpd.stmt_insert_entry);
+   sqlite3_finalize(fpd.stmt_begin);
+   sqlite3_finalize(fpd.stmt_commit);
+}
+
+bool index_insert_entry(
+   fp_data& fpd,
+   UINT32 line,
+   UINT32 column_start,
+   UINT32 column_end,
+   const char *context,
+   const char *type,
+   const char *sub_type,
+   const char *identifier)
+{
+   bool retval = true;
+   int result;
+
+   result = sqlite3_reset(fpd.stmt_insert_entry);
+
+   if (result == SQLITE_OK)
+   {
+      result |= sqlite3_bind_int64(fpd.stmt_insert_entry,
+                                   2,
+                                   line);
+      result |= sqlite3_bind_int64(fpd.stmt_insert_entry,
+                                   3,
+                                   column_start);
+      result |= sqlite3_bind_int64(fpd.stmt_insert_entry,
+                                   4,
+                                   column_end);
+      result |= sqlite3_bind_text(fpd.stmt_insert_entry,
+                                  5,
+                                  context,
+                                  -1,
+                                  SQLITE_STATIC);
+      result |= sqlite3_bind_text(fpd.stmt_insert_entry,
+                                  6,
+                                  type,
+                                  -1,
+                                  SQLITE_STATIC);
+      result |= sqlite3_bind_text(fpd.stmt_insert_entry,
+                                  7,
+                                  sub_type,
+                                  -1,
+                                  SQLITE_STATIC);
+      result |= sqlite3_bind_text(fpd.stmt_insert_entry,
+                                  8,
+                                  identifier,
+                                  -1,
+                                  SQLITE_STATIC);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_step(fpd.stmt_insert_entry);
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
+   }
+
+   if (result != SQLITE_OK)
+   {
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      cpd.error_count++;
+      retval = false;
+   }
 
    return retval;
 }

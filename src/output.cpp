@@ -100,7 +100,7 @@ void output_identifier(
    printf(" %s %s %s %s\n", scope, type_strings[type], sub_type_strings[sub_type], identifier);
 }
 
-void output(void)
+void output(fp_data& fpd)
 {
    chunk_t *pc;
    id_type type;
@@ -223,14 +223,22 @@ void output(void)
             continue;
       }
 
-      output_identifier(cpd.filename,
+      output_identifier(fpd.filename,
                         pc->orig_line,
                         pc->orig_col,
                         pc->orig_col_end,
                         pc->scope,
                         type,
                         sub_type,
-                        pc->str.c_str());
+                        pc->str);
+      (void) index_insert_entry(fpd,
+                                pc->orig_line,
+                                pc->orig_col,
+                                pc->orig_col_end,
+                                pc->scope,
+                                type_strings[type],
+                                sub_type_strings[sub_type],
+                                pc->str);
    }
 }
 
