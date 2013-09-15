@@ -147,7 +147,7 @@ bool index_insert_entry(
    UINT32 line,
    UINT32 column_start,
    UINT32 column_end,
-   const char *context,
+   const char *scope,
    const char *type,
    const char *sub_type,
    const char *identifier);

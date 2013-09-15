@@ -78,7 +78,7 @@ bool index_check(void)
       {
          result = sqlite3_exec(
             cpd.index,
-            "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Context TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
+            "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
             NULL,
             NULL,
             &errmsg);
@@ -380,7 +380,7 @@ bool index_insert_entry(
    UINT32 line,
    UINT32 column_start,
    UINT32 column_end,
-   const char *context,
+   const char *scope,
    const char *type,
    const char *sub_type,
    const char *identifier)
@@ -403,7 +403,7 @@ bool index_insert_entry(
                                    column_end);
       result |= sqlite3_bind_text(fpd.stmt_insert_entry,
                                   5,
-                                  context,
+                                  scope,
                                   -1,
                                   SQLITE_STATIC);
       result |= sqlite3_bind_text(fpd.stmt_insert_entry,
@@ -450,7 +450,7 @@ bool index_lookup_identifier(const char *identifier)
    int result;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.ColumnEnd,Entries.Context,Entries.Type,Entries.SubType,Entries.Identifier "
+                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.ColumnEnd,Entries.Scope,Entries.Type,Entries.SubType,Entries.Identifier "
                                "FROM Files JOIN Entries ON Files.rowid=Entries.Filerow "
                                "WHERE Entries.Identifier LIKE ?",
                                -1,
