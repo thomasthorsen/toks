@@ -304,7 +304,7 @@ bool index_prepare_for_file(fp_data& fpd)
          }
       }
    }
-   else
+   else if (result == SQLITE_DONE)
    {
       LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", fpd.filename, fpd.digest);
       result = index_insert_file(fpd.digest, fpd.filename);
