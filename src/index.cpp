@@ -1,6 +1,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cinttypes>
 
 #include "prototypes.h"
 #include "toks_types.h"
@@ -291,13 +292,13 @@ bool index_prepare_for_file(fp_data& fpd)
 
       if (strcmp(fpd.digest, ingest) == 0)
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with same digest\n", fpd.filename, fpd.digest, filerow);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %"PRId64" with same digest\n", fpd.filename, fpd.digest, (int64_t) filerow);
          result = SQLITE_OK;
          retval = false;
       }
       else
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %lld with different digest (%s)\n", fpd.filename, fpd.digest, filerow, ingest);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %"PRId64" with different digest (%s)\n", fpd.filename, fpd.digest, (int64_t) filerow, ingest);
          result = index_replace_file(fpd.digest, fpd.filename);
          if (result == SQLITE_OK)
          {
@@ -307,12 +308,12 @@ bool index_prepare_for_file(fp_data& fpd)
    }
    else if (result == SQLITE_DONE)
    {
-      LOG_FMT(LNOTE, "File %s(%s) does not exist in index\n", fpd.filename, fpd.digest);
       result = index_insert_file(fpd.digest, fpd.filename);
       if (result == SQLITE_OK)
       {
          result = index_lookup_filerow(fpd.filename, &filerow);
       }
+      LOG_FMT(LNOTE, "File %s(%s) does not exist in index, inserted at filerow %"PRId64"\n", fpd.filename, fpd.digest, (int64_t) filerow);
    }
 
    if (result == SQLITE_OK)

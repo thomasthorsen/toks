@@ -5,7 +5,7 @@ find_package(Threads REQUIRED)
 
 set(SQLITE_FLAGS "-DSQLITE_OMIT_LOAD_EXTENSION")
 
-set(C_FLAGS "-Wall -Werror -O3 -g ${SQLITE_FLAGS}")
+set(C_FLAGS "-O3 -g ${SQLITE_FLAGS}")
 
 # Create a stand-alone executable when compiling for Windows
 if(MINGW)
@@ -13,7 +13,7 @@ if(MINGW)
 endif()
 
 set(CMAKE_C_FLAGS "${C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${C_FLAGS} -Wall -Werror")
 
 set(VERSION "0.0")
 
