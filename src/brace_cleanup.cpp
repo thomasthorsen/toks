@@ -24,12 +24,12 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
 #define insert_vbrace_close_after(pc, frm)    insert_vbrace(pc, true, frm)
 #define insert_vbrace_open_before(pc, frm)    insert_vbrace(pc, false, frm)
 
-static void parse_cleanup(struct parse_frame *frm, chunk_t *pc);
+static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
 
-static bool close_statement(struct parse_frame *frm, chunk_t *pc);
+static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
 
-static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc);
-static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc);
+static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
+static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
 
 
 static int preproc_start(struct parse_frame *frm, chunk_t *pc)
@@ -102,7 +102,7 @@ static void print_stack(log_sev_t logsev, const char *str,
  *
  * TODO: This can be cleaned up and simplified - we can look both forward and backward!
  */
-void brace_cleanup(void)
+void brace_cleanup(fp_data& fpd)
 {
    chunk_t            *pc;
    struct parse_frame frm;
@@ -161,7 +161,7 @@ void brace_cleanup(void)
            (cpd.in_preproc == CT_NONE)))
       {
          cpd.consumed = false;
-         parse_cleanup(&frm, pc);
+         parse_cleanup(fpd, &frm, pc);
          print_stack(LBCSAFTER, (pc->type == CT_VBRACE_CLOSE) ? "Virt-}" : pc->str, &frm, pc);
       }
       pc = chunk_get_next(pc);
@@ -200,7 +200,7 @@ static bool maybe_while_of_do(chunk_t *pc)
 }
 
 
-static void push_fmr_pse(struct parse_frame *frm, chunk_t *pc,
+static void push_fmr_pse(fp_data& fpd, struct parse_frame *frm, chunk_t *pc,
                          brstage_e stage, const char *logtext)
 {
    if (frm->pse_tos < ((int)ARRAY_SIZE(frm->pse) - 1))
@@ -215,7 +215,7 @@ static void push_fmr_pse(struct parse_frame *frm, chunk_t *pc,
    else
    {
       LOG_FMT(LWARN, "%s: Error: Frame stack overflow,  Unable to properly process this file.\n",
-              cpd.filename);
+              fpd.filename);
       cpd.error_count++;
    }
 }
@@ -275,7 +275,7 @@ static void push_fmr_pse(struct parse_frame *frm, chunk_t *pc,
  * When a #define is entered, the current frame is pushed and cleared.
  * When a #define is exited, the frame is popped.
  */
-static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
+static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
 {
    c_token_t parent = CT_NONE;
    chunk_t   *prev;
@@ -330,7 +330,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
    /* Check the progression of complex statements */
    if (frm->pse[frm->pse_tos].stage != BS_NONE)
    {
-      if (check_complex_statements(frm, pc))
+      if (check_complex_statements(fpd, frm, pc))
       {
          return;
       }
@@ -347,13 +347,13 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
       if (chunk_is_semicolon(pc))
       {
          cpd.consumed = true;
-         close_statement(frm, pc);
+         close_statement(fpd, frm, pc);
       }
       else if ((cpd.lang_flags & LANG_PAWN) != 0)
       {
          if (pc->type == CT_BRACE_CLOSE)
          {
-            close_statement(frm, pc);
+            close_statement(fpd, frm, pc);
          }
       }
    }
@@ -386,7 +386,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
              (frm->pse[frm->pse_tos].type != CT_PP_DEFINE))
          {
             LOG_FMT(LWARN, "%s:%d Error: Unexpected '%s' for '%s', which was on line %d\n",
-                    cpd.filename, pc->orig_line, pc->str.c_str(),
+                    fpd.filename, pc->orig_line, pc->str.c_str(),
                     get_token_name(frm->pse[frm->pse_tos].pc->type),
                     frm->pse[frm->pse_tos].pc->orig_line);
             print_stack(LBCSPOP, "=Error  ", frm, pc);
@@ -416,7 +416,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
          /* See if we are in a complex statement */
          if (frm->pse[frm->pse_tos].stage != BS_NONE)
          {
-            handle_complex_close(frm, pc);
+            handle_complex_close(fpd, frm, pc);
          }
       }
    }
@@ -456,10 +456,10 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
          else
          {
             LOG_FMT(LWARN, "%s:%d: Error: Expected a semicolon for WHILE_OF_DO, but got '%s'\n",
-                    cpd.filename, pc->orig_line, get_token_name(pc->type));
+                    fpd.filename, pc->orig_line, get_token_name(pc->type));
             cpd.error_count++;
          }
-         handle_complex_close(frm, pc);
+         handle_complex_close(fpd, frm, pc);
       }
    }
 
@@ -535,7 +535,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
       {
          frm->brace_level++;
       }
-      push_fmr_pse(frm, pc, BS_NONE, "+Open   ");
+      push_fmr_pse(fpd, frm, pc, BS_NONE, "+Open   ");
       frm->pse[frm->pse_tos].parent = parent;
       pc->parent_type = parent;
    }
@@ -545,7 +545,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
    /** Create a stack entry for complex statements IF/DO/FOR/WHILE/SWITCH */
    if (patcls == PATCLS_BRACED)
    {
-      push_fmr_pse(frm, pc,
+      push_fmr_pse(fpd, frm, pc,
                    (pc->type == CT_DO) ? BS_BRACE_DO : BS_BRACE2,
                    "+ComplexBraced");
    }
@@ -558,15 +558,15 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
          pc->type = CT_WHILE_OF_DO;
          bs       = BS_WOD_PAREN;
       }
-      push_fmr_pse(frm, pc, bs, "+ComplexParenBraced");
+      push_fmr_pse(fpd, frm, pc, bs, "+ComplexParenBraced");
    }
    else if (patcls == PATCLS_OPBRACED)
    {
-      push_fmr_pse(frm, pc, BS_OP_PAREN1, "+ComplexOpParenBraced");
+      push_fmr_pse(fpd, frm, pc, BS_OP_PAREN1, "+ComplexOpParenBraced");
    }
    else if (patcls == PATCLS_ELSE)
    {
-      push_fmr_pse(frm, pc, BS_ELSEIF, "+ComplexElse");
+      push_fmr_pse(fpd, frm, pc, BS_ELSEIF, "+ComplexElse");
    }
 
    /* Mark simple statement/expression starts
@@ -639,7 +639,7 @@ static void parse_cleanup(struct parse_frame *frm, chunk_t *pc)
  * @param pc   The current chunk
  * @return     true - done with this chunk, false - keep processing
  */
-static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
+static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
 {
    c_token_t parent;
    chunk_t   *vbrace;
@@ -665,7 +665,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
       /* Remove the CT_IF and close the statement */
       frm->pse_tos--;
       print_stack(LBCSPOP, "-IF-CCS ", frm, pc);
-      if (close_statement(frm, pc))
+      if (close_statement(fpd, frm, pc))
       {
          return(true);
       }
@@ -706,7 +706,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
       /* Remove the CT_TRY and close the statement */
       frm->pse_tos--;
       print_stack(LBCSPOP, "-TRY-CCS ", frm, pc);
-      if (close_statement(frm, pc))
+      if (close_statement(fpd, frm, pc))
       {
          return(true);
       }
@@ -724,7 +724,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
       }
 
       LOG_FMT(LWARN, "%s:%d Error: Expected 'while', got '%s'\n",
-              cpd.filename, pc->orig_line, pc->str.c_str());
+              fpd.filename, pc->orig_line, pc->str.c_str());
       frm->pse_tos--;
       print_stack(LBCSPOP, "-Error  ", frm, pc);
       cpd.error_count++;
@@ -743,7 +743,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
       frm->level++;
       frm->brace_level++;
 
-      push_fmr_pse(frm, vbrace, BS_NONE, "+VBrace ");
+      push_fmr_pse(fpd, frm, vbrace, BS_NONE, "+VBrace ");
       frm->pse[frm->pse_tos].parent = parent;
 
       /* update the level of pc */
@@ -765,7 +765,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
         (frm->pse[frm->pse_tos].stage == BS_WOD_PAREN)))
    {
       LOG_FMT(LWARN, "%s:%d Error: Expected '(', got '%s' for '%s'\n",
-              cpd.filename, pc->orig_line, pc->str.c_str(),
+              fpd.filename, pc->orig_line, pc->str.c_str(),
               get_token_name(frm->pse[frm->pse_tos].type));
 
       /* Throw out the complex statement */
@@ -786,7 +786,7 @@ static bool check_complex_statements(struct parse_frame *frm, chunk_t *pc)
  * @param pc   The current chunk
  * @return     true - done with this chunk, false - keep processing
  */
-static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
+static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
 {
    chunk_t *next;
 
@@ -809,7 +809,7 @@ static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
          {
             frm->pse_tos--;
             print_stack(LBCSPOP, "-IF-HCS ", frm, pc);
-            if (close_statement(frm, pc))
+            if (close_statement(fpd, frm, pc))
             {
                return(true);
             }
@@ -828,7 +828,7 @@ static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
          {
             frm->pse_tos--;
             print_stack(LBCSPOP, "-TRY-HCS ", frm, pc);
-            if (close_statement(frm, pc))
+            if (close_statement(fpd, frm, pc))
             {
                return(true);
             }
@@ -840,7 +840,7 @@ static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
                  get_token_name(frm->pse[frm->pse_tos].type));
          frm->pse_tos--;
          print_stack(LBCSPOP, "-HCC B2 ", frm, pc);
-         if (close_statement(frm, pc))
+         if (close_statement(fpd, frm, pc))
          {
             return(true);
          }
@@ -864,7 +864,7 @@ static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
       frm->pse_tos--;
       print_stack(LBCSPOP, "-HCC WoDS ", frm, pc);
 
-      if (close_statement(frm, pc))
+      if (close_statement(fpd, frm, pc))
       {
          return(true);
       }
@@ -873,7 +873,7 @@ static bool handle_complex_close(struct parse_frame *frm, chunk_t *pc)
    {
       /* PROBLEM */
       LOG_FMT(LWARN, "%s:%d Error: TOS.type='%s' TOS.stage=%d\n",
-              cpd.filename, pc->orig_line,
+              fpd.filename, pc->orig_line,
               get_token_name(frm->pse[frm->pse_tos].type),
               frm->pse[frm->pse_tos].stage);
       cpd.error_count++;
@@ -950,7 +950,7 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
  *
  * @return     true - done with this chunk, false - keep processing
  */
-static bool close_statement(struct parse_frame *frm, chunk_t *pc)
+static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
 {
    chunk_t *vbc = pc;
 
@@ -996,7 +996,7 @@ static bool close_statement(struct parse_frame *frm, chunk_t *pc)
          print_stack(LBCSPOP, "-CS VB  ", frm, pc);
 
          /* And repeat the close */
-         close_statement(frm, pc);
+         close_statement(fpd, frm, pc);
          return(true);
       }
    }
@@ -1004,7 +1004,7 @@ static bool close_statement(struct parse_frame *frm, chunk_t *pc)
    /* See if we are done with a complex statement */
    if (frm->pse[frm->pse_tos].stage != BS_NONE)
    {
-      if (handle_complex_close(frm, vbc))
+      if (handle_complex_close(fpd, frm, vbc))
       {
          return(true);
       }

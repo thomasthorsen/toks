@@ -1035,7 +1035,7 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
  * @param pc      The structure to update, str is an input.
  * @return        true/false - whether anything was parsed
  */
-static bool parse_next(tok_ctx& ctx, chunk_t& pc)
+static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
 {
    const chunk_tag_t *punc;
    int ch, ch1;
@@ -1288,7 +1288,7 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
    pc.str.append(ctx.get());
 
    LOG_FMT(LWARN, "%s:%d Garbage in col %d: %x\n",
-           cpd.filename, pc.orig_line, (int)ctx.c.col, pc.str[0]);
+           fpd.filename, pc.orig_line, (int)ctx.c.col, pc.str[0]);
    cpd.error_count++;
    return(true);
 }
@@ -1302,9 +1302,9 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
  *  - leading space & tabs are converted to the appropriate format.
  *
  */
-void tokenize(const vector<UINT8>& data)
+void tokenize(fp_data& fpd)
 {
-   tok_ctx            ctx(data);
+   tok_ctx            ctx(fpd.data);
    chunk_t            chunk;
    chunk_t            *pc    = NULL;
    chunk_t            *rprev = NULL;
@@ -1315,10 +1315,10 @@ void tokenize(const vector<UINT8>& data)
    while (ctx.more())
    {
       chunk.reset();
-      if (!parse_next(ctx, chunk))
+      if (!parse_next(fpd, ctx, chunk))
       {
          LOG_FMT(LERR, "%s:%d Bailed before the end?\n",
-                 cpd.filename, ctx.c.row);
+                 fpd.filename, ctx.c.row);
          cpd.error_count++;
          break;
       }

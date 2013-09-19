@@ -38,7 +38,7 @@ struct cp_data cpd;
 static int language_from_tag(const char *tag);
 static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
-static void toks_start(const vector<UINT8>& data);
+static void toks_start(fp_data& fpd);
 static void toks_end();
 static void do_source_file(const char *filename_in, bool dump);
 static void process_source_list(const char *source_list, bool dump);
@@ -407,9 +407,7 @@ static void do_source_file(const char *filename, bool dump)
       LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
               filename, language_to_string(cpd.lang_flags));
 
-      cpd.filename = filename;
-
-      toks_start(fpd.data);
+      toks_start(fpd);
 
       /* Special hook for dumping parsed data for debugging */
       if (dump)
@@ -428,12 +426,12 @@ static void do_source_file(const char *filename, bool dump)
 }
 
 
-static void toks_start(const vector<UINT8>& data)
+static void toks_start(fp_data& fpd)
 {
    /**
     * Parse the text into chunks
     */
-   tokenize(data);
+   tokenize(fpd);
 
    /**
     * Change certain token types based on simple sequence.
@@ -441,13 +439,13 @@ static void toks_start(const vector<UINT8>& data)
     * Note that level info is not yet available, so it is OK to do all
     * processing that doesn't need to know level info. (that's very little!)
     */
-   tokenize_cleanup();
+   tokenize_cleanup(fpd);
 
    /**
     * Detect the brace and paren levels and insert virtual braces.
     * This handles all that nasty preprocessor stuff
     */
-   brace_cleanup();
+   brace_cleanup(fpd);
 
    /**
     * At this point, the level information is available and accurate.
@@ -461,14 +459,14 @@ static void toks_start(const vector<UINT8>& data)
    /**
     * Re-type chunks, combine chunks
     */
-   fix_symbols();
+   fix_symbols(fpd);
 
    mark_comments();
 
    /**
     * Look at all colons ':' and mark labels, :? sequences, etc.
     */
-   combine_labels();
+   combine_labels(fpd);
 
    /**
     * Assign scope information

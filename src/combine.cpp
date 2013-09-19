@@ -23,18 +23,18 @@ static void fix_enum_struct_union(chunk_t *pc);
 static void fix_casts(chunk_t *pc);
 static void fix_type_cast(chunk_t *pc);
 static chunk_t *fix_var_def(chunk_t *pc);
-static void mark_function(chunk_t *pc);
+static void mark_function(fp_data& fpd, chunk_t *pc);
 static void mark_function_return_type(chunk_t *fname, chunk_t *pc, c_token_t parent_type);
 static bool mark_function_type(chunk_t *pc);
 static void mark_struct_union_body(chunk_t *start);
 static chunk_t *mark_variable_definition(chunk_t *start, UINT64 flags);
 
 static void mark_define_expressions(void);
-static void mark_class_ctor(chunk_t *pclass);
+static void mark_class_ctor(fp_data& fpd, chunk_t *pclass);
 static void mark_namespace(chunk_t *pns);
-static void mark_cpp_constructor(chunk_t *pc);
+static void mark_cpp_constructor(fp_data& fpd, chunk_t *pc);
 static void mark_lvalue(chunk_t *pc);
-static void mark_template_func(chunk_t *pc, chunk_t *pc_next);
+static void mark_template_func(fp_data& fpd, chunk_t *pc, chunk_t *pc_next);
 static void mark_exec_sql(chunk_t *pc);
 static void handle_oc_class(chunk_t *pc);
 static void handle_oc_block_literal(chunk_t *pc);
@@ -248,7 +248,7 @@ static chunk_t *skip_dc_member(chunk_t *start)
  * First on all non-preprocessor chunks and then on each preprocessor chunk.
  * It does all the detection and classifying.
  */
-void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
+static void do_symbol_check(fp_data& fpd, chunk_t *prev, chunk_t *pc, chunk_t *next)
 {
    chunk_t *tmp;
 
@@ -542,7 +542,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
        (next->type == CT_ANGLE_OPEN) &&
        (next->parent_type == CT_TEMPLATE))
    {
-      mark_template_func(pc, next);
+      mark_template_func(fpd, pc, next);
    }
 
    if ((pc->type == CT_SQUARE_CLOSE) &&
@@ -647,7 +647,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
       if ((pc->type == CT_FUNCTION) &&
           ((pc->parent_type == CT_OC_BLOCK_EXPR) || !is_oc_block(pc)))
       {
-         mark_function(pc);
+         mark_function(fpd, pc);
       }
    }
 
@@ -753,7 +753,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
    {
       if ((pc->type != CT_STRUCT) || ((cpd.lang_flags & LANG_C) == 0))
       {
-         mark_class_ctor(pc);
+         mark_class_ctor(fpd, pc);
       }
    }
 
@@ -999,7 +999,7 @@ void do_symbol_check(chunk_t *prev, chunk_t *pc, chunk_t *next)
  *   STRUCT/ENUM/UNION + WORD :: WORD => TYPE
  *   WORD + '('               :: WORD => FUNCTION
  */
-void fix_symbols(void)
+void fix_symbols(fp_data& fpd)
 {
    chunk_t *pc;
    chunk_t *next;
@@ -1039,7 +1039,7 @@ void fix_symbols(void)
       {
          next = &dummy;
       }
-      do_symbol_check(prev, pc, next);
+      do_symbol_check(fpd, prev, pc, next);
       pc = chunk_get_next_ncnl(pc);
    }
 
@@ -1974,7 +1974,7 @@ static void fix_typedef(chunk_t *start)
  * CT_Q_COLON, CT_LABEL_COLON, or CT_CASE_COLON.
  * It also changes the CT_WORD before CT_LABEL_COLON into CT_LABEL.
  */
-void combine_labels(void)
+void combine_labels(fp_data& fpd)
 {
    chunk_t *cur;
    chunk_t *prev;
@@ -2158,7 +2158,7 @@ void combine_labels(void)
                else
                {
                   LOG_FMT(LWARN, "%s:%d unexpected colon in col %d n-parent=%s c-parent=%s l=%d bl=%d\n",
-                          cpd.filename, next->orig_line, next->orig_col,
+                          fpd.filename, next->orig_line, next->orig_col,
                           get_token_name(next->parent_type),
                           get_token_name(cur->parent_type),
                           next->level, next->brace_level);
@@ -2716,7 +2716,7 @@ static bool can_be_full_param(chunk_t *start, chunk_t *end)
  * Constructor/destructor detection should have already been done when the
  * 'class' token was encountered (see mark_class_ctor).
  */
-static void mark_function(chunk_t *pc)
+static void mark_function(fp_data& fpd, chunk_t *pc)
 {
    chunk_t *prev;
    chunk_t *next;
@@ -2943,7 +2943,7 @@ static void mark_function(chunk_t *pc)
                        (destr != NULL) ? "DE" : "CON",
                        prev->str.c_str(), get_token_name(prev->type));
 
-               mark_cpp_constructor(pc);
+               mark_cpp_constructor(fpd, pc);
                return;
             }
             else
@@ -3301,7 +3301,7 @@ static void mark_function(chunk_t *pc)
 }
 
 
-static void mark_cpp_constructor(chunk_t *pc)
+static void mark_cpp_constructor(fp_data& fpd, chunk_t *pc)
 {
    chunk_t *paren_open;
    chunk_t *tmp;
@@ -3324,7 +3324,7 @@ static void mark_cpp_constructor(chunk_t *pc)
    if (!chunk_is_str(paren_open, "(", 1))
    {
       LOG_FMT(LWARN, "%s:%d Expected '(', got: [%s]\n",
-              cpd.filename, paren_open->orig_line,
+              fpd.filename, paren_open->orig_line,
               paren_open->str.c_str());
       return;
    }
@@ -3377,7 +3377,7 @@ static void mark_cpp_constructor(chunk_t *pc)
  * We're on a 'class' or 'struct'.
  * Scan for CT_FUNCTION with a string that matches pclass->str
  */
-static void mark_class_ctor(chunk_t *start)
+static void mark_class_ctor(fp_data& fpd, chunk_t *start)
 {
    chunk_t    *next;
    chunk_t    *pclass;
@@ -3493,7 +3493,7 @@ static void mark_class_ctor(chunk_t *start)
          {
             pc->type = CT_FUNC_CLASS;
             LOG_FMT(LFTOR, "%d] Marked CTor/DTor %s\n", pc->orig_line, pc->str.c_str());
-            mark_cpp_constructor(pc);
+            mark_cpp_constructor(fpd, pc);
          }
          else
          {
@@ -4008,7 +4008,7 @@ static void handle_d_template(chunk_t *pc)
  * Or we could be on a variable def if it's followed by a word:
  *   Renderer<rgb32> rend;
  */
-static void mark_template_func(chunk_t *pc, chunk_t *pc_next)
+static void mark_template_func(fp_data& fpd, chunk_t *pc, chunk_t *pc_next)
 {
    chunk_t *angle_close;
    chunk_t *after;
@@ -4041,7 +4041,7 @@ static void mark_template_func(chunk_t *pc, chunk_t *pc_next)
                     __func__, pc->str.c_str(), pc->orig_line);
             // its a function!!!
             pc->type = CT_FUNC_CALL;
-            mark_function(pc);
+            mark_function(fpd, pc);
          }
       }
       else if (after->type == CT_WORD)

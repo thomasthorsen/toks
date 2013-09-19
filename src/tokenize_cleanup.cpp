@@ -77,7 +77,7 @@ static void split_off_angle_close(chunk_t *pc)
 }
 
 
-void tokenize_cleanup(void)
+void tokenize_cleanup(fp_data& fpd)
 {
    chunk_t *pc   = chunk_get_head();
    chunk_t *prev = NULL;
@@ -108,7 +108,7 @@ void tokenize_cleanup(void)
           !chunk_get_next_ncnl(pc, CNAV_PREPROC))
       {
          LOG_FMT(LNOTE, "%s:%d Detected a macro that ends with a semicolon. Possible failures if used.\n",
-                 cpd.filename, pc->orig_line);
+                 fpd.filename, pc->orig_line);
       }
    }
 
@@ -134,7 +134,7 @@ void tokenize_cleanup(void)
             if (next->type != CT_ASSIGN)
             {
                LOG_FMT(LERR, "%s:%d %s: version: Unexpected token %s\n",
-                       cpd.filename, pc->orig_line, __func__, get_token_name(next->type));
+                       fpd.filename, pc->orig_line, __func__, get_token_name(next->type));
                cpd.error_count++;
             }
             pc->type = CT_WORD;

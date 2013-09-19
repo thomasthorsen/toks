@@ -318,7 +318,6 @@ struct fp_data
 struct cp_data
 {
    UINT32             error_count;
-   const char         *filename;
 
    int                lang_flags; // LANG_xxx
    bool               lang_forced;

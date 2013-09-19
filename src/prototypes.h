@@ -47,8 +47,8 @@ void output_identifier(
  *  combine.cpp
  */
 
-void fix_symbols(void);
-void combine_labels(void);
+void fix_symbols(fp_data& fpd);
+void combine_labels(fp_data& fpd);
 void mark_comments(void);
 void make_type(chunk_t *pc);
 
@@ -65,21 +65,21 @@ chunk_t *skip_attribute_prev(chunk_t *fp_close);
  *  tokenize.cpp
  */
 
-void tokenize(const vector<UINT8>& data);
+void tokenize(fp_data& fpd);
 
 
 /*
  *  tokenize_cleanup.cpp
  */
 
-void tokenize_cleanup(void);
+void tokenize_cleanup(fp_data& fpd);
 
 
 /*
  *  brace_cleanup.cpp
  */
 
-void brace_cleanup(void);
+void brace_cleanup(fp_data& fpd);
 
 
 /*
