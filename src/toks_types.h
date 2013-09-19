@@ -322,8 +322,6 @@ struct cp_data
    int                lang_flags; // LANG_xxx
    bool               lang_forced;
 
-   bool               consumed;
-
    c_token_t          in_preproc;
    int                preproc_ncnl_count;
 

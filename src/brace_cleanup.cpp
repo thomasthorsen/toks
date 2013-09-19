@@ -24,12 +24,12 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
 #define insert_vbrace_close_after(pc, frm)    insert_vbrace(pc, true, frm)
 #define insert_vbrace_open_before(pc, frm)    insert_vbrace(pc, false, frm)
 
-static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
+static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
-static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
+static bool close_statement(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
-static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
-static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
+static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
+static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
 
 static int preproc_start(struct parse_frame *frm, chunk_t *pc)
@@ -107,6 +107,7 @@ void brace_cleanup(fp_data& fpd)
    chunk_t            *pc;
    struct parse_frame frm;
    int                pp_level;
+   bool               consumed = false;
 
    memset(&frm, 0, sizeof(frm));
 
@@ -160,8 +161,8 @@ void brace_cleanup(fp_data& fpd)
           ((cpd.in_preproc == CT_PP_DEFINE) ||
            (cpd.in_preproc == CT_NONE)))
       {
-         cpd.consumed = false;
-         parse_cleanup(fpd, &frm, pc);
+         consumed = false;
+         parse_cleanup(fpd, consumed, &frm, pc);
          print_stack(LBCSAFTER, (pc->type == CT_VBRACE_CLOSE) ? "Virt-}" : pc->str, &frm, pc);
       }
       pc = chunk_get_next(pc);
@@ -275,7 +276,7 @@ static void push_fmr_pse(fp_data& fpd, struct parse_frame *frm, chunk_t *pc,
  * When a #define is entered, the current frame is pushed and cleared.
  * When a #define is exited, the frame is popped.
  */
-static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
+static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc)
 {
    c_token_t parent = CT_NONE;
    chunk_t   *prev;
@@ -330,7 +331,7 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
    /* Check the progression of complex statements */
    if (frm->pse[frm->pse_tos].stage != BS_NONE)
    {
-      if (check_complex_statements(fpd, frm, pc))
+      if (check_complex_statements(fpd, consumed, frm, pc))
       {
          return;
       }
@@ -346,14 +347,14 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
    {
       if (chunk_is_semicolon(pc))
       {
-         cpd.consumed = true;
-         close_statement(fpd, frm, pc);
+         consumed = true;
+         close_statement(fpd, consumed, frm, pc);
       }
       else if ((cpd.lang_flags & LANG_PAWN) != 0)
       {
          if (pc->type == CT_BRACE_CLOSE)
          {
-            close_statement(fpd, frm, pc);
+            close_statement(fpd, consumed, frm, pc);
          }
       }
    }
@@ -395,7 +396,7 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
       }
       else
       {
-         cpd.consumed = true;
+         consumed = true;
 
          /* Copy the parent, update the paren/brace levels */
          pc->parent_type = frm->pse[frm->pse_tos].parent;
@@ -416,20 +417,20 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
          /* See if we are in a complex statement */
          if (frm->pse[frm->pse_tos].stage != BS_NONE)
          {
-            handle_complex_close(fpd, frm, pc);
+            handle_complex_close(fpd, consumed, frm, pc);
          }
       }
    }
 
    /* In this state, we expect a semicolon, but we'll also hit the closing
-    * sparen, so we need to check cpd.consumed to see if the close sparen was
+    * sparen, so we need to check consumed to see if the close sparen was
     * aleady handled.
     */
    if (frm->pse[frm->pse_tos].stage == BS_WOD_SEMI)
    {
       chunk_t *tmp = pc;
 
-      if (cpd.consumed)
+      if (consumed)
       {
          /* If consumed, then we are on the close sparen.
           * PAWN: Check the next chunk for a semicolon. If it isn't, then
@@ -450,7 +451,7 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
          /* Complain if this ISN'T a semicolon, but close out WHILE_OF_DO anyway */
          if ((pc->type == CT_SEMICOLON) || (pc->type == CT_VSEMICOLON))
          {
-            cpd.consumed    = true;
+            consumed = true;
             pc->parent_type = CT_WHILE_OF_DO;
          }
          else
@@ -459,7 +460,7 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
                     fpd.filename, pc->orig_line, get_token_name(pc->type));
             cpd.error_count++;
          }
-         handle_complex_close(fpd, frm, pc);
+         handle_complex_close(fpd, consumed, frm, pc);
       }
    }
 
@@ -639,7 +640,7 @@ static void parse_cleanup(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
  * @param pc   The current chunk
  * @return     true - done with this chunk, false - keep processing
  */
-static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
+static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc)
 {
    c_token_t parent;
    chunk_t   *vbrace;
@@ -665,7 +666,7 @@ static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chun
       /* Remove the CT_IF and close the statement */
       frm->pse_tos--;
       print_stack(LBCSPOP, "-IF-CCS ", frm, pc);
-      if (close_statement(fpd, frm, pc))
+      if (close_statement(fpd, consumed, frm, pc))
       {
          return(true);
       }
@@ -706,7 +707,7 @@ static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chun
       /* Remove the CT_TRY and close the statement */
       frm->pse_tos--;
       print_stack(LBCSPOP, "-TRY-CCS ", frm, pc);
-      if (close_statement(fpd, frm, pc))
+      if (close_statement(fpd, consumed, frm, pc))
       {
          return(true);
       }
@@ -786,7 +787,7 @@ static bool check_complex_statements(fp_data& fpd, struct parse_frame *frm, chun
  * @param pc   The current chunk
  * @return     true - done with this chunk, false - keep processing
  */
-static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
+static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc)
 {
    chunk_t *next;
 
@@ -809,7 +810,7 @@ static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t 
          {
             frm->pse_tos--;
             print_stack(LBCSPOP, "-IF-HCS ", frm, pc);
-            if (close_statement(fpd, frm, pc))
+            if (close_statement(fpd, consumed, frm, pc))
             {
                return(true);
             }
@@ -828,7 +829,7 @@ static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t 
          {
             frm->pse_tos--;
             print_stack(LBCSPOP, "-TRY-HCS ", frm, pc);
-            if (close_statement(fpd, frm, pc))
+            if (close_statement(fpd, consumed, frm, pc))
             {
                return(true);
             }
@@ -840,7 +841,7 @@ static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t 
                  get_token_name(frm->pse[frm->pse_tos].type));
          frm->pse_tos--;
          print_stack(LBCSPOP, "-HCC B2 ", frm, pc);
-         if (close_statement(fpd, frm, pc))
+         if (close_statement(fpd, consumed, frm, pc))
          {
             return(true);
          }
@@ -864,7 +865,7 @@ static bool handle_complex_close(fp_data& fpd, struct parse_frame *frm, chunk_t 
       frm->pse_tos--;
       print_stack(LBCSPOP, "-HCC WoDS ", frm, pc);
 
-      if (close_statement(fpd, frm, pc))
+      if (close_statement(fpd, consumed, frm, pc))
       {
          return(true);
       }
@@ -950,7 +951,7 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
  *
  * @return     true - done with this chunk, false - keep processing
  */
-static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
+static bool close_statement(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc)
 {
    chunk_t *vbc = pc;
 
@@ -960,7 +961,7 @@ static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
            get_token_name(frm->pse[frm->pse_tos].type),
            frm->pse[frm->pse_tos].stage);
 
-   if (cpd.consumed)
+   if (consumed)
    {
       frm->stmt_count = 0;
       frm->expr_count = 0;
@@ -974,7 +975,7 @@ static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
    if (frm->pse[frm->pse_tos].type == CT_VBRACE_OPEN)
    {
       /* If the current token has already been consumed, then add after it */
-      if (cpd.consumed)
+      if (consumed)
       {
          insert_vbrace_close_after(pc, frm);
       }
@@ -996,7 +997,7 @@ static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
          print_stack(LBCSPOP, "-CS VB  ", frm, pc);
 
          /* And repeat the close */
-         close_statement(fpd, frm, pc);
+         close_statement(fpd, consumed, frm, pc);
          return(true);
       }
    }
@@ -1004,7 +1005,7 @@ static bool close_statement(fp_data& fpd, struct parse_frame *frm, chunk_t *pc)
    /* See if we are done with a complex statement */
    if (frm->pse[frm->pse_tos].stage != BS_NONE)
    {
-      if (handle_complex_close(fpd, frm, vbc))
+      if (handle_complex_close(fpd, consumed, frm, vbc))
       {
          return(true);
       }
