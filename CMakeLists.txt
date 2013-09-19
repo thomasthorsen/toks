@@ -13,7 +13,7 @@ if(MINGW)
 endif()
 
 set(CMAKE_C_FLAGS "${C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${C_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${C_FLAGS} -Wall -Werror -std=c++0x")
 
 set(VERSION "0.0")
 
