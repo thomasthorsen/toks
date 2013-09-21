@@ -489,7 +489,6 @@ static void toks_end()
    cpd.frame_count = 0;
    cpd.pp_level    = 0;
    cpd.in_preproc  = CT_NONE;
-   cpd.preproc_ncnl_count = 0;
 }
 
 

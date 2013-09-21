@@ -883,7 +883,7 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
  * @param pc   The structure to update, str is an input.
  * @return     Whether a word was parsed (always true)
  */
-static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
+static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count)
 {
    int             ch;
    static unc_text interface("@interface");
@@ -912,7 +912,7 @@ static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
 
    /* Detect pre-processor functions now */
    if ((cpd.in_preproc == CT_PP_DEFINE) &&
-       (cpd.preproc_ncnl_count == 1))
+       (preproc_ncnl_count == 1))
    {
       if (ctx.peek() == '(')
       {
@@ -1035,7 +1035,7 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
  * @param pc      The structure to update, str is an input.
  * @return        true/false - whether anything was parsed
  */
-static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
+static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl_count)
 {
    const chunk_tag_t *punc;
    int ch, ch1;
@@ -1126,7 +1126,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       /* check for non-keyword identifiers such as @if @switch, etc */
       if (CharTable::IsKw1(ctx.peek(1)))
       {
-         parse_word(ctx, pc, true);
+         parse_word(ctx, pc, true, preproc_ncnl_count);
          return(true);
       }
    }
@@ -1261,7 +1261,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    if (CharTable::IsKw1(ctx.peek()) ||
        ((ctx.peek() == '@') && CharTable::IsKw1(ctx.peek(1))))
    {
-      parse_word(ctx, pc, false);
+      parse_word(ctx, pc, false, preproc_ncnl_count);
       return(true);
    }
 
@@ -1309,13 +1309,14 @@ void tokenize(fp_data& fpd)
    chunk_t            *pc    = NULL;
    chunk_t            *rprev = NULL;
    struct parse_frame frm;
+   int preproc_ncnl_count = 0;
 
    memset(&frm, 0, sizeof(frm));
 
    while (ctx.more())
    {
       chunk.reset();
-      if (!parse_next(fpd, ctx, chunk))
+      if (!parse_next(fpd, ctx, chunk, preproc_ncnl_count))
       {
          LOG_FMT(LERR, "%s:%d Bailed before the end?\n",
                  fpd.filename, ctx.c.row);
@@ -1363,7 +1364,7 @@ void tokenize(fp_data& fpd)
       if (pc->type == CT_NEWLINE) // || (pc->type == CT_COMMENT_MULTI))
       {
          cpd.in_preproc         = CT_NONE;
-         cpd.preproc_ncnl_count = 0;
+         preproc_ncnl_count = 0;
       }
 
       /* Special handling for preprocessor stuff */
@@ -1374,7 +1375,7 @@ void tokenize(fp_data& fpd)
          /* Count words after the preprocessor */
          if (!chunk_is_comment(pc) && !chunk_is_newline(pc))
          {
-            cpd.preproc_ncnl_count++;
+            preproc_ncnl_count++;
          }
 
          /* Figure out the type of preprocessor for #include parsing */

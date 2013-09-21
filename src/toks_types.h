@@ -323,7 +323,6 @@ struct cp_data
    bool               lang_forced;
 
    c_token_t          in_preproc;
-   int                preproc_ncnl_count;
 
    struct parse_frame frames[16];
    int                frame_count;
