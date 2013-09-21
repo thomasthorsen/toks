@@ -104,14 +104,10 @@ const chunk_tag_t *find_punctuator(const char *str, int lang_flags);
 /*
  *  parse_frame.cpp
  */
-
-void pf_copy(struct parse_frame *dst, const struct parse_frame *src);
-void pf_push(struct parse_frame *pf);
-void pf_push_under(struct parse_frame *pf);
-void pf_copy_tos(struct parse_frame *pf);
-void pf_trash_tos(void);
-void pf_pop(struct parse_frame *pf);
-int pf_check(struct parse_frame *frm, chunk_t *pc);
+void pf_push(fp_data& fpd, struct parse_frame *pf);
+void pf_push_under(fp_data& fpd, struct parse_frame *pf);
+void pf_pop(fp_data& fpd, struct parse_frame *pf);
+int pf_check(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
 
 
 /*

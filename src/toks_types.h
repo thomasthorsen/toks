@@ -313,6 +313,10 @@ struct fp_data
    sqlite3_stmt       *stmt_insert_entry;
    sqlite3_stmt       *stmt_begin;
    sqlite3_stmt       *stmt_commit;
+
+   struct parse_frame frames[16];
+   int                frame_count;
+   int                frame_pp_level;
 };
 
 struct cp_data
@@ -321,10 +325,6 @@ struct cp_data
 
    int                lang_flags; // LANG_xxx
    bool               lang_forced;
-
-   struct parse_frame frames[16];
-   int                frame_count;
-   int                pp_level;
 
    sqlite3            *index;
 };

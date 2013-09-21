@@ -385,6 +385,8 @@ static void do_source_file(const char *filename, bool dump)
    fp_data fpd;
 
    fpd.filename = filename;
+   fpd.frame_count = 0;
+   fpd.frame_pp_level = 0;
 
    /* Do some simple language detection based on the filename extension */
    if (!cpd.lang_forced || (cpd.lang_flags == 0))
@@ -484,10 +486,6 @@ static void toks_end()
    {
       chunk_del(pc);
    }
-
-   /* Clean up some state variables */
-   cpd.frame_count = 0;
-   cpd.pp_level    = 0;
 }
 
 

@@ -32,10 +32,10 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
 static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
 
-static int preproc_start(struct parse_frame *frm, chunk_t *pc, c_token_t in_preproc)
+static int preproc_start(fp_data& fpd, struct parse_frame *frm, chunk_t *pc, c_token_t in_preproc)
 {
    chunk_t *next;
-   int     pp_level = cpd.pp_level;
+   int     pp_level = fpd.frame_pp_level;
 
    /* Get the type of preprocessor and handle it */
    next = chunk_get_next_ncnl(pc);
@@ -48,7 +48,7 @@ static int preproc_start(struct parse_frame *frm, chunk_t *pc, c_token_t in_prep
        */
       if (in_preproc == CT_PP_DEFINE)
       {
-         pf_push(frm);
+         pf_push(fpd, frm);
 
          /* a preproc body starts a new, blank frame */
          memset(frm, 0, sizeof(*frm));
@@ -63,7 +63,7 @@ static int preproc_start(struct parse_frame *frm, chunk_t *pc, c_token_t in_prep
       else
       {
          /* Check for #if, #else, #endif, etc */
-         pp_level = pf_check(frm, pc);
+         pp_level = pf_check(fpd, frm, pc);
       }
    }
    return(pp_level);
@@ -112,9 +112,6 @@ void brace_cleanup(fp_data& fpd)
 
    memset(&frm, 0, sizeof(frm));
 
-   cpd.frame_count = 0;
-   cpd.pp_level    = 0;
-
    pc = chunk_get_head();
    while (pc != NULL)
    {
@@ -124,17 +121,17 @@ void brace_cleanup(fp_data& fpd)
          if (in_preproc == CT_PP_DEFINE)
          {
             /* out of the #define body, restore the frame */
-            pf_pop(&frm);
+            pf_pop(fpd, &frm);
          }
 
          in_preproc = CT_NONE;
       }
 
       /* Check for a preprocessor start */
-      pp_level = cpd.pp_level;
+      pp_level = fpd.frame_pp_level;
       if (pc->type == CT_PREPROC)
       {
-         pp_level = preproc_start(&frm, pc, in_preproc);
+         pp_level = preproc_start(fpd, &frm, pc, in_preproc);
       }
 
       /* Do before assigning stuff from the frame */
