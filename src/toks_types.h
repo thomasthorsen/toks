@@ -322,8 +322,6 @@ struct cp_data
    int                lang_flags; // LANG_xxx
    bool               lang_forced;
 
-   c_token_t          in_preproc;
-
    struct parse_frame frames[16];
    int                frame_count;
    int                pp_level;

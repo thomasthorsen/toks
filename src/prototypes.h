@@ -87,7 +87,7 @@ void brace_cleanup(fp_data& fpd);
  */
 
 int load_keyword_file(const char *filename);
-c_token_t find_keyword_type(const char *word, int len);
+c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc);
 void add_keyword(const char *tag, c_token_t type);
 void print_keywords(FILE *pfile);
 void clear_keyword_file(void);

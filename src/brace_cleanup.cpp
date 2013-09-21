@@ -32,7 +32,7 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
 static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
 
-static int preproc_start(struct parse_frame *frm, chunk_t *pc)
+static int preproc_start(struct parse_frame *frm, chunk_t *pc, c_token_t in_preproc)
 {
    chunk_t *next;
    int     pp_level = cpd.pp_level;
@@ -41,12 +41,12 @@ static int preproc_start(struct parse_frame *frm, chunk_t *pc)
    next = chunk_get_next_ncnl(pc);
    if (next != NULL)
    {
-      cpd.in_preproc = next->type;
+      in_preproc = next->type;
 
       /**
        * If we are in a define, push the frame stack.
        */
-      if (cpd.in_preproc == CT_PP_DEFINE)
+      if (in_preproc == CT_PP_DEFINE)
       {
          pf_push(frm);
 
@@ -108,33 +108,33 @@ void brace_cleanup(fp_data& fpd)
    struct parse_frame frm;
    int                pp_level;
    bool               consumed = false;
+   c_token_t in_preproc = CT_NONE;
 
    memset(&frm, 0, sizeof(frm));
 
    cpd.frame_count = 0;
-   cpd.in_preproc  = CT_NONE;
    cpd.pp_level    = 0;
 
    pc = chunk_get_head();
    while (pc != NULL)
    {
       /* Check for leaving a #define body */
-      if ((cpd.in_preproc != CT_NONE) && ((pc->flags & PCF_IN_PREPROC) == 0))
+      if ((in_preproc != CT_NONE) && ((pc->flags & PCF_IN_PREPROC) == 0))
       {
-         if (cpd.in_preproc == CT_PP_DEFINE)
+         if (in_preproc == CT_PP_DEFINE)
          {
             /* out of the #define body, restore the frame */
             pf_pop(&frm);
          }
 
-         cpd.in_preproc = CT_NONE;
+         in_preproc = CT_NONE;
       }
 
       /* Check for a preprocessor start */
       pp_level = cpd.pp_level;
       if (pc->type == CT_PREPROC)
       {
-         pp_level = preproc_start(&frm, pc);
+         pp_level = preproc_start(&frm, pc, in_preproc);
       }
 
       /* Do before assigning stuff from the frame */
@@ -158,8 +158,8 @@ void brace_cleanup(fp_data& fpd)
        * Also need to pass in the initial '#' to close out any virtual braces.
        */
       if (!chunk_is_comment(pc) && !chunk_is_newline(pc) &&
-          ((cpd.in_preproc == CT_PP_DEFINE) ||
-           (cpd.in_preproc == CT_NONE)))
+          ((in_preproc == CT_PP_DEFINE) ||
+           (in_preproc == CT_NONE)))
       {
          consumed = false;
          parse_cleanup(fpd, consumed, &frm, pc);

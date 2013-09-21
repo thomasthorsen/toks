@@ -883,7 +883,7 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
  * @param pc   The structure to update, str is an input.
  * @return     Whether a word was parsed (always true)
  */
-static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count)
+static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count, c_token_t in_preproc)
 {
    int             ch;
    static unc_text interface("@interface");
@@ -911,7 +911,7 @@ static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_nc
    }
 
    /* Detect pre-processor functions now */
-   if ((cpd.in_preproc == CT_PP_DEFINE) &&
+   if ((in_preproc == CT_PP_DEFINE) &&
        (preproc_ncnl_count == 1))
    {
       if (ctx.peek() == '(')
@@ -934,7 +934,7 @@ static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_nc
       else
       {
          /* Turn it into a keyword now */
-         pc.type = find_keyword_type(pc.str.c_str(), pc.str.size());
+         pc.type = find_keyword_type(pc.str.c_str(), pc.str.size(), in_preproc);
          if (pc.type != CT_WORD)
          {
              pc.flags |= PCF_KEYWORD;
@@ -1035,7 +1035,7 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
  * @param pc      The structure to update, str is an input.
  * @return        true/false - whether anything was parsed
  */
-static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl_count)
+static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl_count, c_token_t in_preproc)
 {
    const chunk_tag_t *punc;
    int ch, ch1;
@@ -1059,8 +1059,8 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    /**
     * Handle unknown/unhandled preprocessors
     */
-   if ((cpd.in_preproc > CT_PP_BODYCHUNK) &&
-       (cpd.in_preproc <= CT_PP_OTHER))
+   if ((in_preproc > CT_PP_BODYCHUNK) &&
+       (in_preproc <= CT_PP_OTHER))
    {
       pc.str.clear();
       tok_info ss;
@@ -1126,7 +1126,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       /* check for non-keyword identifiers such as @if @switch, etc */
       if (CharTable::IsKw1(ctx.peek(1)))
       {
-         parse_word(ctx, pc, true, preproc_ncnl_count);
+         parse_word(ctx, pc, true, preproc_ncnl_count, in_preproc);
          return(true);
       }
    }
@@ -1221,13 +1221,13 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
            ((ch1 == '"') || (ch1 == '\''))) ||
           (ch == '"') ||
           (ch == '\'') ||
-          ((ch == '<') && (cpd.in_preproc == CT_PP_INCLUDE)))
+          ((ch == '<') && (in_preproc == CT_PP_INCLUDE)))
       {
          parse_string(ctx, pc, unc_isalpha(ch) ? 1 : 0, true);
          return(true);
       }
 
-      if ((ch == '<') && (cpd.in_preproc == CT_PP_DEFINE))
+      if ((ch == '<') && (in_preproc == CT_PP_DEFINE))
       {
          if (chunk_get_tail()->type == CT_MACRO)
          {
@@ -1261,7 +1261,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    if (CharTable::IsKw1(ctx.peek()) ||
        ((ctx.peek() == '@') && CharTable::IsKw1(ctx.peek(1))))
    {
-      parse_word(ctx, pc, false, preproc_ncnl_count);
+      parse_word(ctx, pc, false, preproc_ncnl_count, in_preproc);
       return(true);
    }
 
@@ -1310,13 +1310,14 @@ void tokenize(fp_data& fpd)
    chunk_t            *rprev = NULL;
    struct parse_frame frm;
    int preproc_ncnl_count = 0;
+   c_token_t in_preproc = CT_NONE;
 
    memset(&frm, 0, sizeof(frm));
 
    while (ctx.more())
    {
       chunk.reset();
-      if (!parse_next(fpd, ctx, chunk, preproc_ncnl_count))
+      if (!parse_next(fpd, ctx, chunk, preproc_ncnl_count, in_preproc))
       {
          LOG_FMT(LERR, "%s:%d Bailed before the end?\n",
                  fpd.filename, ctx.c.row);
@@ -1363,12 +1364,12 @@ void tokenize(fp_data& fpd)
       /* A newline marks the end of a preprocessor */
       if (pc->type == CT_NEWLINE) // || (pc->type == CT_COMMENT_MULTI))
       {
-         cpd.in_preproc         = CT_NONE;
+         in_preproc = CT_NONE;
          preproc_ncnl_count = 0;
       }
 
       /* Special handling for preprocessor stuff */
-      if (cpd.in_preproc != CT_NONE)
+      if (in_preproc != CT_NONE)
       {
          pc->flags |= PCF_IN_PREPROC;
 
@@ -1379,13 +1380,13 @@ void tokenize(fp_data& fpd)
          }
 
          /* Figure out the type of preprocessor for #include parsing */
-         if (cpd.in_preproc == CT_PREPROC)
+         if (in_preproc == CT_PREPROC)
          {
             if ((pc->type < CT_PP_DEFINE) || (pc->type > CT_PP_OTHER))
             {
                pc->type = CT_PP_OTHER;
             }
-            cpd.in_preproc = pc->type;
+            in_preproc = pc->type;
          }
       }
       else
@@ -1396,7 +1397,7 @@ void tokenize(fp_data& fpd)
          {
             pc->type       = CT_PREPROC;
             pc->flags     |= PCF_IN_PREPROC;
-            cpd.in_preproc = CT_PREPROC;
+            in_preproc = CT_PREPROC;
          }
       }
    }
