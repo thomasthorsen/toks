@@ -5,7 +5,7 @@
  * @author  Ben Gardner
  * @license GPL v2+
  */
-#define DEFINE_PCF_NAMES
+
 #define DEFINE_CHAR_TABLE
 
 #include "config.h"
@@ -129,7 +129,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -d           : Dump all tokens after parsing a file\n"
            " -L SEV       : Set the log severity (see log_levels.h)\n"
            " -s           : Show the log severity in the logs\n"
-           " --decode     : decode remaining args (chunk flags) and exit\n"
            "\n"
            "Usage Examples\n"
            "toks foo.d\n"
@@ -201,17 +200,6 @@ int main(int argc, char *argv[])
    {
       logmask_from_string(p_arg, mask);
       log_set_mask(mask);
-   }
-
-   if (arg.Present("--decode"))
-   {
-      log_set_mask(LNOTE);
-      idx = 1;
-      while ((p_arg = arg.Unused(idx)) != NULL)
-      {
-         log_pcf_flags(LNOTE, strtoul(p_arg, NULL, 16));
-      }
-      return EXIT_SUCCESS;
    }
 
    /* Enable log sevs? */
@@ -664,36 +652,4 @@ static const char *language_to_string(int lang)
       }
    }
    return("???");
-}
-
-
-void log_pcf_flags(log_sev_t sev, UINT64 flags)
-{
-   if (!log_sev_on(sev))
-   {
-      return;
-   }
-
-   log_fmt(sev, "[0x%" PRIx64 ":", flags);
-
-   const char *tolog = NULL;
-   for (int i = 0; i < (int)ARRAY_SIZE(pcf_names); i++)
-   {
-      if ((flags & (1ULL << i)) != 0)
-      {
-         if (tolog != NULL)
-         {
-            log_str(sev, tolog, strlen(tolog));
-            log_str(sev, ",", 1);
-         }
-         tolog = pcf_names[i];
-      }
-   }
-
-   if (tolog != NULL)
-   {
-      log_str(sev, tolog, strlen(tolog));
-   }
-
-   log_str(sev, "]\n", 2);
 }
