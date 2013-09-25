@@ -32,7 +32,7 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
 static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
 
-static int preproc_start(fp_data& fpd, struct parse_frame *frm, chunk_t *pc, c_token_t in_preproc)
+static int preproc_start(fp_data& fpd, struct parse_frame *frm, chunk_t *pc, c_token_t& in_preproc)
 {
    chunk_t *next;
    int     pp_level = fpd.frame_pp_level;
