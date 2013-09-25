@@ -116,8 +116,10 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -l           : Language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t           : Load a file with types (usually not needed)\n"
            "\n"
-           "Lookup Options:\n"
-           "--id <identifier> : Lookup specified identifier\n"
+           "Lookup Options (can be combined, supports SQL Wildcards):\n"
+           " --id <name>          : Lookup identifier by name\n"
+           " --type <type>        : Lookup identifier by type\n"
+           " --sub-type <subtype> : Lookup identifier by subtype\n"
            "\n"
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
@@ -132,7 +134,6 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            "Usage Examples\n"
            "toks foo.d\n"
            "toks -L0-2,20-23,51 foo.d\n"
-           "toks -o foo.out foo.d\n"
            "toks --id my_identifier\n"
            "\n"
            ,
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
    const char *p_arg;
    bool dump = false;
    int retval;
-   const char *identifier;
+   const char *identifier, *type, *sub_type;
 
    Args arg(argc, argv);
 
@@ -257,11 +258,15 @@ int main(int argc, char *argv[])
    index_file = arg.Param("-i");
 
    identifier = arg.Param("--id");
+   type = arg.Param("--type");
+   sub_type = arg.Param("--sub-type");
 
    LOG_FMT(LNOTE, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LNOTE, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
    LOG_FMT(LNOTE, "index_file = %s\n", (index_file != NULL) ? index_file : "null");
    LOG_FMT(LNOTE, "identifier = %s\n", (identifier != NULL) ? identifier : "null");
+   LOG_FMT(LNOTE, "type = %s\n", (type != NULL) ? type : "null");
+   LOG_FMT(LNOTE, "sub_type = %s\n", (sub_type != NULL) ? sub_type : "null");
 
    /*
     *  Done parsing args
@@ -285,7 +290,8 @@ int main(int argc, char *argv[])
    idx   = 1;
    p_arg = arg.Unused(idx);
 
-   if ((source_list != NULL) || (p_arg != NULL) || identifier != NULL)
+   if ((source_list != NULL) || (p_arg != NULL) ||
+       (identifier != NULL) || (type != NULL) || (sub_type != NULL))
    {
       /* Do the files on the command line first */
       if (p_arg != NULL)
@@ -302,9 +308,9 @@ int main(int argc, char *argv[])
          process_source_list(source_list, dump);
       }
 
-      if (identifier != NULL)
+      if ((identifier != NULL) || (type != NULL) || (sub_type != NULL))
       {
-         (void) index_lookup_identifier(identifier);
+         (void) index_lookup_identifier(identifier, type, sub_type);
       }
    }
    else

@@ -444,7 +444,7 @@ bool index_insert_entry(
    return retval;
 }
 
-bool index_lookup_identifier(const char *identifier)
+bool index_lookup_identifier(const char *identifier, const char *type, const char *sub_type)
 {
    bool retval = true;
    sqlite3_stmt *stmt_lookup_identifier;
@@ -453,7 +453,9 @@ bool index_lookup_identifier(const char *identifier)
    result = sqlite3_prepare_v2(cpd.index,
                                "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.ColumnEnd,Entries.Scope,Entries.Type,Entries.SubType,Entries.Identifier "
                                "FROM Files JOIN Entries ON Files.rowid=Entries.Filerow "
-                               "WHERE Entries.Identifier LIKE ?",
+                               "WHERE Entries.Identifier LIKE ? "
+                               "AND Entries.Type LIKE ? "
+                               "AND Entries.SubType LIKE ?",
                                -1,
                                &stmt_lookup_identifier,
                                NULL);
@@ -462,7 +464,17 @@ bool index_lookup_identifier(const char *identifier)
    {
       result = sqlite3_bind_text(stmt_lookup_identifier,
                                  1,
-                                 identifier,
+                                 identifier != NULL ? identifier : "%",
+                                 -1,
+                                 SQLITE_STATIC);
+      result = sqlite3_bind_text(stmt_lookup_identifier,
+                                 2,
+                                 type != NULL ? type : "%",
+                                 -1,
+                                 SQLITE_STATIC);
+      result = sqlite3_bind_text(stmt_lookup_identifier,
+                                 3,
+                                 sub_type != NULL ? sub_type : "%",
                                  -1,
                                  SQLITE_STATIC);
    }

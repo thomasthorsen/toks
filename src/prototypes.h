@@ -147,7 +147,10 @@ bool index_insert_entry(
    const char *type,
    const char *sub_type,
    const char *identifier);
-bool index_lookup_identifier(const char *identifier);
+bool index_lookup_identifier(
+   const char *identifier,
+   const char *type,
+   const char *sub_type);
 
 
 /* Options we couldn't quite get rid of */
