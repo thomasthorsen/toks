@@ -347,12 +347,13 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
          consumed = true;
          close_statement(fpd, consumed, frm, pc);
       }
-      else if ((cpd.lang_flags & LANG_PAWN) != 0)
+      else if ((pc->type == CT_PAREN_CLOSE) ||
+               (pc->type == CT_BRACE_CLOSE) ||
+               (pc->type == CT_ANGLE_CLOSE) ||
+               (pc->type == CT_MACRO_CLOSE) ||
+               (pc->type == CT_SQUARE_CLOSE))
       {
-         if (pc->type == CT_BRACE_CLOSE)
-         {
-            close_statement(fpd, consumed, frm, pc);
-         }
+         close_statement(fpd, consumed, frm, pc);
       }
    }
 
