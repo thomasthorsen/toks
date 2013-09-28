@@ -544,9 +544,41 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
    /** Create a stack entry for complex statements IF/DO/FOR/WHILE/SWITCH */
    if (patcls == PATCLS_BRACED)
    {
-      push_fmr_pse(fpd, frm, pc,
-                   (pc->type == CT_DO) ? BS_BRACE_DO : BS_BRACE2,
-                   "+ComplexBraced");
+      /* Check that a statement follows, otherwise demote keyword to word */
+      chunk_t *tmp = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+      bool statement_found = false;
+
+      if (tmp != NULL)
+      {
+         if (tmp->type == CT_BRACE_OPEN)
+         {
+            statement_found = true;
+         }
+         else
+         {
+            do
+            {
+               tmp = chunk_get_next_ncnl(tmp, CNAV_PREPROC);
+               if ((tmp != NULL) && chunk_is_semicolon(tmp) && (tmp->level == pc->level))
+               {
+                  statement_found = true;
+                  break;
+               }
+            } while ((tmp != NULL) && (tmp->level >= pc->level));
+         }
+      }
+      if (statement_found)
+      {
+         push_fmr_pse(fpd, frm, pc,
+                      (pc->type == CT_DO) ? BS_BRACE_DO : BS_BRACE2,
+                      "+ComplexBraced");
+      }
+      else
+      {
+         /* Demote keyword to word as no statement was found */
+         pc->type = CT_WORD;
+         pc->flags &= ~PCF_KEYWORD;
+      }
    }
    else if (patcls == PATCLS_PBRACED)
    {
