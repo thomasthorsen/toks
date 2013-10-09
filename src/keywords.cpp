@@ -343,7 +343,7 @@ static const chunk_tag_t *kw_static_first(const chunk_tag_t *tag)
 }
 
 
-static const chunk_tag_t *kw_static_match(const chunk_tag_t *tag, c_token_t in_preproc)
+static const chunk_tag_t *kw_static_match(const chunk_tag_t *tag, c_token_t in_preproc, int lang_flags)
 {
    bool              in_pp = ((in_preproc != CT_NONE) && (in_preproc != CT_PP_DEFINE));
    bool              pp_iter;
@@ -356,7 +356,7 @@ static const chunk_tag_t *kw_static_match(const chunk_tag_t *tag, c_token_t in_p
       //fprintf(stderr, " check:%s", iter->tag);
       pp_iter = (iter->lang_flags & FLAG_PP) != 0;
       if ((strcmp(iter->tag, tag->tag) == 0) &&
-          ((cpd.lang_flags & iter->lang_flags) != 0) &&
+          ((lang_flags & iter->lang_flags) != 0) &&
           (in_pp == pp_iter))
       {
          //fprintf(stderr, " match:%s", iter->tag);
@@ -374,7 +374,7 @@ static const chunk_tag_t *kw_static_match(const chunk_tag_t *tag, c_token_t in_p
  * @param len     The length of the text
  * @return        CT_WORD (no match) or the keyword token
  */
-c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc)
+c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc, int lang_flags)
 {
    string            ss(word, len);
    chunk_tag_t       key;
@@ -399,7 +399,7 @@ c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc)
                                         sizeof(keywords[0]), kw_compare);
    if (p_ret != NULL)
    {
-      p_ret = kw_static_match(p_ret, in_preproc);
+      p_ret = kw_static_match(p_ret, in_preproc, lang_flags);
    }
    return((p_ret != NULL) ? p_ret->type : CT_WORD);
 }

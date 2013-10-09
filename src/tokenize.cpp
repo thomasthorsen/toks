@@ -278,10 +278,10 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
  * @param pc   The structure to update, str is an input.
  * @return     Whether a comment was parsed
  */
-static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
+static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
 {
    int  ch;
-   bool is_d    = (cpd.lang_flags & LANG_D) != 0;
+   bool is_d    = (fpd.lang_flags & LANG_D) != 0;
    int  d_level = 0;
    int  bs_cnt;
 
@@ -883,7 +883,7 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
  * @param pc   The structure to update, str is an input.
  * @return     Whether a word was parsed (always true)
  */
-static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count, c_token_t in_preproc)
+static bool parse_word(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count, c_token_t in_preproc)
 {
    int             ch;
    static unc_text interface("@interface");
@@ -926,7 +926,7 @@ static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_nc
    else
    {
       /* '@interface' is reserved, not an interface itself */
-      if ((cpd.lang_flags & LANG_JAVA) && pc.str.startswith("@") &&
+      if ((fpd.lang_flags & LANG_JAVA) && pc.str.startswith("@") &&
           !pc.str.equals(interface))
       {
          pc.type = CT_ANNOTATION;
@@ -934,7 +934,7 @@ static bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_nc
       else
       {
          /* Turn it into a keyword now */
-         pc.type = find_keyword_type(pc.str.c_str(), pc.str.size(), in_preproc);
+         pc.type = find_keyword_type(pc.str.c_str(), pc.str.size(), in_preproc, fpd.lang_flags);
          if (pc.type != CT_WORD)
          {
              pc.flags |= PCF_KEYWORD;
@@ -1110,13 +1110,13 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    /**
     * Parse comments
     */
-   if (parse_comment(ctx, pc))
+   if (parse_comment(fpd, ctx, pc))
    {
       return(true);
    }
 
    /* Check for C# literal strings, ie @"hello" and identifiers @for*/
-   if (((cpd.lang_flags & LANG_CS) != 0) && (ctx.peek() == '@'))
+   if (((fpd.lang_flags & LANG_CS) != 0) && (ctx.peek() == '@'))
    {
       if (ctx.peek(1) == '"')
       {
@@ -1126,14 +1126,14 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       /* check for non-keyword identifiers such as @if @switch, etc */
       if (CharTable::IsKw1(ctx.peek(1)))
       {
-         parse_word(ctx, pc, true, preproc_ncnl_count, in_preproc);
+         parse_word(fpd, ctx, pc, true, preproc_ncnl_count, in_preproc);
          return(true);
       }
    }
 
    /* handle C++0x strings u8"x" u"x" U"x" R"x" u8R"XXX(I'm a "raw UTF-8" string.)XXX" */
    ch = ctx.peek();
-   if (((cpd.lang_flags & LANG_CPP) != 0) &&
+   if (((fpd.lang_flags & LANG_CPP) != 0) &&
        ((ch == 'u') || (ch == 'U') || (ch == 'R')))
    {
       int idx = 0;
@@ -1174,7 +1174,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    }
 
    /* PAWN specific stuff */
-   if ((cpd.lang_flags & LANG_PAWN) != 0)
+   if ((fpd.lang_flags & LANG_PAWN) != 0)
    {
       /* Check for PAWN strings: \"hi" or !"hi" or !\"hi" or \!"hi" */
       if ((ctx.peek() == '\\') || (ctx.peek() == '!'))
@@ -1202,7 +1202,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       return(true);
    }
 
-   if ((cpd.lang_flags & LANG_D) != 0)
+   if ((fpd.lang_flags & LANG_D) != 0)
    {
       /* D specific stuff */
       if (d_parse_string(ctx, pc))
@@ -1239,7 +1239,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    }
 
    /* Check for Objective C literals */
-   if ((cpd.lang_flags & LANG_OC) && (ctx.peek() == '@'))
+   if ((fpd.lang_flags & LANG_OC) && (ctx.peek() == '@'))
    {
       int nc = ctx.peek(1);
       if ((nc == '"') || (nc == '\''))
@@ -1261,7 +1261,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    if (CharTable::IsKw1(ctx.peek()) ||
        ((ctx.peek() == '@') && CharTable::IsKw1(ctx.peek(1))))
    {
-      parse_word(ctx, pc, false, preproc_ncnl_count, in_preproc);
+      parse_word(fpd, ctx, pc, false, preproc_ncnl_count, in_preproc);
       return(true);
    }
 
@@ -1271,7 +1271,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    punc_txt[1] = ctx.peek(1);
    punc_txt[2] = ctx.peek(2);
    punc_txt[3] = ctx.peek(3);
-   if ((punc = find_punctuator(punc_txt, cpd.lang_flags)) != NULL)
+   if ((punc = find_punctuator(punc_txt, fpd.lang_flags)) != NULL)
    {
       int cnt = strlen(punc->tag);
       while (cnt--)

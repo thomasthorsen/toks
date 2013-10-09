@@ -135,7 +135,7 @@ void brace_cleanup(fp_data& fpd)
       }
 
       /* Do before assigning stuff from the frame */
-      if ((cpd.lang_flags & LANG_PAWN) != 0)
+      if ((fpd.lang_flags & LANG_PAWN) != 0)
       {
          if ((frm.pse[frm.pse_tos].type == CT_VBRACE_OPEN) &&
              (pc->type == CT_NEWLINE))
@@ -434,7 +434,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
           * PAWN: Check the next chunk for a semicolon. If it isn't, then
           * add a virtual semicolon, which will get handled on the next pass.
           */
-         if (cpd.lang_flags & LANG_PAWN)
+         if (fpd.lang_flags & LANG_PAWN)
          {
             tmp = chunk_get_next_ncnl(pc);
 

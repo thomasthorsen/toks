@@ -232,14 +232,14 @@ static chunk_t *pawn_process_variable(chunk_t *start)
 }
 
 
-void pawn_add_virtual_semicolons(void)
+void pawn_add_virtual_semicolons(fp_data& fpd)
 {
    chunk_t *prev;
    chunk_t *pc;
 
    /** Add Pawn virtual semicolons */
    prev = NULL;
-   if ((cpd.lang_flags & LANG_PAWN) != 0)
+   if ((fpd.lang_flags & LANG_PAWN) != 0)
    {
       pc = chunk_get_head();
       while ((pc = chunk_get_next(pc)) != NULL)

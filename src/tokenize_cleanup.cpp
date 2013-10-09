@@ -15,7 +15,7 @@
 #include "unc_ctype.h"
 #include <cstring>
 
-static void check_template(chunk_t *start);
+static void check_template(fp_data& fpd, chunk_t *start);
 
 
 /**
@@ -51,7 +51,7 @@ static chunk_t *handle_double_angle_close(chunk_t *pc)
 }
 
 
-static void split_off_angle_close(chunk_t *pc)
+static void split_off_angle_close(fp_data& fpd, chunk_t *pc)
 {
    chunk_t nc;
 
@@ -59,7 +59,7 @@ static void split_off_angle_close(chunk_t *pc)
 
    const chunk_tag_t *ct;
 
-   ct = find_punctuator(pc->text() + 1, cpd.lang_flags);
+   ct = find_punctuator(pc->text() + 1, fpd.lang_flags);
    if (ct == NULL)
    {
       return;
@@ -117,7 +117,7 @@ void tokenize_cleanup(fp_data& fpd)
    next = chunk_get_next_ncnl(pc);
    while ((pc != NULL) && (next != NULL))
    {
-      if ((pc->type == CT_DOT) && ((cpd.lang_flags & LANG_ALLC) != 0))
+      if ((pc->type == CT_DOT) && ((fpd.lang_flags & LANG_ALLC) != 0))
       {
          pc->type = CT_MEMBER;
       }
@@ -236,7 +236,7 @@ void tokenize_cleanup(fp_data& fpd)
        */
       if ((pc->type == CT_ANGLE_OPEN) && (pc->parent_type != CT_TYPE_CAST))
       {
-         check_template(pc);
+         check_template(fpd, pc);
       }
       if ((pc->type == CT_ANGLE_CLOSE) && (pc->parent_type != CT_TEMPLATE))
       {
@@ -251,7 +251,7 @@ void tokenize_cleanup(fp_data& fpd)
          }
       }
 
-      if ((cpd.lang_flags & LANG_D) != 0)
+      if ((fpd.lang_flags & LANG_D) != 0)
       {
          /* Check for the D string concat symbol '~' */
          if ((pc->type == CT_INV) &&
@@ -279,7 +279,7 @@ void tokenize_cleanup(fp_data& fpd)
          }
       }
 
-      if ((cpd.lang_flags & LANG_CPP) != 0)
+      if ((fpd.lang_flags & LANG_CPP) != 0)
       {
          /* Change Word before '::' into a type */
          if ((pc->type == CT_WORD) && (next->type == CT_DC_MEMBER))
@@ -487,7 +487,7 @@ void tokenize_cleanup(fp_data& fpd)
       /* ObjectiveC allows keywords to be used as identifiers in some situations
        * This is a dirty hack to allow some of the more common situations.
        */
-      if (cpd.lang_flags & LANG_OC)
+      if (fpd.lang_flags & LANG_OC)
       {
          if (((pc->type == CT_IF) ||
               (pc->type == CT_FOR) ||
@@ -666,7 +666,7 @@ void tokenize_cleanup(fp_data& fpd)
       }
 
       /* Check for C# nullable types '?' is in next */
-      if ((cpd.lang_flags & LANG_CS) &&
+      if ((fpd.lang_flags & LANG_CS) &&
           (next->type == CT_QUESTION) &&
           (next->orig_col == (pc->orig_col + pc->len())))
       {
@@ -698,7 +698,7 @@ void tokenize_cleanup(fp_data& fpd)
       }
 
       /* Change 'default(' into a sizeof-like statement */
-      if ((cpd.lang_flags & LANG_CS) &&
+      if ((fpd.lang_flags & LANG_CS) &&
           (pc->type == CT_DEFAULT) &&
           (next->type == CT_PAREN_OPEN))
       {
@@ -746,7 +746,7 @@ void tokenize_cleanup(fp_data& fpd)
  * If there is nothing but CT_WORD and CT_MEMBER, then it's probably a
  * template thingy.  Otherwise, it's likely a comparison.
  */
-static void check_template(chunk_t *start)
+static void check_template(fp_data& fpd, chunk_t *start)
 {
    chunk_t *pc;
    chunk_t *end;
@@ -778,7 +778,7 @@ static void check_template(chunk_t *start)
          {
             LOG_FMT(LTEMPL, " {split '%s' at %d:%d}",
                     pc->str.c_str(), pc->orig_line, pc->orig_col);
-            split_off_angle_close(pc);
+            split_off_angle_close(fpd, pc);
          }
 
          if (chunk_is_str(pc, "<", 1))
@@ -859,11 +859,11 @@ static void check_template(chunk_t *start)
          if ((tokens[num_tokens - 1] == CT_ANGLE_OPEN) &&
              (pc->str[0] == '>') && (pc->len() > 1) &&
              (UO_tok_split_gte ||
-              (chunk_is_str(pc, ">>", 2) && ((cpd.lang_flags & LANG_CPP) == 0))))
+              (chunk_is_str(pc, ">>", 2) && ((fpd.lang_flags & LANG_CPP) == 0))))
          {
             LOG_FMT(LTEMPL, " {split '%s' at %d:%d}",
                     pc->str.c_str(), pc->orig_line, pc->orig_col);
-            split_off_angle_close(pc);
+            split_off_angle_close(fpd, pc);
          }
 
          if (chunk_is_str(pc, "<", 1))

@@ -230,14 +230,10 @@ int main(int argc, char *argv[])
    /* Check for a language override */
    if ((p_arg = arg.Param("-l")) != NULL)
    {
-      cpd.lang_flags = language_from_tag(p_arg);
-      if (cpd.lang_flags == 0)
+      cpd.forced_lang_flags = language_from_tag(p_arg);
+      if (cpd.forced_lang_flags == LANG_NONE)
       {
          LOG_FMT(LWARN, "Ignoring unknown language: %s\n", p_arg);
-      }
-      else
-      {
-         cpd.lang_forced = true;
       }
    }
 
@@ -383,10 +379,8 @@ static void do_source_file(const char *filename, bool dump)
    fpd.frame_pp_level = 0;
 
    /* Do some simple language detection based on the filename extension */
-   if (!cpd.lang_forced || (cpd.lang_flags == 0))
-   {
-      cpd.lang_flags = language_from_filename(filename);
-   }
+   fpd.lang_flags = cpd.forced_lang_flags != LANG_NONE ?
+      cpd.forced_lang_flags : language_from_filename(filename);
 
    /* Read in the source file */
    if (!decode_file(fpd.data, filename))
@@ -401,7 +395,7 @@ static void do_source_file(const char *filename, bool dump)
    if (index_prepare_for_file(fpd))
    {
       LOG_FMT(LNOTE, "Parsing: %s as language %s\n",
-              filename, language_to_string(cpd.lang_flags));
+              filename, language_to_string(fpd.lang_flags));
 
       toks_start(fpd);
 
@@ -447,7 +441,7 @@ static void toks_start(fp_data& fpd)
     * At this point, the level information is available and accurate.
     */
 
-   if ((cpd.lang_flags & LANG_PAWN) != 0)
+   if ((fpd.lang_flags & LANG_PAWN) != 0)
    {
       pawn_prescan();
    }
@@ -607,7 +601,7 @@ static int language_from_filename(const char *filename)
  * Find the language for the file extension
  *
  * @param filename   The name of the file
- * @return           LANG_xxx or 0 (no match)
+ * @return           LANG_xxx or LANG_NONE (no match)
  */
 static int language_from_tag(const char *tag)
 {
@@ -620,7 +614,7 @@ static int language_from_tag(const char *tag)
          return(languages[i].lang);
       }
    }
-   return(0);
+   return(LANG_NONE);
 }
 
 

@@ -259,6 +259,7 @@ struct chunk_t
 
 enum
 {
+   LANG_NONE = 0x0000,
    LANG_C    = 0x0001,
    LANG_CPP  = 0x0002,
    LANG_D    = 0x0004,
@@ -317,14 +318,15 @@ struct fp_data
    struct parse_frame frames[16];
    int                frame_count;
    int                frame_pp_level;
+
+   int                lang_flags; // LANG_xxx
 };
 
 struct cp_data
 {
    UINT32             error_count;
 
-   int                lang_flags; // LANG_xxx
-   bool               lang_forced;
+   int                forced_lang_flags; // LANG_xxx
 
    sqlite3            *index;
 };

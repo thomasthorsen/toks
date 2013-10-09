@@ -86,7 +86,7 @@ void brace_cleanup(fp_data& fpd);
  */
 
 int load_keyword_file(const char *filename);
-c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc);
+c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc, int lang_flags);
 void add_keyword(const char *tag, c_token_t type);
 void print_keywords(FILE *pfile);
 void clear_keyword_file(void);
@@ -113,7 +113,7 @@ int pf_check(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
  * lang_pawn.cpp
  */
 void pawn_prescan(void);
-void pawn_add_virtual_semicolons();
+void pawn_add_virtual_semicolons(fp_data& fpd);
 chunk_t *pawn_check_vsemicolon(chunk_t *pc);
 chunk_t *pawn_add_vsemi_after(chunk_t *pc);
 
