@@ -85,7 +85,7 @@ void brace_cleanup(fp_data& fpd);
  *  keywords.cpp
  */
 
-int load_keyword_file(const char *filename);
+bool load_keyword_file(const char *filename);
 c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc, int lang_flags);
 void add_keyword(const char *tag, c_token_t type);
 void print_keywords(FILE *pfile);

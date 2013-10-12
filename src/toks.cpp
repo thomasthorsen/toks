@@ -41,7 +41,7 @@ static const char *language_to_string(int lang);
 static void toks_start(fp_data& fpd);
 static void toks_end();
 static void do_source_file(const char *filename_in, bool dump);
-static void process_source_list(const char *source_list, bool dump);
+static bool process_source_list(const char *source_list, bool dump);
 
 
 /**
@@ -160,7 +160,7 @@ static void redir_stdout(const char *output_file)
       {
          LOG_FMT(LERR, "Unable to open %s for write: %s (%d)\n",
                  output_file, strerror(errno), errno);
-         usage_exit(NULL, NULL, 56);
+         exit(EXIT_FAILURE);
       }
       LOG_FMT(LNOTE, "Redirecting output to %s\n", output_file);
    }
@@ -218,13 +218,6 @@ int main(int argc, char *argv[])
    while ((p_arg = arg.Params("-t", idx)) != NULL)
    {
       load_keyword_file(p_arg);
-   }
-
-   /* add types */
-   idx = 0;
-   while ((p_arg = arg.Params("--type", idx)) != NULL)
-   {
-      add_keyword(p_arg, CT_TYPE);
    }
 
    /* Check for a language override */
@@ -289,7 +282,7 @@ int main(int argc, char *argv[])
 
       if (source_list != NULL)
       {
-         process_source_list(source_list, dump);
+         (void) process_source_list(source_list, dump);
       }
 
       if ((identifier != NULL) || (type != NULL) || (sub_type != NULL))
@@ -305,11 +298,11 @@ int main(int argc, char *argv[])
 
    clear_keyword_file();
 
-   return((cpd.error_count != 0) ? EXIT_FAILURE : EXIT_SUCCESS);
+   return EXIT_SUCCESS;
 }
 
 
-static void process_source_list(const char *source_list, bool dump)
+static bool process_source_list(const char *source_list, bool dump)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -318,8 +311,7 @@ static void process_source_list(const char *source_list, bool dump)
    {
       LOG_FMT(LERR, "%s: fopen(%s) failed: %s (%d)\n",
               __func__, source_list, strerror(errno), errno);
-      cpd.error_count++;
-      return;
+      return false;
    }
 
    char linebuf[256];
@@ -362,6 +354,8 @@ static void process_source_list(const char *source_list, bool dump)
    {
       fclose(p_file);
    }
+
+   return true;
 }
 
 
@@ -385,7 +379,6 @@ static void do_source_file(const char *filename, bool dump)
    /* Read in the source file */
    if (!decode_file(fpd.data, filename))
    {
-      cpd.error_count++;
       return;
    }
 

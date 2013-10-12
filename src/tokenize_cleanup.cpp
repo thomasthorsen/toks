@@ -133,9 +133,8 @@ void tokenize_cleanup(fp_data& fpd)
          {
             if (next->type != CT_ASSIGN)
             {
-               LOG_FMT(LERR, "%s:%d %s: version: Unexpected token %s\n",
+               LOG_FMT(LWARN, "%s:%d %s: version: Unexpected token %s\n",
                        fpd.filename, pc->orig_line, __func__, get_token_name(next->type));
-               cpd.error_count++;
             }
             pc->type = CT_WORD;
          }

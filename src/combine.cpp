@@ -108,7 +108,7 @@ static chunk_t *flag_parens2(const char *func, int line,
    paren_close = chunk_skip_to_match(po, CNAV_PREPROC);
    if (paren_close == NULL)
    {
-      LOG_FMT(LERR, "flag_parens[%s:%d]: no match for [%s] at  [%d:%d]\n",
+      LOG_FMT(LWARN, "flag_parens[%s:%d]: no match for [%s] at  [%d:%d]\n",
               func, line, po->str.c_str(), po->orig_line, po->orig_col);
       return(NULL);
    }
@@ -2162,7 +2162,6 @@ void combine_labels(fp_data& fpd)
                           get_token_name(next->parent_type),
                           get_token_name(cur->parent_type),
                           next->level, next->brace_level);
-                  cpd.error_count++;
                }
             }
          }

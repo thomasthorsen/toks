@@ -409,9 +409,9 @@ c_token_t find_keyword_type(const char *word, int len, c_token_t in_preproc, int
  * Loads the dynamic keywords from a file
  *
  * @param filename   The path to the file to load
- * @return           SUCCESS or FAILURE
+ * @return           true (success) or false (failure)
  */
-int load_keyword_file(const char *filename)
+bool load_keyword_file(const char *filename)
 {
    FILE *pf;
    char buf[256];
@@ -425,8 +425,7 @@ int load_keyword_file(const char *filename)
    {
       LOG_FMT(LERR, "%s: fopen(%s) failed: %s (%d)\n",
               __func__, filename, strerror(errno), errno);
-      cpd.error_count++;
-      return(FAILURE);
+      return false;
    }
 
    while (fgets(buf, sizeof(buf), pf) != NULL)
@@ -452,13 +451,12 @@ int load_keyword_file(const char *filename)
          {
             LOG_FMT(LWARN, "%s:%d Invalid line (starts with '%s')\n",
                     filename, line_no, args[0]);
-            cpd.error_count++;
          }
       }
    }
 
    fclose(pf);
-   return(SUCCESS);
+   return true;
 }
 
 

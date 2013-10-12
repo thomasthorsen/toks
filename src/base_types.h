@@ -39,14 +39,7 @@ typedef uint64_t   UINT64;
 
 #endif   /* ifdef WIN32 */
 
-/* and the good old SUCCESS/FAILURE */
-
-#define SUCCESS    0
-#define FAILURE    -1
-
-
 /* and a nice macro to keep SlickEdit happy */
-
 #define static_inline    static inline
 
 /* and the ever-so-important array size macro */

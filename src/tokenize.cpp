@@ -1289,7 +1289,6 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
 
    LOG_FMT(LWARN, "%s:%d Garbage in col %d: %x\n",
            fpd.filename, pc.orig_line, (int)ctx.c.col, pc.str[0]);
-   cpd.error_count++;
    return(true);
 }
 
@@ -1319,9 +1318,8 @@ void tokenize(fp_data& fpd)
       chunk.reset();
       if (!parse_next(fpd, ctx, chunk, preproc_ncnl_count, in_preproc))
       {
-         LOG_FMT(LERR, "%s:%d Bailed before the end?\n",
+         LOG_FMT(LWARN, "%s:%d Bailed before the end?\n",
                  fpd.filename, ctx.c.row);
-         cpd.error_count++;
          break;
       }
 

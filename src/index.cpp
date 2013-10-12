@@ -354,7 +354,6 @@ bool index_prepare_for_file(fp_data& fpd)
    {
       const char *errstr = sqlite3_errstr(result);
       LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
-      cpd.error_count++;
       retval = false;
    }
 
@@ -437,7 +436,6 @@ bool index_insert_entry(
    {
       const char *errstr = sqlite3_errstr(result);
       LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
-      cpd.error_count++;
       retval = false;
    }
 
@@ -516,7 +514,6 @@ bool index_lookup_identifier(const char *identifier, const char *type, const cha
    {
       const char *errstr = sqlite3_errstr(result);
       LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
-      cpd.error_count++;
       retval = false;
    }
 

@@ -324,10 +324,7 @@ struct fp_data
 
 struct cp_data
 {
-   UINT32             error_count;
-
    int                forced_lang_flags; // LANG_xxx
-
    sqlite3            *index;
 };
 

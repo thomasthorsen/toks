@@ -212,9 +212,8 @@ static void push_fmr_pse(fp_data& fpd, struct parse_frame *frm, chunk_t *pc,
    }
    else
    {
-      LOG_FMT(LWARN, "%s: Error: Frame stack overflow,  Unable to properly process this file.\n",
+      LOG_FMT(LWARN, "%s: Frame stack overflow,  Unable to properly process this file.\n",
               fpd.filename);
-      cpd.error_count++;
    }
 }
 
@@ -384,12 +383,11 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
          if ((frm->pse[frm->pse_tos].type != CT_NONE) &&
              (frm->pse[frm->pse_tos].type != CT_PP_DEFINE))
          {
-            LOG_FMT(LWARN, "%s:%d Error: Unexpected '%s' for '%s', which was on line %d\n",
+            LOG_FMT(LWARN, "%s:%d Unexpected '%s' for '%s', which was on line %d\n",
                     fpd.filename, pc->orig_line, pc->str.c_str(),
                     get_token_name(frm->pse[frm->pse_tos].pc->type),
                     frm->pse[frm->pse_tos].pc->orig_line);
             print_stack(LBCSPOP, "=Error  ", frm, pc);
-            cpd.error_count++;
          }
       }
       else
@@ -454,9 +452,8 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
          }
          else
          {
-            LOG_FMT(LWARN, "%s:%d: Error: Expected a semicolon for WHILE_OF_DO, but got '%s'\n",
+            LOG_FMT(LWARN, "%s:%d: Expected a semicolon for WHILE_OF_DO, but got '%s'\n",
                     fpd.filename, pc->orig_line, get_token_name(pc->type));
-            cpd.error_count++;
          }
          handle_complex_close(fpd, consumed, frm, pc);
       }
@@ -754,11 +751,10 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
          return(true);
       }
 
-      LOG_FMT(LWARN, "%s:%d Error: Expected 'while', got '%s'\n",
+      LOG_FMT(LWARN, "%s:%d Expected 'while', got '%s'\n",
               fpd.filename, pc->orig_line, pc->str.c_str());
       frm->pse_tos--;
       print_stack(LBCSPOP, "-Error  ", frm, pc);
-      cpd.error_count++;
    }
 
    /* Insert a CT_VBRACE_OPEN, if needed */
@@ -795,14 +791,13 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
        ((frm->pse[frm->pse_tos].stage == BS_PAREN1) ||
         (frm->pse[frm->pse_tos].stage == BS_WOD_PAREN)))
    {
-      LOG_FMT(LWARN, "%s:%d Error: Expected '(', got '%s' for '%s'\n",
+      LOG_FMT(LWARN, "%s:%d Expected '(', got '%s' for '%s'\n",
               fpd.filename, pc->orig_line, pc->str.c_str(),
               get_token_name(frm->pse[frm->pse_tos].type));
 
       /* Throw out the complex statement */
       frm->pse_tos--;
       print_stack(LBCSPOP, "-Error  ", frm, pc);
-      cpd.error_count++;
    }
 
    return(false);
@@ -903,11 +898,10 @@ static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_fram
    else
    {
       /* PROBLEM */
-      LOG_FMT(LWARN, "%s:%d Error: TOS.type='%s' TOS.stage=%d\n",
+      LOG_FMT(LWARN, "%s:%d TOS.type='%s' TOS.stage=%d\n",
               fpd.filename, pc->orig_line,
               get_token_name(frm->pse[frm->pse_tos].type),
               frm->pse[frm->pse_tos].stage);
-      cpd.error_count++;
    }
    return(false);
 }
