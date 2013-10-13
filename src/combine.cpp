@@ -29,7 +29,7 @@ static bool mark_function_type(fp_data& fpd, chunk_t *pc);
 static void mark_struct_union_body(chunk_t *start);
 static chunk_t *mark_variable_definition(chunk_t *start, UINT64 flags);
 
-static void mark_define_expressions(void);
+static void mark_define_expressions(fp_data& fpd);
 static void mark_class_ctor(fp_data& fpd, chunk_t *pclass);
 static void mark_namespace(chunk_t *pns);
 static void mark_cpp_constructor(fp_data& fpd, chunk_t *pc);
@@ -46,7 +46,7 @@ static void handle_cs_property(chunk_t *pc);
 static void handle_cpp_template(chunk_t *pc);
 static void handle_cpp_lambda(fp_data& fpd, chunk_t *pc);
 static void handle_d_template(chunk_t *pc);
-static void handle_wrap(chunk_t *pc);
+static void handle_wrap(fp_data& fpd, chunk_t *pc);
 static void handle_proto_wrap(fp_data& fpd, chunk_t *pc);
 static bool is_oc_block(chunk_t *pc);
 static void handle_java_assert(chunk_t *pc);
@@ -1006,14 +1006,14 @@ void fix_symbols(fp_data& fpd)
    chunk_t *prev;
    chunk_t dummy;
 
-   mark_define_expressions();
+   mark_define_expressions(fpd);
 
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next_ncnl(pc))
+   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next_ncnl(pc))
    {
       if ((pc->type == CT_FUNC_WRAP) ||
           (pc->type == CT_TYPE_WRAP))
       {
-         handle_wrap(pc);
+         handle_wrap(fpd, pc);
       }
 
       if (pc->type == CT_ASSIGN)
@@ -1022,7 +1022,7 @@ void fix_symbols(fp_data& fpd)
       }
    }
 
-   pc = chunk_get_head();
+   pc = chunk_get_head(fpd);
    if (chunk_is_newline(pc) || chunk_is_comment(pc))
    {
       pc = chunk_get_next_ncnl(pc);
@@ -1049,7 +1049,7 @@ void fix_symbols(fp_data& fpd)
     * 2nd pass - handle variable definitions
     * REVISIT: We need function params marked to do this (?)
     */
-   pc = chunk_get_head();
+   pc = chunk_get_head(fpd);
    int square_level = -1;
    while (pc != NULL)
    {
@@ -1793,7 +1793,7 @@ static void fix_enum_struct_union(fp_data& fpd, chunk_t *pc)
        */
       if (fpd.lang_flags & LANG_D)
       {
-         next = pawn_add_vsemi_after(chunk_get_prev_ncnl(next));
+         next = pawn_add_vsemi_after(fpd, chunk_get_prev_ncnl(next));
       }
    }
 
@@ -1984,7 +1984,7 @@ void combine_labels(fp_data& fpd)
    bool    hit_case       = false;
    bool    hit_class      = false;
 
-   prev = chunk_get_head();
+   prev = chunk_get_head(fpd);
    cur  = chunk_get_next_nc(prev);
    next = chunk_get_next_nc(cur);
 
@@ -3109,7 +3109,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
          LOG_FMT(LFCN, "%s: '%s' is FCN_DEF:", __func__, pc->str.c_str());
          if (prev == NULL)
          {
-            prev = chunk_get_head();
+            prev = chunk_get_head(fpd);
          }
          for (tmp = prev; tmp != pc; tmp = chunk_get_next_ncnl(tmp))
          {
@@ -3613,14 +3613,14 @@ static void mark_struct_union_body(chunk_t *start)
 /**
  * Sets the parent for comments.
  */
-void mark_comments(void)
+void mark_comments(fp_data& fpd)
 {
    chunk_t *cur;
    chunk_t *next;
    bool    prev_nl = true;
    bool    next_nl;
 
-   cur = chunk_get_head();
+   cur = chunk_get_head(fpd);
 
    while (cur != NULL)
    {
@@ -3657,14 +3657,14 @@ void mark_comments(void)
  * Marks statement starts in a macro body.
  * REVISIT: this may already be done
  */
-static void mark_define_expressions(void)
+static void mark_define_expressions(fp_data& fpd)
 {
    chunk_t *pc;
    chunk_t *prev;
    bool    in_define = false;
    bool    first     = true;
 
-   pc   = chunk_get_head();
+   pc   = chunk_get_head(fpd);
    prev = pc;
 
    while (pc != NULL)
@@ -3856,7 +3856,7 @@ static void handle_cpp_lambda(fp_data& fpd, chunk_t *sq_o)
       nc.str.pop_front();
       nc.orig_col++;
       nc.column++;
-      sq_c = chunk_add_after(&nc, sq_o);
+      sq_c = chunk_add_after(fpd, &nc, sq_o);
    }
    sq_o->parent_type = CT_CPP_LAMBDA;
    sq_c->parent_type = CT_CPP_LAMBDA;
@@ -4902,7 +4902,7 @@ static void handle_cs_property(chunk_t *bro)
  * A type wrap chunk and what follows should be treated as a simple type.
  * Create new text for the chunk and call it a CT_TYPE.
  */
-static void handle_wrap(chunk_t *pc)
+static void handle_wrap(fp_data& fpd, chunk_t *pc)
 {
    chunk_t *opp  = chunk_get_next(pc);
    chunk_t *name = chunk_get_next(opp);
@@ -4921,9 +4921,9 @@ static void handle_wrap(chunk_t *pc)
 
       pc->orig_col_end = pc->orig_col + pc->len();
 
-      chunk_del(opp);
-      chunk_del(name);
-      chunk_del(clp);
+      chunk_del(fpd, opp);
+      chunk_del(fpd, name);
+      chunk_del(fpd, clp);
    }
 }
 

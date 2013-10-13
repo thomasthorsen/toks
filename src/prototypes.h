@@ -30,7 +30,7 @@ const char *get_file_extension(int& idx);
  */
 
 void output(fp_data& fpd);
-void output_dump_tokens(void);
+void output_dump_tokens(fp_data& fpd);
 void output_identifier(
    const char *filename,
    UINT32 line,
@@ -48,7 +48,7 @@ void output_identifier(
 
 void fix_symbols(fp_data& fpd);
 void combine_labels(fp_data& fpd);
-void mark_comments(void);
+void mark_comments(fp_data& fpd);
 void make_type(chunk_t *pc);
 
 void flag_series(chunk_t *start, chunk_t *end, UINT64 set_flags, UINT64 clr_flags=0, chunk_nav_t nav = CNAV_ALL);
@@ -112,10 +112,10 @@ int pf_check(fp_data& fpd, struct parse_frame *frm, chunk_t *pc);
 /*
  * lang_pawn.cpp
  */
-void pawn_prescan(void);
+void pawn_prescan(fp_data& fpd);
 void pawn_add_virtual_semicolons(fp_data& fpd);
-chunk_t *pawn_check_vsemicolon(chunk_t *pc);
-chunk_t *pawn_add_vsemi_after(chunk_t *pc);
+chunk_t *pawn_check_vsemicolon(fp_data& fpd, chunk_t *pc);
+chunk_t *pawn_add_vsemi_after(fp_data& fpd, chunk_t *pc);
 
 
 /*
@@ -127,7 +127,7 @@ bool decode_file(vector<UINT8>& out_data, const char *filename);
 /*
  * scope.cpp
  */
-void assign_scope(void);
+void assign_scope(fp_data& fpd);
 
 
 /*

@@ -39,7 +39,7 @@ static int language_from_tag(const char *tag);
 static int language_from_filename(const char *filename);
 static const char *language_to_string(int lang);
 static void toks_start(fp_data& fpd);
-static void toks_end();
+static void toks_end(fp_data& fpd);
 static void do_source_file(const char *filename_in, bool dump);
 static bool process_source_list(const char *source_list, bool dump);
 
@@ -395,7 +395,7 @@ static void do_source_file(const char *filename, bool dump)
       /* Special hook for dumping parsed data for debugging */
       if (dump)
       {
-         output_dump_tokens();
+         output_dump_tokens(fpd);
       }
 
       index_begin_file(fpd);
@@ -404,7 +404,7 @@ static void do_source_file(const char *filename, bool dump)
 
       index_end_file(fpd);
 
-      toks_end();
+      toks_end(fpd);
    }
 }
 
@@ -436,7 +436,7 @@ static void toks_start(fp_data& fpd)
 
    if ((fpd.lang_flags & LANG_PAWN) != 0)
    {
-      pawn_prescan();
+      pawn_prescan(fpd);
    }
 
    /**
@@ -444,7 +444,7 @@ static void toks_start(fp_data& fpd)
     */
    fix_symbols(fpd);
 
-   mark_comments();
+   mark_comments(fpd);
 
    /**
     * Look at all colons ':' and mark labels, :? sequences, etc.
@@ -454,18 +454,18 @@ static void toks_start(fp_data& fpd)
    /**
     * Assign scope information
     */
-   assign_scope();
+   assign_scope(fpd);
 }
 
 
-static void toks_end()
+static void toks_end(fp_data& fpd)
 {
    /* Free all the memory */
    chunk_t *pc;
 
-   while ((pc = chunk_get_head()) != NULL)
+   while ((pc = chunk_get_head(fpd)) != NULL)
    {
-      chunk_del(pc);
+      chunk_del(fpd, pc);
    }
 }
 

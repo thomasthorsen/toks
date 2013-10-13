@@ -22,7 +22,7 @@ static void check_template(fp_data& fpd, chunk_t *start);
  * Convert '>' + '>' into '>>'
  * If we only have a single '>', then change it to CT_COMPARE.
  */
-static chunk_t *handle_double_angle_close(chunk_t *pc)
+static chunk_t *handle_double_angle_close(fp_data& fpd, chunk_t *pc)
 {
    chunk_t *next = chunk_get_next(pc);
 
@@ -39,7 +39,7 @@ static chunk_t *handle_double_angle_close(chunk_t *pc)
          pc->orig_col_end = next->orig_col_end;
 
          chunk_t *tmp = chunk_get_next_ncnl(next);
-         chunk_del(next);
+         chunk_del(fpd, next);
          next = tmp;
       }
       else
@@ -73,13 +73,13 @@ static void split_off_angle_close(fp_data& fpd, chunk_t *pc)
    nc.str.pop_front();
    nc.orig_col++;
    nc.column++;
-   chunk_add_after(&nc, pc);
+   chunk_add_after(fpd, &nc, pc);
 }
 
 
 void tokenize_cleanup(fp_data& fpd)
 {
-   chunk_t *pc   = chunk_get_head();
+   chunk_t *pc;
    chunk_t *prev = NULL;
    chunk_t *next;
    chunk_t *tmp;
@@ -89,7 +89,7 @@ void tokenize_cleanup(fp_data& fpd)
    /* Since [] is expected to be TSQUARE for the 'operator', we need to make
     * this change in the first pass.
     */
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next_ncnl(pc))
+   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next_ncnl(pc))
    {
       if (pc->type == CT_SQUARE_OPEN)
       {
@@ -99,7 +99,7 @@ void tokenize_cleanup(fp_data& fpd)
             /* Change '[' + ']' into '[]' */
             pc->type = CT_TSQUARE;
             pc->str  = "[]";
-            chunk_del(next);
+            chunk_del(fpd, next);
             pc->orig_col_end += 1;
          }
       }
@@ -113,7 +113,7 @@ void tokenize_cleanup(fp_data& fpd)
    }
 
    /* We can handle everything else in the second pass */
-   pc   = chunk_get_head();
+   pc   = chunk_get_head(fpd);
    next = chunk_get_next_ncnl(pc);
    while ((pc != NULL) && (next != NULL))
    {
@@ -246,7 +246,7 @@ void tokenize_cleanup(fp_data& fpd)
          }
          else
          {
-            next = handle_double_angle_close(pc);
+            next = handle_double_angle_close(fpd, pc);
          }
       }
 
@@ -339,7 +339,7 @@ void tokenize_cleanup(fp_data& fpd)
             {
                next->str  = "()";
                next->type = CT_OPERATOR_VAL;
-               chunk_del(tmp);
+               chunk_del(fpd, tmp);
                next->orig_col_end += 1;
             }
          }
@@ -350,7 +350,7 @@ void tokenize_cleanup(fp_data& fpd)
             next->str.append('>');
             next->orig_col_end++;
             next->type = CT_OPERATOR_VAL;
-            chunk_del(tmp2);
+            chunk_del(fpd, tmp2);
          }
          else if (next->flags & PCF_PUNCTUATOR)
          {
@@ -382,7 +382,7 @@ void tokenize_cleanup(fp_data& fpd)
 
             while ((tmp2 = chunk_get_next(next)) != tmp)
             {
-               chunk_del(tmp2);
+               chunk_del(fpd, tmp2);
             }
 
             next->type = CT_OPERATOR_VAL;
@@ -465,7 +465,7 @@ void tokenize_cleanup(fp_data& fpd)
          pc->str.append(' ');
          pc->str += next->str;
          pc->orig_col_end = next->orig_col_end;
-         chunk_del(next);
+         chunk_del(fpd, next);
          next = chunk_get_next_ncnl(pc);
          /* label the 'in' */
          if (next && (next->type == CT_PAREN_OPEN))
@@ -690,7 +690,7 @@ void tokenize_cleanup(fp_data& fpd)
             if (doit)
             {
                pc->str += next->str;
-               chunk_del(next);
+               chunk_del(fpd, next);
                next = tmp;
             }
          }
@@ -873,7 +873,7 @@ static void check_template(fp_data& fpd, chunk_t *start)
          {
             if ((num_tokens > 0) && (tokens[num_tokens - 1] == CT_PAREN_OPEN))
             {
-               handle_double_angle_close(pc);
+               handle_double_angle_close(fpd, pc);
             }
             else if (--num_tokens <= 0)
             {

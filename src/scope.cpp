@@ -113,9 +113,9 @@ static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
 }
 
 
-void assign_scope()
+void assign_scope(fp_data& fpd)
 {
-   chunk_t *pc = chunk_get_head();
+   chunk_t *pc = chunk_get_head(fpd);
    unc_text res_scopes;
 
    while (pc != NULL)

@@ -30,14 +30,14 @@ enum chunk_nav_t
 
 chunk_t *chunk_dup(const chunk_t *pc_in);
 
-chunk_t *chunk_add(const chunk_t *pc_in);
-chunk_t *chunk_add_after(const chunk_t *pc_in, chunk_t *ref);
-chunk_t *chunk_add_before(const chunk_t *pc_in, chunk_t *ref);
+chunk_t *chunk_add(fp_data& fpd, const chunk_t *pc_in);
+chunk_t *chunk_add_after(fp_data& fpd, const chunk_t *pc_in, chunk_t *ref);
+chunk_t *chunk_add_before(fp_data& fpd, const chunk_t *pc_in, chunk_t *ref);
 
-void chunk_del(chunk_t *pc);
+void chunk_del(fp_data& fpd, chunk_t *pc);
 
-chunk_t *chunk_get_head(void);
-chunk_t *chunk_get_tail(void);
+chunk_t *chunk_get_head(fp_data& fpd);
+chunk_t *chunk_get_tail(fp_data& fpd);
 chunk_t *chunk_get_next(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 

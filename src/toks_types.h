@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <deque>
+#include <cstdio>
 using namespace std;
 
 #include "base_types.h"
@@ -19,8 +20,7 @@ using namespace std;
 #include "logger.h"
 #include "unc_text.h"
 #include "sqlite3080001.h"
-#include <cstdio>
-#include <assert.h>
+#include "ListManager.h"
 
 /**
  * Brace stage enum used in brace_cleanup
@@ -320,6 +320,8 @@ struct fp_data
    int                frame_pp_level;
 
    int                lang_flags; // LANG_xxx
+
+   ListManager<chunk_t> chunk_list;
 };
 
 struct cp_data

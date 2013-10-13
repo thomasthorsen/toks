@@ -1229,7 +1229,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
 
       if ((ch == '<') && (in_preproc == CT_PP_DEFINE))
       {
-         if (chunk_get_tail()->type == CT_MACRO)
+         if (chunk_get_tail(fpd)->type == CT_MACRO)
          {
             /* We have "#define XXX <", assume '<' starts an include string */
             parse_string(ctx, pc, 0, false);
@@ -1357,7 +1357,7 @@ void tokenize(fp_data& fpd)
             pc->flags &= ~PCF_IN_PREPROC;
          }
       }
-      pc = chunk_add_before(&chunk, NULL);
+      pc = chunk_add_before(fpd, &chunk, NULL);
 
       /* A newline marks the end of a preprocessor */
       if (pc->type == CT_NEWLINE) // || (pc->type == CT_COMMENT_MULTI))

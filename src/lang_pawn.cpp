@@ -10,12 +10,12 @@
 #include "ChunkStack.h"
 #include "prototypes.h"
 
-static chunk_t *pawn_process_line(chunk_t *start);
-static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn);
-static chunk_t *pawn_process_variable(chunk_t *start);
-static chunk_t *pawn_process_func_def(chunk_t *pc);
+static chunk_t *pawn_process_line(fp_data& fpd, chunk_t *start);
+static chunk_t *pawn_mark_function0(fp_data& fpd, chunk_t *start, chunk_t *fcn);
+static chunk_t *pawn_process_variable(fp_data& fpd, chunk_t *start);
+static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc);
 
-chunk_t *pawn_add_vsemi_after(chunk_t *pc)
+chunk_t *pawn_add_vsemi_after(fp_data& fpd, chunk_t *pc)
 {
    if ((pc->type == CT_VSEMICOLON) ||
        (pc->type == CT_SEMICOLON))
@@ -42,7 +42,7 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc)
            __func__, pc->orig_line, pc->str.c_str(),
            get_token_name(pc->type));
 
-   return(chunk_add_after(&chunk, pc));
+   return(chunk_add_after(fpd, &chunk, pc));
 }
 
 
@@ -100,7 +100,7 @@ static bool pawn_continued(chunk_t *pc, int br_level)
  *
  * We are looking for unbraced functions.
  */
-void pawn_prescan(void)
+void pawn_prescan(fp_data& fpd)
 {
    /* Start at the beginning and step through the entire file, and clean up
     * any questionable stuff
@@ -109,14 +109,14 @@ void pawn_prescan(void)
    chunk_t *pc;
    bool    did_nl = true;
 
-   pc = chunk_get_head();
+   pc = chunk_get_head(fpd);
    while (pc != NULL)
    {
       if (did_nl && (pc->type != CT_PREPROC) &&
           !chunk_is_newline(pc) && (pc->level == 0))
       {
          /* pc now points to the start of a line */
-         pc = pawn_process_line(pc);
+         pc = pawn_process_line(fpd, pc);
       }
       /* note that continued lines are ignored */
       if (pc != NULL)
@@ -145,7 +145,7 @@ void pawn_prescan(void)
  *
  * Variable definitions start with 'stock', 'static', 'new', or 'public'.
  */
-static chunk_t *pawn_process_line(chunk_t *start)
+static chunk_t *pawn_process_line(fp_data& fpd, chunk_t *start)
 {
    chunk_t *pc;
    chunk_t *fcn = NULL;
@@ -156,7 +156,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
    if ((start->type == CT_NEW) ||
        chunk_is_str(start, "const", 5))
    {
-      return(pawn_process_variable(start));
+      return(pawn_process_variable(fpd, start));
    }
 
    /* if a open paren is found before an assign, then this is a function */
@@ -183,14 +183,14 @@ static chunk_t *pawn_process_line(chunk_t *start)
    {
       if (pc->type == CT_ASSIGN)
       {
-         return(pawn_process_variable(pc));
+         return(pawn_process_variable(fpd, pc));
       }
    }
 
    if (fcn != NULL)
    {
       //LOG_FMT(LNOTE, "FUNCTION: %s\n", fcn->str.c_str());
-      return(pawn_mark_function0(start, fcn));
+      return(pawn_mark_function0(fpd, start, fcn));
    }
 
    if (start->type == CT_ENUM)
@@ -209,7 +209,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
  * follows a variable definition at level 0 until the end.
  * Adds a semicolon at the end, if needed.
  */
-static chunk_t *pawn_process_variable(chunk_t *start)
+static chunk_t *pawn_process_variable(fp_data& fpd, chunk_t *start)
 {
    chunk_t *prev = NULL;
    chunk_t *pc   = start;
@@ -222,7 +222,7 @@ static chunk_t *pawn_process_variable(chunk_t *start)
          if ((prev->type != CT_VSEMICOLON) &&
              (prev->type != CT_SEMICOLON))
          {
-            pawn_add_vsemi_after(prev);
+            pawn_add_vsemi_after(fpd, prev);
          }
          break;
       }
@@ -241,7 +241,7 @@ void pawn_add_virtual_semicolons(fp_data& fpd)
    prev = NULL;
    if ((fpd.lang_flags & LANG_PAWN) != 0)
    {
-      pc = chunk_get_head();
+      pc = chunk_get_head(fpd);
       while ((pc = chunk_get_next(pc)) != NULL)
       {
          if (!chunk_is_comment(pc) &&
@@ -266,7 +266,7 @@ void pawn_add_virtual_semicolons(fp_data& fpd)
              (prev->type != CT_SEMICOLON) &&
              !pawn_continued(prev, prev->brace_level))
          {
-            pawn_add_vsemi_after(prev);
+            pawn_add_vsemi_after(fpd, prev);
             prev = NULL;
          }
       }
@@ -277,7 +277,7 @@ void pawn_add_virtual_semicolons(fp_data& fpd)
 /**
  * We are on a level 0 function proto of def
  */
-static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
+static chunk_t *pawn_mark_function0(fp_data& fpd, chunk_t *start, chunk_t *fcn)
 {
    chunk_t *last;
 
@@ -309,11 +309,11 @@ static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
    }
 
    /* Not a prototype, so it must be a function def */
-   return(pawn_process_func_def(fcn));
+   return(pawn_process_func_def(fpd, fcn));
 }
 
 
-static chunk_t *pawn_process_func_def(chunk_t *pc)
+static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
 {
    /* We are on a function definition */
    chunk_t *clp;
@@ -381,7 +381,7 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
       chunk.type        = CT_VBRACE_OPEN;
       chunk.parent_type = CT_FUNC_DEF;
 
-      chunk_t *prev = chunk_add_before(&chunk, last);
+      chunk_t *prev = chunk_add_before(fpd, &chunk, last);
       last = prev;
 
       /* find the next newline at level 0 */
@@ -419,7 +419,7 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
       chunk.level       = 0;
       chunk.brace_level = 0;
       chunk.parent_type = CT_FUNC_DEF;
-      last = chunk_add_after(&chunk, last);
+      last = chunk_add_after(fpd, &chunk, last);
    }
    return(last);
 }
@@ -432,7 +432,7 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
  * @param pc   The newline (CT_NEWLINE)
  * @return     Either the newline or the newly inserted virtual semicolon
  */
-chunk_t *pawn_check_vsemicolon(chunk_t *pc)
+chunk_t *pawn_check_vsemicolon(fp_data& fpd, chunk_t *pc)
 {
    chunk_t *vb_open;
    chunk_t *prev;
@@ -463,5 +463,5 @@ chunk_t *pawn_check_vsemicolon(chunk_t *pc)
       return(pc);
    }
 
-   return(pawn_add_vsemi_after(prev));
+   return(pawn_add_vsemi_after(fpd, prev));
 }

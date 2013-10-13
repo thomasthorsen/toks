@@ -11,6 +11,8 @@
  * A simple list manager for a double-linked list.
  * Class T must define 'next' and 'prev', which must be pointers to type T.
  */
+#ifndef LIST_MANAGER_H_INCLUDED
+#define LIST_MANAGER_H_INCLUDED
 
 template<class T> class ListManager
 {
@@ -48,28 +50,6 @@ public:
    T *GetTail()
    {
       return(last);
-   }
-
-
-   T *GetNext(T *ref)
-   {
-      return((ref != NULL) ? ref->next : NULL);
-   }
-
-
-   T *GetPrev(T *ref)
-   {
-      return((ref != NULL) ? ref->prev : NULL);
-   }
-
-
-   void InitEntry(T *obj) const
-   {
-      if (obj != NULL)
-      {
-         obj->next = NULL;
-         obj->prev = NULL;
-      }
    }
 
 
@@ -201,3 +181,5 @@ public:
       first = obj;
    }
 };
+
+#endif /* LIST_MANAGER_H_INCLUDED */

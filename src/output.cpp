@@ -101,7 +101,7 @@ void output(fp_data& fpd)
    id_type type;
    id_sub_type sub_type;
 
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
+   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next(pc))
    {
       if (pc->flags & PCF_PUNCTUATOR)
          continue;
@@ -229,7 +229,7 @@ void output(fp_data& fpd)
    }
 }
 
-void output_dump_tokens()
+void output_dump_tokens(fp_data& fpd)
 {
    chunk_t *pc;
    int     cnt;
@@ -237,7 +237,7 @@ void output_dump_tokens()
 
    printf("# -=====-\n");
    printf("# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
-   for (pc = chunk_get_head(); pc != NULL; pc = chunk_get_next(pc))
+   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next(pc))
    {
       printf("\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%d]",
               pc->orig_line, get_token_name(pc->type),

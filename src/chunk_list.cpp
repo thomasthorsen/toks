@@ -12,19 +12,16 @@
 #include "ListManager.h"
 #include "prototypes.h"
 
-typedef ListManager<chunk_t>   ChunkList;
 
-ChunkList g_cl;
-
-chunk_t *chunk_get_head(void)
+chunk_t *chunk_get_head(fp_data& fpd)
 {
-   return(g_cl.GetHead());
+   return(fpd.chunk_list.GetHead());
 }
 
 
-chunk_t *chunk_get_tail(void)
+chunk_t *chunk_get_tail(fp_data& fpd)
 {
-   return(g_cl.GetTail());
+   return(fpd.chunk_list.GetTail());
 }
 
 
@@ -34,7 +31,7 @@ chunk_t *chunk_get_next(chunk_t *cur, chunk_nav_t nav)
    {
       return(NULL);
    }
-   chunk_t *pc = g_cl.GetNext(cur);
+   chunk_t *pc = cur->next;
    if ((pc == NULL) || (nav == CNAV_ALL))
    {
       return(pc);
@@ -51,7 +48,7 @@ chunk_t *chunk_get_next(chunk_t *cur, chunk_nav_t nav)
    /* Not in a preproc, skip any preproc */
    while ((pc != NULL) && (pc->flags & PCF_IN_PREPROC))
    {
-      pc = g_cl.GetNext(pc);
+      pc = pc->next;
    }
    return(pc);
 }
@@ -63,7 +60,7 @@ chunk_t *chunk_get_prev(chunk_t *cur, chunk_nav_t nav)
    {
       return(NULL);
    }
-   chunk_t *pc = g_cl.GetPrev(cur);
+   chunk_t *pc = cur->prev;
    if ((pc == NULL) || (nav == CNAV_ALL))
    {
       return(pc);
@@ -80,7 +77,7 @@ chunk_t *chunk_get_prev(chunk_t *cur, chunk_nav_t nav)
    /* Not in a preproc, skip any proproc */
    while ((pc != NULL) && (pc->flags & PCF_IN_PREPROC))
    {
-      pc = g_cl.GetPrev(pc);
+      pc = pc->prev;
    }
    return(pc);
 }
@@ -99,7 +96,8 @@ chunk_t *chunk_dup(const chunk_t *pc_in)
 
    /* Copy all fields and then init the entry */
    *pc = *pc_in;
-   g_cl.InitEntry(pc);
+   pc->next = NULL;
+   pc->prev = NULL;
 
    return(pc);
 }
@@ -108,13 +106,13 @@ chunk_t *chunk_dup(const chunk_t *pc_in)
 /**
  * Add to the tail of the list
  */
-chunk_t *chunk_add(const chunk_t *pc_in)
+chunk_t *chunk_add(fp_data& fpd, const chunk_t *pc_in)
 {
    chunk_t *pc;
 
    if ((pc = chunk_dup(pc_in)) != NULL)
    {
-      g_cl.AddTail(pc);
+      fpd.chunk_list.AddTail(pc);
    }
    return(pc);
 }
@@ -124,7 +122,7 @@ chunk_t *chunk_add(const chunk_t *pc_in)
  * Add a copy after the given chunk.
  * If ref is NULL, add at the head.
  */
-chunk_t *chunk_add_after(const chunk_t *pc_in, chunk_t *ref)
+chunk_t *chunk_add_after(fp_data& fpd, const chunk_t *pc_in, chunk_t *ref)
 {
    chunk_t *pc;
 
@@ -132,11 +130,11 @@ chunk_t *chunk_add_after(const chunk_t *pc_in, chunk_t *ref)
    {
       if (ref != NULL)
       {
-         g_cl.AddAfter(pc, ref);
+         fpd.chunk_list.AddAfter(pc, ref);
       }
       else
       {
-         g_cl.AddHead(pc);
+         fpd.chunk_list.AddHead(pc);
       }
    }
    return(pc);
@@ -147,7 +145,7 @@ chunk_t *chunk_add_after(const chunk_t *pc_in, chunk_t *ref)
  * Add a copy before the given chunk.
  * If ref is NULL, add at the head.
  */
-chunk_t *chunk_add_before(const chunk_t *pc_in, chunk_t *ref)
+chunk_t *chunk_add_before(fp_data& fpd, const chunk_t *pc_in, chunk_t *ref)
 {
    chunk_t *pc;
 
@@ -155,25 +153,20 @@ chunk_t *chunk_add_before(const chunk_t *pc_in, chunk_t *ref)
    {
       if (ref != NULL)
       {
-         g_cl.AddBefore(pc, ref);
+         fpd.chunk_list.AddBefore(pc, ref);
       }
       else
       {
-         g_cl.AddTail(pc);
+         fpd.chunk_list.AddTail(pc);
       }
    }
    return(pc);
 }
 
 
-void chunk_del(chunk_t *pc)
+void chunk_del(fp_data& fpd, chunk_t *pc)
 {
-   g_cl.Pop(pc);
-   //if ((pc->flags & PCF_OWN_STR) && (pc->str != NULL))
-   //{
-   //   delete[] (char *)pc->str;
-   //   pc->str = NULL;
-   //}
+   fpd.chunk_list.Pop(pc);
    delete pc;
 }
 

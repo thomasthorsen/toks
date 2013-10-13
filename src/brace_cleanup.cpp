@@ -18,11 +18,11 @@
 #include "unc_ctype.h"
 
 
-static chunk_t *insert_vbrace(chunk_t *pc, bool after,
+static chunk_t *insert_vbrace(fp_data& fpd, chunk_t *pc, bool after,
                               struct parse_frame *frm);
 
-#define insert_vbrace_close_after(pc, frm)    insert_vbrace(pc, true, frm)
-#define insert_vbrace_open_before(pc, frm)    insert_vbrace(pc, false, frm)
+#define insert_vbrace_close_after(fpd, pc, frm)    insert_vbrace(fpd, pc, true, frm)
+#define insert_vbrace_open_before(fpd, pc, frm)    insert_vbrace(fpd, pc, false, frm)
 
 static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm, chunk_t *pc);
 
@@ -112,7 +112,7 @@ void brace_cleanup(fp_data& fpd)
 
    memset(&frm, 0, sizeof(frm));
 
-   pc = chunk_get_head();
+   pc = chunk_get_head(fpd);
    while (pc != NULL)
    {
       /* Check for leaving a #define body */
@@ -140,7 +140,7 @@ void brace_cleanup(fp_data& fpd)
          if ((frm.pse[frm.pse_tos].type == CT_VBRACE_OPEN) &&
              (pc->type == CT_NEWLINE))
          {
-            pc = pawn_check_vsemicolon(pc);
+            pc = pawn_check_vsemicolon(fpd, pc);
          }
       }
 
@@ -438,7 +438,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
 
             if ((tmp->type != CT_SEMICOLON) && (tmp->type != CT_VSEMICOLON))
             {
-               pawn_add_vsemi_after(pc);
+               pawn_add_vsemi_after(fpd, pc);
             }
          }
       }
@@ -764,7 +764,7 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
    {
       parent = frm->pse[frm->pse_tos].type;
 
-      vbrace = insert_vbrace_open_before(pc, frm);
+      vbrace = insert_vbrace_open_before(fpd, pc, frm);
       vbrace->parent_type = parent;
 
       frm->level++;
@@ -907,7 +907,7 @@ static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_fram
 }
 
 
-static chunk_t *insert_vbrace(chunk_t *pc, bool after,
+static chunk_t *insert_vbrace(fp_data& fpd, chunk_t *pc, bool after,
                               struct parse_frame *frm)
 {
    chunk_t chunk;
@@ -923,7 +923,7 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
    if (after)
    {
       chunk.type = CT_VBRACE_CLOSE;
-      rv         = chunk_add_after(&chunk, pc);
+      rv         = chunk_add_after(fpd, &chunk, pc);
    }
    else
    {
@@ -960,7 +960,7 @@ static chunk_t *insert_vbrace(chunk_t *pc, bool after,
       chunk.orig_line = ref->orig_line;
       chunk.column    = ref->column + ref->len() + 1;
       chunk.type      = CT_VBRACE_OPEN;
-      rv = chunk_add_after(&chunk, ref);
+      rv = chunk_add_after(fpd, &chunk, ref);
    }
    return(rv);
 }
@@ -1001,13 +1001,13 @@ static bool close_statement(fp_data& fpd, bool& consumed, struct parse_frame *fr
       /* If the current token has already been consumed, then add after it */
       if (consumed)
       {
-         insert_vbrace_close_after(pc, frm);
+         insert_vbrace_close_after(fpd, pc, frm);
       }
       else
       {
          /* otherwise, add before it and consume the vbrace */
          vbc = chunk_get_prev_ncnl(pc);
-         vbc = insert_vbrace_close_after(vbc, frm);
+         vbc = insert_vbrace_close_after(fpd, vbc, frm);
          vbc->parent_type = frm->pse[frm->pse_tos].parent;
 
          frm->level--;
