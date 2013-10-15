@@ -50,40 +50,15 @@ bool index_check(void)
 
       result = sqlite3_exec(
          cpd.index,
-         "CREATE TABLE Version(Version INTEGER)",
+         "CREATE TABLE Version(Version INTEGER);"
+         "INSERT INTO Version VALUES(" xstr(INDEX_VERSION) ");"
+         "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE);"
+         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT);"
+         "PRAGMA journal_mode=OFF;"
+         "PRAGMA synchronous=OFF;",
          NULL,
          NULL,
          &errmsg);
-
-      if (result == SQLITE_OK)
-      {
-         result = sqlite3_exec(
-            cpd.index,
-            "INSERT INTO Version VALUES(" xstr(INDEX_VERSION) ")",
-            NULL,
-            NULL,
-            &errmsg);
-      }
-
-      if (result == SQLITE_OK)
-      {
-         result = sqlite3_exec(
-            cpd.index,
-            "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE)",
-            NULL,
-            NULL,
-            &errmsg);
-      }
-
-      if (result == SQLITE_OK)
-      {
-         result = sqlite3_exec(
-            cpd.index,
-            "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT)",
-            NULL,
-            NULL,
-            &errmsg);
-      }
 
       if (result != SQLITE_OK)
       {
