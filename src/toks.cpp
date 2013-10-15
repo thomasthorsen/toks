@@ -41,7 +41,7 @@ static const char *language_to_string(int lang);
 static void toks_start(fp_data& fpd);
 static void toks_end(fp_data& fpd);
 static void do_source_file(const char *filename_in, bool dump);
-static bool process_source_list(const char *source_list, bool dump);
+static bool process_source_list(const char *source_list, deque<string>& source_files);
 
 
 /**
@@ -271,19 +271,28 @@ int main(int argc, char *argv[])
    if ((source_list != NULL) || (p_arg != NULL) ||
        (identifier != NULL) || (type != NULL) || (sub_type != NULL))
    {
-      /* Do the files on the command line first */
+      deque<string> source_files;
+
+      /* Build a list of source files */
       if (p_arg != NULL)
       {
          idx = 1;
          while ((p_arg = arg.Unused(idx)) != NULL)
          {
-            do_source_file(p_arg, dump);
+            source_files.push_back(p_arg);
          }
       }
-
       if (source_list != NULL)
       {
-         (void) process_source_list(source_list, dump);
+         (void) process_source_list(source_list, source_files);
+      }
+
+      size_t size = source_files.size();
+
+      for (size_t i = 0; i < size; i += 1)
+      {
+         const char *fn = source_files.at(i).c_str();
+         do_source_file(fn, dump);
       }
 
       if ((identifier != NULL) || (type != NULL) || (sub_type != NULL))
@@ -306,7 +315,7 @@ int main(int argc, char *argv[])
 }
 
 
-static bool process_source_list(const char *source_list, bool dump)
+static bool process_source_list(const char *source_list, deque<string>& source_files)
 {
    int from_stdin = strcmp(source_list, "-") == 0;
    FILE *p_file = from_stdin ? stdin : fopen(source_list, "r");
@@ -350,7 +359,7 @@ static bool process_source_list(const char *source_list, bool dump)
 
       if (fname[0] != '#')
       {
-         do_source_file(fname, dump);
+         source_files.push_back(fname);
       }
    }
 
