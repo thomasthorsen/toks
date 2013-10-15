@@ -260,6 +260,7 @@ int main(int argc, char *argv[])
 
    if (!index_check())
    {
+      sqlite3_close(cpd.index);
       return EXIT_FAILURE;
    }
 
@@ -293,10 +294,13 @@ int main(int argc, char *argv[])
    else
    {
       /* no input specified */
+      sqlite3_close(cpd.index);
       usage_exit(NULL, argv[0], EXIT_SUCCESS);
    }
 
    clear_keyword_file();
+
+   sqlite3_close(cpd.index);
 
    return EXIT_SUCCESS;
 }
