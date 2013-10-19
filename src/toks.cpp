@@ -273,26 +273,31 @@ int main(int argc, char *argv[])
    {
       deque<string> source_files;
 
-      /* Build a list of source files */
-      if (p_arg != NULL)
+      if (index_prepare_for_analysis())
       {
-         idx = 1;
-         while ((p_arg = arg.Unused(idx)) != NULL)
+         /* Build a list of source files */
+         if (p_arg != NULL)
          {
-            source_files.push_back(p_arg);
+            idx = 1;
+            while ((p_arg = arg.Unused(idx)) != NULL)
+            {
+               source_files.push_back(p_arg);
+            }
          }
-      }
-      if (source_list != NULL)
-      {
-         (void) process_source_list(source_list, source_files);
-      }
+         if (source_list != NULL)
+         {
+            (void) process_source_list(source_list, source_files);
+         }
 
-      size_t size = source_files.size();
+         size_t size = source_files.size();
 
-      for (size_t i = 0; i < size; i += 1)
-      {
-         const char *fn = source_files.at(i).c_str();
-         do_source_file(fn, dump);
+         for (size_t i = 0; i < size; i += 1)
+         {
+            const char *fn = source_files.at(i).c_str();
+            do_source_file(fn, dump);
+         }
+
+         index_end_analysis();
       }
 
       if ((identifier != NULL) || (type != NULL) || (sub_type != NULL))

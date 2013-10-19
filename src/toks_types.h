@@ -311,9 +311,6 @@ struct fp_data
    const char         *filename;
    vector<UINT8>      data;
    char               digest[33];
-   sqlite3_stmt       *stmt_insert_entry;
-   sqlite3_stmt       *stmt_begin;
-   sqlite3_stmt       *stmt_commit;
 
    struct parse_frame frames[16];
    int                frame_count;
@@ -328,6 +325,10 @@ struct cp_data
 {
    int                forced_lang_flags; // LANG_xxx
    sqlite3            *index;
+
+   sqlite3_stmt       *stmt_insert_entry;
+   sqlite3_stmt       *stmt_begin;
+   sqlite3_stmt       *stmt_commit;
 };
 
 extern struct cp_data cpd;
