@@ -118,44 +118,10 @@ void index_end_analysis(void)
    sqlite3_finalize(cpd.stmt_commit);
 }
 
-static int index_lookup_filerow(const char *filename, sqlite3_int64 *filerow)
-{
-   sqlite3_stmt *stmt_lookup_filerow = NULL;
-   int result;
-
-   result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT rowid FROM Files WHERE Filename=?",
-                               -1,
-                               &stmt_lookup_filerow,
-                               NULL);
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_bind_text(stmt_lookup_filerow,
-                                 1,
-                                 filename,
-                                 -1,
-                                 SQLITE_STATIC);
-   }
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_step(stmt_lookup_filerow);
-      if (result == SQLITE_ROW)
-      {
-         *filerow = sqlite3_column_int64(stmt_lookup_filerow, 0);
-         result = SQLITE_OK;
-      }
-   }
-
-   (void) sqlite3_finalize(stmt_lookup_filerow);
-
-   return result;
-}
-
 static int index_insert_file(
    const char *digest,
-   const char *filename)
+   const char *filename,
+   sqlite3_int64 *filerow)
 {
    sqlite3_stmt *stmt_insert_file = NULL;
    int result;
@@ -194,6 +160,8 @@ static int index_insert_file(
    }
 
    (void) sqlite3_finalize(stmt_insert_file);
+
+   *filerow = sqlite3_last_insert_rowid(cpd.index);
 
    return result;
 }
@@ -325,11 +293,7 @@ bool index_prepare_for_file(fp_data& fpd)
    }
    else if (result == SQLITE_DONE)
    {
-      result = index_insert_file(fpd.digest, fpd.filename);
-      if (result == SQLITE_OK)
-      {
-         result = index_lookup_filerow(fpd.filename, &filerow);
-      }
+      result = index_insert_file(fpd.digest, fpd.filename, &filerow);
       LOG_FMT(LNOTE, "File %s(%s) does not exist in index, inserted at filerow %"PRId64"\n", fpd.filename, fpd.digest, (int64_t) filerow);
    }
 
@@ -377,47 +341,42 @@ bool index_insert_entry(
    bool retval = true;
    int result;
 
-   result = sqlite3_reset(cpd.stmt_insert_entry);
-
-   if (result == SQLITE_OK)
-   {
-      result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
-                                   2,
-                                   line);
-      result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
-                                   3,
-                                   column_start);
-      result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
-                                   4,
-                                   column_end);
-      result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                                  5,
-                                  scope,
-                                  -1,
-                                  SQLITE_STATIC);
-      result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                                  6,
-                                  type,
-                                  -1,
-                                  SQLITE_STATIC);
-      result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                                  7,
-                                  sub_type,
-                                  -1,
-                                  SQLITE_STATIC);
-      result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                                  8,
-                                  identifier,
-                                  -1,
-                                  SQLITE_STATIC);
-   }
+   result = sqlite3_bind_int64(cpd.stmt_insert_entry,
+                               2,
+                               line);
+   result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
+                                3,
+                                column_start);
+   result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
+                                4,
+                                column_end);
+   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+                               5,
+                               scope,
+                               -1,
+                               SQLITE_STATIC);
+   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+                               6,
+                               type,
+                               -1,
+                               SQLITE_STATIC);
+   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+                               7,
+                               sub_type,
+                               -1,
+                               SQLITE_STATIC);
+   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+                               8,
+                               identifier,
+                               -1,
+                               SQLITE_STATIC);
 
    if (result == SQLITE_OK)
    {
       result = sqlite3_step(cpd.stmt_insert_entry);
       if (result == SQLITE_DONE)
       {
-         result = SQLITE_OK;
+         result = sqlite3_reset(cpd.stmt_insert_entry);
       }
    }
 
