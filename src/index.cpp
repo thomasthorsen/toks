@@ -101,6 +101,15 @@ bool index_prepare_for_analysis(void)
                                   NULL);
    }
 
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "INSERT INTO Files VALUES(?,?)",
+                                  -1,
+                                  &cpd.stmt_insert_file,
+                                  NULL);
+   }
+
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
@@ -113,9 +122,10 @@ bool index_prepare_for_analysis(void)
 
 void index_end_analysis(void)
 {
-   sqlite3_finalize(cpd.stmt_insert_entry);
-   sqlite3_finalize(cpd.stmt_begin);
-   sqlite3_finalize(cpd.stmt_commit);
+   (void) sqlite3_finalize(cpd.stmt_insert_entry);
+   (void) sqlite3_finalize(cpd.stmt_begin);
+   (void) sqlite3_finalize(cpd.stmt_commit);
+   (void) sqlite3_finalize(cpd.stmt_insert_file);
 }
 
 static int index_insert_file(
@@ -123,27 +133,17 @@ static int index_insert_file(
    const char *filename,
    sqlite3_int64 *filerow)
 {
-   sqlite3_stmt *stmt_insert_file = NULL;
    int result;
 
-   result = sqlite3_prepare_v2(cpd.index,
-                               "INSERT INTO Files VALUES(?,?)",
-                               -1,
-                               &stmt_insert_file,
-                               NULL);
+   result = sqlite3_bind_text(cpd.stmt_insert_file,
+                              1,
+                              digest,
+                              -1,
+                              SQLITE_STATIC);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_text(stmt_insert_file,
-                                 1,
-                                 digest,
-                                 -1,
-                                 SQLITE_STATIC);
-   }
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_bind_text(stmt_insert_file,
+      result = sqlite3_bind_text(cpd.stmt_insert_file,
                                  2,
                                  filename,
                                  -1,
@@ -152,14 +152,12 @@ static int index_insert_file(
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_step(stmt_insert_file);
+      result = sqlite3_step(cpd.stmt_insert_file);
       if (result == SQLITE_DONE)
       {
-         result = SQLITE_OK;
+         result = sqlite3_reset(cpd.stmt_insert_file);
       }
    }
-
-   (void) sqlite3_finalize(stmt_insert_file);
 
    *filerow = sqlite3_last_insert_rowid(cpd.index);
 

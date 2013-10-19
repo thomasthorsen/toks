@@ -329,6 +329,7 @@ struct cp_data
    sqlite3_stmt       *stmt_insert_entry;
    sqlite3_stmt       *stmt_begin;
    sqlite3_stmt       *stmt_commit;
+   sqlite3_stmt       *stmt_insert_file;
 };
 
 extern struct cp_data cpd;
