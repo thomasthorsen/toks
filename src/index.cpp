@@ -53,7 +53,7 @@ bool index_check(void)
          "CREATE TABLE Version(Version INTEGER);"
          "INSERT INTO Version VALUES(" xstr(INDEX_VERSION) ");"
          "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE);"
-         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, ColumnEnd INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT);"
+         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT);"
          "PRAGMA journal_mode=OFF;"
          "PRAGMA synchronous=OFF;",
          NULL,
@@ -78,7 +78,7 @@ bool index_prepare_for_analysis(void)
    bool retval = true;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "INSERT INTO Entries VALUES(?,?,?,?,?,?,?,?)",
+                               "INSERT INTO Entries VALUES(?,?,?,?,?,?,?)",
                                -1,
                                &cpd.stmt_insert_entry,
                                NULL);
@@ -326,7 +326,6 @@ bool index_insert_entry(
    fp_data& fpd,
    UINT32 line,
    UINT32 column_start,
-   UINT32 column_end,
    const char *scope,
    const char *type,
    const char *sub_type,
@@ -341,26 +340,23 @@ bool index_insert_entry(
    result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
                                 3,
                                 column_start);
-   result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
-                                4,
-                                column_end);
    result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               5,
+                               4,
                                scope,
                                -1,
                                SQLITE_STATIC);
    result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               6,
+                               5,
                                type,
                                -1,
                                SQLITE_STATIC);
    result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               7,
+                               6,
                                sub_type,
                                -1,
                                SQLITE_STATIC);
    result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               8,
+                               7,
                                identifier,
                                -1,
                                SQLITE_STATIC);
@@ -391,7 +387,7 @@ bool index_lookup_identifier(const char *identifier, const char *type, const cha
    int result;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.ColumnEnd,Entries.Scope,Entries.Type,Entries.SubType,Entries.Identifier "
+                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.Scope,Entries.Type,Entries.SubType,Entries.Identifier "
                                "FROM Files JOIN Entries ON Files.rowid=Entries.Filerow "
                                "WHERE Entries.Identifier LIKE ? "
                                "AND Entries.Type LIKE ? "
@@ -429,16 +425,14 @@ bool index_lookup_identifier(const char *identifier, const char *type, const cha
             const char *filename = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 0));
             UINT32 line = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 1);
             UINT32 column_start = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 2);
-            UINT32 column_end = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 3);
-            const char *scope = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 4));
-            const char *type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 5));
-            const char *sub_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 6));
-            const char *identifier = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 7));
+            const char *scope = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 3));
+            const char *type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 4));
+            const char *sub_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 5));
+            const char *identifier = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 6));
             output_identifier(
                filename,
                line,
                column_start,
-               column_end,
                scope,
                type,
                sub_type,

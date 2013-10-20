@@ -86,13 +86,12 @@ void output_identifier(
    const char *filename,
    UINT32 line,
    UINT32 column_start,
-   UINT32 column_end,
    const char *scope,
    const char *type,
    const char *sub_type,
    const char *identifier)
 {
-   printf("%s:%u:%d:%d %s %s %s %s\n", filename, line, column_start, column_end, scope, type, sub_type, identifier);
+   printf("%s:%u:%d %s %s %s %s\n", filename, line, column_start, scope, type, sub_type, identifier);
 }
 
 void output(fp_data& fpd)
@@ -221,7 +220,6 @@ void output(fp_data& fpd)
       (void) index_insert_entry(fpd,
                                 pc->orig_line,
                                 pc->orig_col,
-                                pc->orig_col_end,
                                 pc->scope,
                                 type_strings[type],
                                 sub_type_strings[sub_type],
