@@ -110,6 +110,33 @@ bool index_prepare_for_analysis(void)
                                   NULL);
    }
 
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "DELETE FROM Entries WHERE Filerow=?",
+                                  -1,
+                                  &cpd.stmt_prune_entries,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "UPDATE Files SET Digest=? WHERE Filename=?",
+                                  -1,
+                                  &cpd.stmt_change_digest,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "SELECT rowid,Digest FROM Files WHERE Filename=?",
+                                  -1,
+                                  &cpd.stmt_lookup_file,
+                                  NULL);
+   }
+
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
@@ -126,6 +153,9 @@ void index_end_analysis(void)
    (void) sqlite3_finalize(cpd.stmt_begin);
    (void) sqlite3_finalize(cpd.stmt_commit);
    (void) sqlite3_finalize(cpd.stmt_insert_file);
+   (void) sqlite3_finalize(cpd.stmt_prune_entries);
+   (void) sqlite3_finalize(cpd.stmt_change_digest);
+   (void) sqlite3_finalize(cpd.stmt_lookup_file);
 }
 
 static int index_insert_file(
@@ -166,59 +196,37 @@ static int index_insert_file(
 
 static int index_prune_entries(sqlite3_int64 filerow)
 {
-   sqlite3_stmt *stmt_prune_entries = NULL;
    int result;
 
-   result = sqlite3_prepare_v2(cpd.index,
-                               "DELETE FROM Entries WHERE Filerow=?",
-                               -1,
-                               &stmt_prune_entries,
-                               NULL);
+   result = sqlite3_bind_int64(cpd.stmt_prune_entries,
+                               1,
+                               filerow);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_int64(stmt_prune_entries,
-                                  1,
-                                  filerow);
-   }
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_step(stmt_prune_entries);
+      result = sqlite3_step(cpd.stmt_prune_entries);
       if (result == SQLITE_DONE)
       {
-         result = SQLITE_OK;
+         result = sqlite3_reset(cpd.stmt_prune_entries);
       }
    }
-
-   (void) sqlite3_finalize(stmt_prune_entries);
 
    return result;
 }
 
 static int index_replace_file(const char *digest, const char *filename)
 {
-   sqlite3_stmt *stmt_change_digest = NULL;
    int result;
 
-   result = sqlite3_prepare_v2(cpd.index,
-                               "UPDATE Files SET Digest=? WHERE Filename=?",
-                               -1,
-                               &stmt_change_digest,
-                               NULL);
+   result = sqlite3_bind_text(cpd.stmt_change_digest,
+                              1,
+                              digest,
+                              -1,
+                              SQLITE_STATIC);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_text(stmt_change_digest,
-                                 1,
-                                 digest,
-                                 -1,
-                                 SQLITE_STATIC);
-   }
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_bind_text(stmt_change_digest,
+      result = sqlite3_bind_text(cpd.stmt_change_digest,
                                  2,
                                  filename,
                                  -1,
@@ -227,14 +235,12 @@ static int index_replace_file(const char *digest, const char *filename)
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_step(stmt_change_digest);
+      result = sqlite3_step(cpd.stmt_change_digest);
       if (result == SQLITE_DONE)
       {
-         result = SQLITE_OK;
+         result = sqlite3_reset(cpd.stmt_change_digest);
       }
    }
-
-   (void) sqlite3_finalize(stmt_change_digest);
 
    return result;
 }
@@ -242,36 +248,26 @@ static int index_replace_file(const char *digest, const char *filename)
 /* Returns true if the file needs to be analyzed */
 bool index_prepare_for_file(fp_data& fpd)
 {
-   sqlite3_stmt *stmt_lookup_file = NULL;
    int result;
    bool retval = true;
    sqlite3_int64 filerow = 0;
 
-   result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT rowid,Digest FROM Files WHERE Filename=?",
-                               -1,
-                               &stmt_lookup_file,
-                               NULL);
+   result = sqlite3_bind_text(cpd.stmt_lookup_file,
+                              1,
+                              fpd.filename,
+                              -1,
+                              SQLITE_STATIC);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_text(stmt_lookup_file,
-                                 1,
-                                 fpd.filename,
-                                 -1,
-                                 SQLITE_STATIC);
-   }
-
-   if (result == SQLITE_OK)
-   {
-      result = sqlite3_step(stmt_lookup_file);
+      result = sqlite3_step(cpd.stmt_lookup_file);
    }
 
    if (result == SQLITE_ROW)
    {
-      filerow = sqlite3_column_int64(stmt_lookup_file, 0);
+      filerow = sqlite3_column_int64(cpd.stmt_lookup_file, 0);
       const char *ingest =
-         (const char *) sqlite3_column_text(stmt_lookup_file, 1);
+         (const char *) sqlite3_column_text(cpd.stmt_lookup_file, 1);
 
       if (strcmp(fpd.digest, ingest) == 0)
       {
@@ -309,7 +305,7 @@ bool index_prepare_for_file(fp_data& fpd)
       retval = false;
    }
 
-   (void) sqlite3_finalize(stmt_lookup_file);
+   (void) sqlite3_reset(cpd.stmt_lookup_file);
 
    return retval;
 }
