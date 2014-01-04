@@ -62,7 +62,7 @@ bool index_check(void)
 
       if (result != SQLITE_OK)
       {
-         LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
+         LOG_FMT(LERR, "index_check: access error (%d: %s)\n", result, errmsg != NULL ? errmsg : "");
          retval = false;
       }
 
@@ -140,7 +140,7 @@ bool index_prepare_for_analysis(void)
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
-      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      LOG_FMT(LERR, "index_prepare_for_analysis: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
       retval = false;
    }
 
@@ -301,7 +301,7 @@ bool index_prepare_for_file(fp_data& fpd)
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
-      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      LOG_FMT(LERR, "index_prepare_for_file: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
       retval = false;
    }
 
@@ -373,7 +373,7 @@ bool index_insert_entry(
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
-      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      LOG_FMT(LERR, "index_insert_entry: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
       retval = false;
    }
 
@@ -449,7 +449,7 @@ bool index_lookup_identifier(const char *identifier, const char *type, const cha
    if (result != SQLITE_OK)
    {
       const char *errstr = sqlite3_errstr(result);
-      LOG_FMT(LERR, "Index access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      LOG_FMT(LERR, "index_lookup_identifier: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
       retval = false;
    }
 
