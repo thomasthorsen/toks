@@ -53,7 +53,7 @@ bool index_check(void)
          "CREATE TABLE Version(Version INTEGER);"
          "INSERT INTO Version VALUES(" xstr(INDEX_VERSION) ");"
          "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE);"
-         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type TEXT, SubType INTEGER, Identifier TEXT, PRIMARY KEY (Filerow, Line, ColumnStart)) WITHOUT ROWID;"
+         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT, PRIMARY KEY (Filerow, Line, ColumnStart)) WITHOUT ROWID;"
          "PRAGMA journal_mode=OFF;"
          "PRAGMA synchronous=OFF;",
          NULL,
