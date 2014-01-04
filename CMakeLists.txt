@@ -23,7 +23,7 @@ include_directories("${PROJECT_BINARY_DIR}"
                     "${PROJECT_SOURCE_DIR}/sqlite3")
 
 add_executable(toks
-sqlite3/sqlite3080001.c
+sqlite3/sqlite3080200.c
 src/args.cpp
 src/brace_cleanup.cpp
 src/chunk_list.cpp
