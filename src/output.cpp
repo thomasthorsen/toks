@@ -13,34 +13,6 @@
 #include <cstdlib>
 
 
-typedef enum
-{
-   IT_UNKNOWN,
-   IT_MACRO,             // preprocessor macro
-   IT_MACRO_FUNCTION,    // function like preprocessor macro
-   IT_FUNCTION,          // functions
-   IT_STRUCT,            // struct <tag>
-   IT_UNION,             // union <tag>
-   IT_ENUM,              // enum <tag>
-   IT_ENUM_VAL,          // values of an enum
-   IT_CLASS,             // class
-   IT_STRUCT_TYPE,       // typedef alias of a struct
-   IT_UNION_TYPE,        // typedef alias of a union
-   IT_ENUM_TYPE,         // typedef alias of an enum
-   IT_FUNCTION_TYPE,     // typedef of a function or function ptr
-   IT_TYPE,              // a type
-   IT_VAR,               // a variable
-   IT_NAMESPACE,         // a namespace
-} id_type;
-
-typedef enum
-{
-   IST_UNKNOWN,
-   IST_DEFINITION,
-   IST_DECLARATION,
-   IST_REFERENCE,
-} id_sub_type;
-
 const char *type_strings[] =
 {
    "UNKNOWN",
@@ -63,10 +35,9 @@ const char *type_strings[] =
 
 const char *sub_type_strings[] =
 {
-   "UNKNOWN",
+   "REF",
    "DEF",
    "DECL",
-   "REF",
 };
 
 
@@ -79,7 +50,7 @@ static id_sub_type sub_type_from_flags(chunk_t *pc)
    else if (pc->flags & PCF_REF)
       return IST_REFERENCE;
    else
-      return IST_UNKNOWN;
+      return IST_REFERENCE;
 }
 
 void output_identifier(
@@ -87,11 +58,11 @@ void output_identifier(
    UINT32 line,
    UINT32 column_start,
    const char *scope,
-   const char *type,
-   const char *sub_type,
+   id_type type,
+   id_sub_type sub_type,
    const char *identifier)
 {
-   printf("%s:%u:%d %s %s %s %s\n", filename, line, column_start, scope, type, sub_type, identifier);
+   printf("%s:%u:%d %s %s %s %s\n", filename, line, column_start, scope, type_strings[type], sub_type_strings[sub_type], identifier);
 }
 
 void output(fp_data& fpd)
@@ -106,7 +77,7 @@ void output(fp_data& fpd)
          continue;
 
       type = IT_UNKNOWN;
-      sub_type = IST_UNKNOWN;
+      sub_type = IST_REFERENCE;
 
       switch (pc->type)
       {
@@ -221,8 +192,8 @@ void output(fp_data& fpd)
                                 pc->orig_line,
                                 pc->orig_col,
                                 pc->scope,
-                                type_strings[type],
-                                sub_type_strings[sub_type],
+                                type,
+                                sub_type,
                                 pc->str);
    }
 }

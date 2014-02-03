@@ -53,9 +53,9 @@ bool index_check(void)
          "CREATE TABLE Version(Version INTEGER);"
          "INSERT INTO Version VALUES(" xstr(INDEX_VERSION) ");"
          "CREATE TABLE Files(Digest TEXT, Filename TEXT UNIQUE);"
-         "CREATE TABLE Entries(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type TEXT, SubType TEXT, Identifier TEXT, PRIMARY KEY (Filerow, Line, ColumnStart)) WITHOUT ROWID;"
-         "PRAGMA journal_mode=OFF;"
-         "PRAGMA synchronous=OFF;",
+         "CREATE TABLE Refs(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type INTEGER, Identifier TEXT);"
+         "CREATE TABLE Defs(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type INTEGER, Identifier TEXT);"
+         "CREATE TABLE Decls(Filerow INTEGER, Line INTEGER, ColumnStart INTEGER, Scope TEXT, Type INTEGER, Identifier TEXT);",
          NULL,
          NULL,
          &errmsg);
@@ -69,6 +69,15 @@ bool index_check(void)
       sqlite3_free(errmsg);
    }
 
+   (void) sqlite3_exec(
+      cpd.index,
+      "PRAGMA journal_mode=OFF;"
+      "PRAGMA synchronous=OFF;"
+      "PRAGMA case_sensitive_like=ON;",
+      NULL,
+      NULL,
+      NULL);
+
    return retval;
 }
 
@@ -78,10 +87,28 @@ bool index_prepare_for_analysis(void)
    bool retval = true;
 
    result = sqlite3_prepare_v2(cpd.index,
-                               "INSERT INTO Entries VALUES(?,?,?,?,?,?,?)",
+                               "INSERT INTO Refs VALUES(?,?,?,?,?,?)",
                                -1,
-                               &cpd.stmt_insert_entry,
+                               &cpd.stmt_insert_reference,
                                NULL);
+
+   if (result == SQLITE_OK)
+   {
+      result |= sqlite3_prepare_v2(cpd.index,
+                                  "INSERT INTO Defs VALUES(?,?,?,?,?,?)",
+                                  -1,
+                                  &cpd.stmt_insert_definition,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result |= sqlite3_prepare_v2(cpd.index,
+                                  "INSERT INTO Decls VALUES(?,?,?,?,?,?)",
+                                  -1,
+                                  &cpd.stmt_insert_declaration,
+                                  NULL);
+   }
 
    if (result == SQLITE_OK)
    {
@@ -113,9 +140,27 @@ bool index_prepare_for_analysis(void)
    if (result == SQLITE_OK)
    {
       result = sqlite3_prepare_v2(cpd.index,
-                                  "DELETE FROM Entries WHERE Filerow=?",
+                                  "DELETE FROM Refs WHERE Filerow=?",
                                   -1,
-                                  &cpd.stmt_prune_entries,
+                                  &cpd.stmt_prune_refs,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "DELETE FROM Defs WHERE Filerow=?",
+                                  -1,
+                                  &cpd.stmt_prune_defs,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
+                                  "DELETE FROM Decls WHERE Filerow=?",
+                                  -1,
+                                  &cpd.stmt_prune_decls,
                                   NULL);
    }
 
@@ -149,11 +194,15 @@ bool index_prepare_for_analysis(void)
 
 void index_end_analysis(void)
 {
-   (void) sqlite3_finalize(cpd.stmt_insert_entry);
+   (void) sqlite3_finalize(cpd.stmt_insert_reference);
+   (void) sqlite3_finalize(cpd.stmt_insert_definition);
+   (void) sqlite3_finalize(cpd.stmt_insert_declaration);
    (void) sqlite3_finalize(cpd.stmt_begin);
    (void) sqlite3_finalize(cpd.stmt_commit);
    (void) sqlite3_finalize(cpd.stmt_insert_file);
-   (void) sqlite3_finalize(cpd.stmt_prune_entries);
+   (void) sqlite3_finalize(cpd.stmt_prune_refs);
+   (void) sqlite3_finalize(cpd.stmt_prune_defs);
+   (void) sqlite3_finalize(cpd.stmt_prune_decls);
    (void) sqlite3_finalize(cpd.stmt_change_digest);
    (void) sqlite3_finalize(cpd.stmt_lookup_file);
 }
@@ -198,16 +247,48 @@ static int index_prune_entries(sqlite3_int64 filerow)
 {
    int result;
 
-   result = sqlite3_bind_int64(cpd.stmt_prune_entries,
+   result = sqlite3_bind_int64(cpd.stmt_prune_refs,
                                1,
                                filerow);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_step(cpd.stmt_prune_entries);
+      result = sqlite3_step(cpd.stmt_prune_refs);
       if (result == SQLITE_DONE)
       {
-         result = sqlite3_reset(cpd.stmt_prune_entries);
+         result = sqlite3_reset(cpd.stmt_prune_refs);
+      }
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_int64(cpd.stmt_prune_defs,
+                                  1,
+                                  filerow);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_step(cpd.stmt_prune_defs);
+      if (result == SQLITE_DONE)
+      {
+         result = sqlite3_reset(cpd.stmt_prune_defs);
+      }
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_int64(cpd.stmt_prune_decls,
+                                  1,
+                                  filerow);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_step(cpd.stmt_prune_decls);
+      if (result == SQLITE_DONE)
+      {
+         result = sqlite3_reset(cpd.stmt_prune_decls);
       }
    }
 
@@ -293,7 +374,21 @@ bool index_prepare_for_file(fp_data& fpd)
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_bind_int64(cpd.stmt_insert_entry,
+      result = sqlite3_bind_int64(cpd.stmt_insert_reference,
+                                  1,
+                                  filerow);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_int64(cpd.stmt_insert_definition,
+                                  1,
+                                  filerow);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_bind_int64(cpd.stmt_insert_declaration,
                                   1,
                                   filerow);
    }
@@ -327,46 +422,45 @@ bool index_insert_entry(
    UINT32 line,
    UINT32 column_start,
    const char *scope,
-   const char *type,
-   const char *sub_type,
+   id_type type,
+   id_sub_type sub_type,
    const char *identifier)
 {
    bool retval = true;
    int result;
+   sqlite3_stmt *stmt_insert_entry = cpd.stmt_insert_reference;
 
-   result = sqlite3_bind_int64(cpd.stmt_insert_entry,
+   if (sub_type == IST_DEFINITION)
+      stmt_insert_entry = cpd.stmt_insert_definition;
+   else if (sub_type == IST_DECLARATION)
+      stmt_insert_entry = cpd.stmt_insert_declaration;
+
+   result = sqlite3_bind_int64(stmt_insert_entry,
                                2,
                                line);
-   result |= sqlite3_bind_int64(cpd.stmt_insert_entry,
+   result |= sqlite3_bind_int64(stmt_insert_entry,
                                 3,
                                 column_start);
-   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+   result |= sqlite3_bind_text(stmt_insert_entry,
                                4,
                                scope,
                                -1,
                                SQLITE_STATIC);
-   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               5,
-                               type,
-                               -1,
-                               SQLITE_STATIC);
-   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
+   result |= sqlite3_bind_int(stmt_insert_entry,
+                              5,
+                              (int) type);
+   result |= sqlite3_bind_text(stmt_insert_entry,
                                6,
-                               sub_type,
-                               -1,
-                               SQLITE_STATIC);
-   result |= sqlite3_bind_text(cpd.stmt_insert_entry,
-                               7,
                                identifier,
                                -1,
                                SQLITE_STATIC);
 
    if (result == SQLITE_OK)
    {
-      result = sqlite3_step(cpd.stmt_insert_entry);
+      result = sqlite3_step(stmt_insert_entry);
       if (result == SQLITE_DONE)
       {
-         result = sqlite3_reset(cpd.stmt_insert_entry);
+         result = sqlite3_reset(stmt_insert_entry);
       }
    }
 
@@ -380,37 +474,55 @@ bool index_insert_entry(
    return retval;
 }
 
-bool index_lookup_identifier(const char *identifier, const char *type, const char *sub_type)
+bool index_lookup_identifier(const char *identifier, id_sub_type sub_type)
 {
    bool retval = true;
    sqlite3_stmt *stmt_lookup_identifier;
    int result;
 
-   result = sqlite3_prepare_v2(cpd.index,
-                               "SELECT Files.Filename,Entries.Line,Entries.ColumnStart,Entries.Scope,Entries.Type,Entries.SubType,Entries.Identifier "
-                               "FROM Files JOIN Entries ON Files.rowid=Entries.Filerow "
-                               "WHERE Entries.Identifier LIKE ? "
-                               "AND Entries.Type LIKE ? "
-                               "AND Entries.SubType LIKE ?",
-                               -1,
-                               &stmt_lookup_identifier,
-                               NULL);
+   switch (sub_type)
+   {
+      default:
+      case IST_REFERENCE:
+      {
+         result = sqlite3_prepare_v2(cpd.index,
+                                     "SELECT Files.Filename,Refs.Line,Refs.ColumnStart,Refs.Scope,Refs.Type,Refs.Identifier "
+                                     "FROM Files JOIN Refs ON Files.rowid=Refs.Filerow "
+                                     "WHERE Refs.Identifier LIKE ?",
+                                     -1,
+                                     &stmt_lookup_identifier,
+                                     NULL);
+         break;
+      }
+      case IST_DEFINITION:
+      {
+         result = sqlite3_prepare_v2(cpd.index,
+                                     "SELECT Files.Filename,Defs.Line,Defs.ColumnStart,Defs.Scope,Defs.Type,Defs.Identifier "
+                                     "FROM Files JOIN Defs ON Files.rowid=Defs.Filerow "
+                                     "WHERE Defs.Identifier LIKE ?",
+                                     -1,
+                                     &stmt_lookup_identifier,
+                                     NULL);
+         break;
+      }
+      case IST_DECLARATION:
+      {
+         result = sqlite3_prepare_v2(cpd.index,
+                                     "SELECT Files.Filename,Decls.Line,Decls.ColumnStart,Decls.Scope,Decls.Type,Decls.Identifier "
+                                     "FROM Files JOIN Decls ON Files.rowid=Decls.Filerow "
+                                     "WHERE Decls.Identifier LIKE ?",
+                                     -1,
+                                     &stmt_lookup_identifier,
+                                     NULL);
+         break;
+      }
+   }
 
    if (result == SQLITE_OK)
    {
       result = sqlite3_bind_text(stmt_lookup_identifier,
                                  1,
                                  identifier != NULL ? identifier : "%",
-                                 -1,
-                                 SQLITE_STATIC);
-      result = sqlite3_bind_text(stmt_lookup_identifier,
-                                 2,
-                                 type != NULL ? type : "%",
-                                 -1,
-                                 SQLITE_STATIC);
-      result = sqlite3_bind_text(stmt_lookup_identifier,
-                                 3,
-                                 sub_type != NULL ? sub_type : "%",
                                  -1,
                                  SQLITE_STATIC);
    }
@@ -426,9 +538,8 @@ bool index_lookup_identifier(const char *identifier, const char *type, const cha
             UINT32 line = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 1);
             UINT32 column_start = (UINT32) sqlite3_column_int64(stmt_lookup_identifier, 2);
             const char *scope = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 3));
-            const char *type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 4));
-            const char *sub_type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 5));
-            const char *identifier = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 6));
+            id_type type = (id_type) sqlite3_column_int64(stmt_lookup_identifier, 4);
+            const char *identifier = reinterpret_cast<const char*>(sqlite3_column_text(stmt_lookup_identifier, 5));
             output_identifier(
                filename,
                line,

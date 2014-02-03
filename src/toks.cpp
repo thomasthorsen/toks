@@ -117,9 +117,10 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -t           : Load a file with types (usually not needed)\n"
            "\n"
            "Lookup Options (can be combined, supports SQL Wildcards):\n"
-           " --id <name>          : Lookup identifier by name\n"
-           " --type <type>        : Lookup identifier by type\n"
-           " --sub-type <subtype> : Lookup identifier by subtype\n"
+           " --id <name>          : Identifier name to search for\n"
+           " --refs               : Show only references\n"
+           " --defs               : Show only definitions\n"
+           " --decls              : Show only declarations\n"
            "\n"
            "Config/Help Options:\n"
            " -h -? --help --usage     : print this message and exit\n"
@@ -174,7 +175,8 @@ int main(int argc, char *argv[])
    const char *p_arg;
    bool dump = false;
    int retval;
-   const char *identifier, *type, *sub_type;
+   const char *identifier;
+   bool refs, defs, decls;
 
    Args arg(argc, argv);
 
@@ -235,15 +237,19 @@ int main(int argc, char *argv[])
    index_file = arg.Param("-i");
 
    identifier = arg.Param("--id");
-   type = arg.Param("--type");
-   sub_type = arg.Param("--sub-type");
+
+   refs = arg.Present("--refs");
+   defs = arg.Present("--defs");
+   decls = arg.Present("--decls");
+   if (!(refs || defs || decls))
+   {
+      refs = defs = decls = true;
+   }
 
    LOG_FMT(LNOTE, "output_file = %s\n", (output_file != NULL) ? output_file : "null");
    LOG_FMT(LNOTE, "source_list = %s\n", (source_list != NULL) ? source_list : "null");
    LOG_FMT(LNOTE, "index_file = %s\n", (index_file != NULL) ? index_file : "null");
    LOG_FMT(LNOTE, "identifier = %s\n", (identifier != NULL) ? identifier : "null");
-   LOG_FMT(LNOTE, "type = %s\n", (type != NULL) ? type : "null");
-   LOG_FMT(LNOTE, "sub_type = %s\n", (sub_type != NULL) ? sub_type : "null");
 
    /*
     *  Done parsing args
@@ -268,41 +274,54 @@ int main(int argc, char *argv[])
    idx   = 1;
    p_arg = arg.Unused(idx);
 
-   if ((source_list != NULL) || (p_arg != NULL) ||
-       (identifier != NULL) || (type != NULL) || (sub_type != NULL))
+   if ((source_list != NULL) || (p_arg != NULL) || (identifier != NULL))
    {
       deque<string> source_files;
 
-      if (index_prepare_for_analysis())
+      if ((source_list != NULL) || (p_arg != NULL))
       {
-         /* Build a list of source files */
-         if (p_arg != NULL)
+         if (index_prepare_for_analysis())
          {
-            idx = 1;
-            while ((p_arg = arg.Unused(idx)) != NULL)
+            /* Build a list of source files */
+            if (p_arg != NULL)
             {
-               source_files.push_back(p_arg);
+               idx = 1;
+               while ((p_arg = arg.Unused(idx)) != NULL)
+               {
+                  source_files.push_back(p_arg);
+               }
             }
-         }
-         if (source_list != NULL)
-         {
-            (void) process_source_list(source_list, source_files);
-         }
+            if (source_list != NULL)
+            {
+               (void) process_source_list(source_list, source_files);
+            }
 
-         size_t size = source_files.size();
+            size_t size = source_files.size();
 
-         for (size_t i = 0; i < size; i += 1)
-         {
-            const char *fn = source_files.at(i).c_str();
-            do_source_file(fn, dump);
+            for (size_t i = 0; i < size; i += 1)
+            {
+               const char *fn = source_files.at(i).c_str();
+               do_source_file(fn, dump);
+            }
+
+            index_end_analysis();
          }
-
-         index_end_analysis();
       }
 
-      if ((identifier != NULL) || (type != NULL) || (sub_type != NULL))
+      if (identifier != NULL)
       {
-         (void) index_lookup_identifier(identifier, type, sub_type);
+         if (decls)
+         {
+            (void) index_lookup_identifier(identifier, IST_DECLARATION);
+         }
+         if (defs)
+         {
+            (void) index_lookup_identifier(identifier, IST_DEFINITION);
+         }
+         if (refs)
+         {
+            (void) index_lookup_identifier(identifier, IST_REFERENCE);
+         }
       }
    }
    else

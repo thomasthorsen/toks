@@ -36,8 +36,8 @@ void output_identifier(
    UINT32 line,
    UINT32 column_start,
    const char *scope,
-   const char *type,
-   const char *sub_type,
+   id_type type,
+   id_sub_type sub_type,
    const char *identifier);
 
 
@@ -143,13 +143,12 @@ bool index_insert_entry(
    UINT32 line,
    UINT32 column_start,
    const char *scope,
-   const char *type,
-   const char *sub_type,
+   id_type type,
+   id_sub_type sub_type,
    const char *identifier);
 bool index_lookup_identifier(
    const char *identifier,
-   const char *type,
-   const char *sub_type);
+   id_sub_type sub_type);
 
 
 /* Options we couldn't quite get rid of */

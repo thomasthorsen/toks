@@ -326,15 +326,47 @@ struct cp_data
    int                forced_lang_flags; // LANG_xxx
    sqlite3            *index;
 
-   sqlite3_stmt       *stmt_insert_entry;
+   sqlite3_stmt       *stmt_insert_reference;
+   sqlite3_stmt       *stmt_insert_definition;
+   sqlite3_stmt       *stmt_insert_declaration;
+
    sqlite3_stmt       *stmt_begin;
    sqlite3_stmt       *stmt_commit;
    sqlite3_stmt       *stmt_insert_file;
-   sqlite3_stmt       *stmt_prune_entries;
+   sqlite3_stmt       *stmt_prune_refs;
+   sqlite3_stmt       *stmt_prune_defs;
+   sqlite3_stmt       *stmt_prune_decls;
    sqlite3_stmt       *stmt_change_digest;
    sqlite3_stmt       *stmt_lookup_file;
 };
 
 extern struct cp_data cpd;
+
+typedef enum
+{
+   IT_UNKNOWN,
+   IT_MACRO,             // preprocessor macro
+   IT_MACRO_FUNCTION,    // function like preprocessor macro
+   IT_FUNCTION,          // functions
+   IT_STRUCT,            // struct <tag>
+   IT_UNION,             // union <tag>
+   IT_ENUM,              // enum <tag>
+   IT_ENUM_VAL,          // values of an enum
+   IT_CLASS,             // class
+   IT_STRUCT_TYPE,       // typedef alias of a struct
+   IT_UNION_TYPE,        // typedef alias of a union
+   IT_ENUM_TYPE,         // typedef alias of an enum
+   IT_FUNCTION_TYPE,     // typedef of a function or function ptr
+   IT_TYPE,              // a type
+   IT_VAR,               // a variable
+   IT_NAMESPACE,         // a namespace
+} id_type;
+
+typedef enum
+{
+   IST_REFERENCE,
+   IST_DEFINITION,
+   IST_DECLARATION,
+} id_sub_type;
 
 #endif   /* TOKS_TYPES_H_INCLUDED */
