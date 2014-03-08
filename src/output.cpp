@@ -15,7 +15,7 @@
 
 const char *type_strings[] =
 {
-   "UNKNOWN",
+   "IDENTIFIER",
    "MACRO",
    "MACRO_FUNCTION",
    "FUNCTION",
@@ -76,7 +76,7 @@ void output(fp_data& fpd)
       if (pc->flags & PCF_PUNCTUATOR)
          continue;
 
-      type = IT_UNKNOWN;
+      type = IT_IDENTIFIER;
       sub_type = IST_REFERENCE;
 
       switch (pc->type)

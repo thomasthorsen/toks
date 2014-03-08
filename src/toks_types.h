@@ -344,7 +344,7 @@ extern struct cp_data cpd;
 
 typedef enum
 {
-   IT_UNKNOWN,
+   IT_IDENTIFIER,        // Unspecified identifier
    IT_MACRO,             // preprocessor macro
    IT_MACRO_FUNCTION,    // function like preprocessor macro
    IT_FUNCTION,          // functions
