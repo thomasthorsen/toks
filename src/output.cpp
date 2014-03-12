@@ -151,6 +151,9 @@ void output(fp_data& fpd)
             sub_type = IST_DEFINITION;
             break;
          case CT_FUNC_CTOR_VAR:
+            type = IT_VAR;
+            sub_type = IST_REFERENCE;
+            break;
          case CT_FUNC_VAR:
          case CT_WORD:
          {
@@ -173,7 +176,7 @@ void output(fp_data& fpd)
                }
                else
                {
-                  type = IT_VAR;
+                  type = IT_IDENTIFIER;
                   sub_type = IST_REFERENCE;
                }
             }
