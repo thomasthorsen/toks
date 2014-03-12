@@ -2343,7 +2343,7 @@ static chunk_t *fix_var_def(chunk_t *start)
       {
          if (chunk_is_str(pc, "extern", 6))
          {
-            flags &= PCF_VAR_DEF;
+            flags &= ~PCF_VAR_DEF;
             flags |= PCF_VAR_DECL;
          }
          else if (chunk_is_str(pc, "static", 6))
