@@ -127,7 +127,7 @@ void assign_scope(fp_data& fpd)
             if ((pc->parent_type != CT_NAMESPACE) &&
                 (pc->flags & PCF_DEF))
             {
-               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+               chunk_t *next = chunk_get_next_nnl(pc, CNAV_PREPROC);
 
                get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
@@ -147,7 +147,7 @@ void assign_scope(fp_data& fpd)
                  (pc->parent_type == CT_ENUM)) &&
                 (pc->flags & PCF_DEF))
             {
-               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+               chunk_t *next = chunk_get_next_nnl(pc, CNAV_PREPROC);
 
                get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
@@ -161,7 +161,7 @@ void assign_scope(fp_data& fpd)
          }
          case CT_FUNC_PROTO:
          {
-            chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+            chunk_t *next = chunk_get_next_nnl(pc, CNAV_PREPROC);
 
             get_resolved_scopes(pc, res_scopes);
             mark_resolved_scopes(pc, res_scopes);
@@ -174,7 +174,7 @@ void assign_scope(fp_data& fpd)
          }
          case CT_FUNC_DEF:
          {
-            chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+            chunk_t *next = chunk_get_next_nnl(pc, CNAV_PREPROC);
 
             get_resolved_scopes(pc, res_scopes);
             mark_resolved_scopes(pc, res_scopes);
@@ -184,12 +184,12 @@ void assign_scope(fp_data& fpd)
                next = mark_scope(next, pc, "()", res_scopes);
             }
 
-            next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+            next = chunk_get_next_nnl(next, CNAV_PREPROC);
 
             /* Skip const/volatile */
             while ((next != NULL) && (next->type == CT_QUALIFIER))
             {
-               next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+               next = chunk_get_next_nnl(next, CNAV_PREPROC);
             }
 
             if ((next != NULL) && (next->type == CT_BRACE_OPEN))
@@ -202,7 +202,7 @@ void assign_scope(fp_data& fpd)
          {
             if (pc->flags & (PCF_DEF | PCF_PROTO))
             {
-               chunk_t *next = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+               chunk_t *next = chunk_get_next_nnl(pc, CNAV_PREPROC);
 
                get_resolved_scopes(pc, res_scopes);
                mark_resolved_scopes(pc, res_scopes);
@@ -218,7 +218,7 @@ void assign_scope(fp_data& fpd)
                   while ((next != NULL) && (next->flags & PCF_IN_CONST_ARGS))
                   {
                      mark_scope_single(next, pc, "()", res_scopes);
-                     next = chunk_get_next_ncnl(next, CNAV_PREPROC);
+                     next = chunk_get_next_nnl(next, CNAV_PREPROC);
                   }
 
                   if ((next != NULL) && (next->type == CT_BRACE_OPEN))

@@ -232,21 +232,6 @@ chunk_t *chunk_get_prev_nnl(chunk_t *cur, chunk_nav_t nav)
 
 
 /**
- * Gets the next non-NEWLINE and non-comment chunk
- */
-chunk_t *chunk_get_next_ncnl(chunk_t *cur, chunk_nav_t nav)
-{
-   chunk_t *pc = cur;
-
-   do
-   {
-      pc = chunk_get_next(pc, nav);
-   } while ((pc != NULL) && (chunk_is_comment(pc) || chunk_is_newline(pc)));
-   return(pc);
-}
-
-
-/**
  * Gets the next non-NEWLINE and non-comment chunk, non-preprocessor chunk
  */
 chunk_t *chunk_get_next_ncnlnp(chunk_t *cur, chunk_nav_t nav)

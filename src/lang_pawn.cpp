@@ -326,7 +326,7 @@ static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
     * we need to add virtual braces around the function body.
     */
    clp  = chunk_get_next_str(pc, ")", 1, 0);
-   last = chunk_get_next_ncnl(clp);
+   last = chunk_get_next_nnl(clp);
 
    if (last != NULL)
    {
@@ -354,7 +354,7 @@ static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
          last->type        = CT_ANGLE_CLOSE;
          last->parent_type = CT_FUNC_DEF;
       }
-      last = chunk_get_next_ncnl(last);
+      last = chunk_get_next_nnl(last);
    }
 
    if (last == NULL)
@@ -385,7 +385,7 @@ static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
       last = prev;
 
       /* find the next newline at level 0 */
-      prev = chunk_get_next_ncnl(prev);
+      prev = chunk_get_next_nnl(prev);
       do
       {
          LOG_FMT(LPFUNC, "%s:%d] check %s, level %d\n", __func__,
@@ -393,7 +393,7 @@ static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
          if ((prev->type == CT_NEWLINE) &&
              (prev->level == 0))
          {
-            next = chunk_get_next_ncnl(prev);
+            next = chunk_get_next_nnl(prev);
             if ((next != NULL) &&
                 (next->type != CT_ELSE) &&
                 (next->type != CT_WHILE_OF_DO))

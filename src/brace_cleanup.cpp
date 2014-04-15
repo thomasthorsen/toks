@@ -38,7 +38,7 @@ static int preproc_start(fp_data& fpd, struct parse_frame *frm, chunk_t *pc, c_t
    int     pp_level = fpd.frame_pp_level;
 
    /* Get the type of preprocessor and handle it */
-   next = chunk_get_next_ncnl(pc);
+   next = chunk_get_next_nnl(pc);
    if (next != NULL)
    {
       in_preproc = next->type;
@@ -434,7 +434,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
           */
          if (fpd.lang_flags & LANG_PAWN)
          {
-            tmp = chunk_get_next_ncnl(pc);
+            tmp = chunk_get_next_nnl(pc);
 
             if ((tmp->type != CT_SEMICOLON) && (tmp->type != CT_VSEMICOLON))
             {
@@ -542,7 +542,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
    if (patcls == PATCLS_BRACED)
    {
       /* Check that a statement follows, otherwise demote keyword to word */
-      chunk_t *tmp = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+      chunk_t *tmp = chunk_get_next_nnl(pc, CNAV_PREPROC);
       bool statement_found = false;
 
       if (tmp != NULL)
@@ -555,7 +555,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
          {
             do
             {
-               tmp = chunk_get_next_ncnl(tmp, CNAV_PREPROC);
+               tmp = chunk_get_next_nnl(tmp, CNAV_PREPROC);
                if ((tmp != NULL) && chunk_is_semicolon(tmp) && (tmp->level == pc->level))
                {
                   statement_found = true;
@@ -621,7 +621,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
    }
 
    /* Mark expression starts */
-   chunk_t *tmp = chunk_get_next_ncnl(pc);
+   chunk_t *tmp = chunk_get_next_nnl(pc);
    if ((pc->type == CT_ARITH) ||
        (pc->type == CT_ASSIGN) ||
        (pc->type == CT_CASE) ||
@@ -830,7 +830,7 @@ static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_fram
          frm->pse[frm->pse_tos].stage = BS_ELSE;
 
          /* If the next chunk isn't CT_ELSE, close the statement */
-         next = chunk_get_next_ncnl(pc);
+         next = chunk_get_next_nnl(pc);
          if ((next != NULL) && (next->type != CT_ELSE))
          {
             frm->pse_tos--;
@@ -847,7 +847,7 @@ static bool handle_complex_close(fp_data& fpd, bool& consumed, struct parse_fram
          frm->pse[frm->pse_tos].stage = BS_CATCH;
 
          /* If the next chunk isn't CT_CATCH or CT_FINALLY, close the statement */
-         next = chunk_get_next_ncnl(pc);
+         next = chunk_get_next_nnl(pc);
          if ((next != NULL) &&
              (next->type != CT_CATCH) &&
              (next->type != CT_FINALLY))

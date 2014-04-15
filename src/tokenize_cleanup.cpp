@@ -38,7 +38,7 @@ static chunk_t *handle_double_angle_close(fp_data& fpd, chunk_t *pc)
          pc->type = CT_ARITH;
          pc->orig_col_end = next->orig_col_end;
 
-         chunk_t *tmp = chunk_get_next_ncnl(next);
+         chunk_t *tmp = chunk_get_next_nnl(next);
          chunk_del(fpd, next);
          next = tmp;
       }
@@ -89,11 +89,11 @@ void tokenize_cleanup(fp_data& fpd)
    /* Since [] is expected to be TSQUARE for the 'operator', we need to make
     * this change in the first pass.
     */
-   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next_ncnl(pc))
+   for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next_nnl(pc))
    {
       if (pc->type == CT_SQUARE_OPEN)
       {
-         next = chunk_get_next_ncnl(pc);
+         next = chunk_get_next_nnl(pc);
          if (chunk_is_token(next, CT_SQUARE_CLOSE))
          {
             /* Change '[' + ']' into '[]' */
@@ -105,7 +105,7 @@ void tokenize_cleanup(fp_data& fpd)
       }
       if ((pc->type == CT_SEMICOLON) &&
           (pc->flags & PCF_IN_PREPROC) &&
-          !chunk_get_next_ncnl(pc, CNAV_PREPROC))
+          !chunk_get_next_nnl(pc, CNAV_PREPROC))
       {
          LOG_FMT(LNOTE, "%s:%d Detected a macro that ends with a semicolon. Possible failures if used.\n",
                  fpd.filename, pc->orig_line);
@@ -114,7 +114,7 @@ void tokenize_cleanup(fp_data& fpd)
 
    /* We can handle everything else in the second pass */
    pc   = chunk_get_head(fpd);
-   next = chunk_get_next_ncnl(pc);
+   next = chunk_get_next_nnl(pc);
    while ((pc != NULL) && (next != NULL))
    {
       if ((pc->type == CT_DOT) && ((fpd.lang_flags & LANG_ALLC) != 0))
@@ -203,7 +203,7 @@ void tokenize_cleanup(fp_data& fpd)
          else
          {
             /* Something else followed by a open brace */
-            tmp = chunk_get_next_ncnl(next);
+            tmp = chunk_get_next_nnl(next);
             if ((tmp == NULL) || (tmp->type != CT_BRACE_OPEN))
             {
                pc->type = CT_QUALIFIER;
@@ -410,7 +410,7 @@ void tokenize_cleanup(fp_data& fpd)
          if (next->type == CT_COLON)
          {
             next->type = CT_PRIVATE_COLON;
-            if ((tmp = chunk_get_next_ncnl(next)) != NULL)
+            if ((tmp = chunk_get_next_nnl(next)) != NULL)
             {
                tmp->flags |= PCF_STMT_START | PCF_EXPR_START;
             }
@@ -452,7 +452,7 @@ void tokenize_cleanup(fp_data& fpd)
                {
                   tmp->type = CT_SQL_WORD;
                }
-               tmp = chunk_get_next_ncnl(tmp);
+               tmp = chunk_get_next_nnl(tmp);
             }
          }
       }
@@ -466,11 +466,11 @@ void tokenize_cleanup(fp_data& fpd)
          pc->str += next->str;
          pc->orig_col_end = next->orig_col_end;
          chunk_del(fpd, next);
-         next = chunk_get_next_ncnl(pc);
+         next = chunk_get_next_nnl(pc);
          /* label the 'in' */
          if (next && (next->type == CT_PAREN_OPEN))
          {
-            tmp = chunk_get_next_ncnl(next);
+            tmp = chunk_get_next_nnl(next);
             while (tmp && (tmp->type != CT_PAREN_CLOSE))
             {
                if (chunk_is_str(tmp, "in", 2))
@@ -478,7 +478,7 @@ void tokenize_cleanup(fp_data& fpd)
                   tmp->type = CT_IN;
                   break;
                }
-               tmp = chunk_get_next_ncnl(tmp);
+               tmp = chunk_get_next_nnl(tmp);
             }
          }
       }
@@ -522,7 +522,7 @@ void tokenize_cleanup(fp_data& fpd)
          }
          next->parent_type = pc->type;
 
-         tmp = chunk_get_next_ncnl(next);
+         tmp = chunk_get_next_nnl(next);
          if (tmp != NULL)
          {
             tmp->flags |= PCF_STMT_START | PCF_EXPR_START;
@@ -537,7 +537,7 @@ void tokenize_cleanup(fp_data& fpd)
 
       if (pc->type == CT_OC_INTF)
       {
-         tmp = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+         tmp = chunk_get_next_nnl(pc, CNAV_PREPROC);
          while ((tmp != NULL) && (tmp->type != CT_OC_END))
          {
             if (get_token_pattern_class(tmp->type) != PATCLS_NONE)
@@ -547,7 +547,7 @@ void tokenize_cleanup(fp_data& fpd)
                        get_token_name(tmp->type));
                tmp->type = CT_WORD;
             }
-            tmp = chunk_get_next_ncnl(tmp, CNAV_PREPROC);
+            tmp = chunk_get_next_nnl(tmp, CNAV_PREPROC);
          }
       }
 
@@ -603,7 +603,7 @@ void tokenize_cleanup(fp_data& fpd)
             if (tmp != NULL)
             {
                tmp->parent_type = pc->type;
-               tmp = chunk_get_next_ncnl(tmp);
+               tmp = chunk_get_next_nnl(tmp);
                if (tmp != NULL)
                {
                   tmp->flags |= PCF_STMT_START | PCF_EXPR_START;
@@ -633,7 +633,7 @@ void tokenize_cleanup(fp_data& fpd)
             tmp->type        = CT_OC_SEL_NAME;
             tmp->parent_type = pc->type;
 
-            while ((tmp = chunk_get_next_ncnl(tmp)) != NULL)
+            while ((tmp = chunk_get_next_nnl(tmp)) != NULL)
             {
                if (tmp->type == CT_PAREN_CLOSE)
                {
@@ -669,7 +669,7 @@ void tokenize_cleanup(fp_data& fpd)
           (next->type == CT_QUESTION) &&
           (next->orig_col == (pc->orig_col + pc->len())))
       {
-         tmp = chunk_get_next_ncnl(next);
+         tmp = chunk_get_next_nnl(next);
          if (tmp != NULL)
          {
             bool doit = ((tmp->type == CT_PAREN_CLOSE) ||
@@ -677,7 +677,7 @@ void tokenize_cleanup(fp_data& fpd)
 
             if (tmp->type == CT_WORD)
             {
-               tmp2 = chunk_get_next_ncnl(tmp);
+               tmp2 = chunk_get_next_nnl(tmp);
                if ((tmp2 != NULL) &&
                    ((tmp2->type == CT_SEMICOLON) ||
                     (tmp2->type == CT_ASSIGN) ||
@@ -736,7 +736,7 @@ void tokenize_cleanup(fp_data& fpd)
 
       prev = pc;
       pc   = next;
-      next = chunk_get_next_ncnl(pc);
+      next = chunk_get_next_nnl(pc);
    }
 }
 
@@ -767,9 +767,9 @@ static void check_template(fp_data& fpd, chunk_t *start)
 
       /* We have: "template< ... >", which is a template declaration */
       int level = 1;
-      for (pc = chunk_get_next_ncnl(start, CNAV_PREPROC);
+      for (pc = chunk_get_next_nnl(start, CNAV_PREPROC);
            pc != NULL;
-           pc = chunk_get_next_ncnl(pc, CNAV_PREPROC))
+           pc = chunk_get_next_nnl(pc, CNAV_PREPROC))
       {
          LOG_FMT(LTEMPL, " [%s,%d]", get_token_name(pc->type), level);
 
@@ -849,9 +849,9 @@ static void check_template(fp_data& fpd, chunk_t *start)
       int       num_tokens = 1;
 
       tokens[0] = CT_ANGLE_OPEN;
-      for (pc = chunk_get_next_ncnl(start, CNAV_PREPROC);
+      for (pc = chunk_get_next_nnl(start, CNAV_PREPROC);
            pc != NULL;
-           pc = chunk_get_next_ncnl(pc, CNAV_PREPROC))
+           pc = chunk_get_next_nnl(pc, CNAV_PREPROC))
       {
          LOG_FMT(LTEMPL, " [%s,%d]", get_token_name(pc->type), num_tokens);
 
@@ -920,7 +920,7 @@ static void check_template(fp_data& fpd, chunk_t *start)
 
    if ((end != NULL) && (end->type == CT_ANGLE_CLOSE))
    {
-      pc = chunk_get_next_ncnl(end, CNAV_PREPROC);
+      pc = chunk_get_next_nnl(end, CNAV_PREPROC);
       if ((pc != NULL) && (pc->type != CT_NUMBER))
       {
          LOG_FMT(LTEMPL, " - Template Detected\n");
@@ -930,7 +930,7 @@ static void check_template(fp_data& fpd, chunk_t *start)
          pc = start;
          while (pc != end)
          {
-            next       = chunk_get_next_ncnl(pc, CNAV_PREPROC);
+            next       = chunk_get_next_nnl(pc, CNAV_PREPROC);
             pc->flags |= PCF_IN_TEMPLATE;
             if (next->type != CT_PAREN_OPEN)
             {
