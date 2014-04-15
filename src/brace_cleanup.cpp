@@ -705,7 +705,7 @@ static bool check_complex_statements(fp_data& fpd, bool& consumed, struct parse_
       if (pc->type == CT_IF)
       {
          if (!UO_indent_else_if ||
-             !chunk_is_newline(chunk_get_prev_nc(pc)))
+             !chunk_is_newline(chunk_get_prev(pc)))
          {
             /* Replace CT_ELSE with CT_IF */
             pc->type = CT_ELSEIF;
