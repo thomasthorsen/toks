@@ -438,7 +438,7 @@ static void do_symbol_check(fp_data& fpd, chunk_t *prev, chunk_t *pc, chunk_t *n
 
       /* Mark one-liner assignment */
       tmp = next;
-      while ((tmp = chunk_get_next_nc(tmp)) != NULL)
+      while ((tmp = chunk_get_next(tmp)) != NULL)
       {
          if (chunk_is_newline(tmp))
          {
@@ -1985,8 +1985,8 @@ void combine_labels(fp_data& fpd)
    bool    hit_class      = false;
 
    prev = chunk_get_head(fpd);
-   cur  = chunk_get_next_nc(prev);
-   next = chunk_get_next_nc(cur);
+   cur  = chunk_get_next(prev);
+   next = chunk_get_next(cur);
 
    /* unlikely that the file will start with a label... */
    while (next != NULL)
@@ -2056,7 +2056,7 @@ void combine_labels(fp_data& fpd)
                {
                   c_token_t new_type = CT_TAG;
 
-                  tmp = chunk_get_next_nc(next);
+                  tmp = chunk_get_next(next);
                   if (chunk_is_newline(prev) && chunk_is_newline(tmp))
                   {
                      new_type   = CT_LABEL;
@@ -2086,7 +2086,7 @@ void combine_labels(fp_data& fpd)
             }
             else if (cur->type == CT_WORD)
             {
-               tmp = chunk_get_next_nc(next, CNAV_PREPROC);
+               tmp = chunk_get_next(next, CNAV_PREPROC);
                if (chunk_is_newline(prev) && ((tmp == NULL) || (tmp->type != CT_NUMBER)))
                {
                   cur->type  = CT_LABEL;
@@ -2168,7 +2168,7 @@ void combine_labels(fp_data& fpd)
       }
       prev = cur;
       cur  = next;
-      next = chunk_get_next_nc(cur);
+      next = chunk_get_next(cur);
    }
 }
 

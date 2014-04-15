@@ -23,7 +23,7 @@ chunk_t *pawn_add_vsemi_after(fp_data& fpd, chunk_t *pc)
       return(pc);
    }
 
-   chunk_t *next = chunk_get_next_nc(pc);
+   chunk_t *next = chunk_get_next(pc);
    if ((next != NULL) &&
        ((next->type == CT_VSEMICOLON) ||
         (next->type == CT_SEMICOLON)))
@@ -124,7 +124,7 @@ void pawn_prescan(fp_data& fpd)
          did_nl = (pc->type == CT_NEWLINE);
       }
 
-      pc = chunk_get_next_nc(pc);
+      pc = chunk_get_next(pc);
    }
 }
 
@@ -165,7 +165,7 @@ static chunk_t *pawn_process_line(fp_data& fpd, chunk_t *start)
       fcn = start;
    }
    pc = start;
-   while (((pc = chunk_get_next_nc(pc)) != NULL) &&
+   while (((pc = chunk_get_next(pc)) != NULL) &&
           !chunk_is_str(pc, "(", 1) &&
           (pc->type != CT_ASSIGN) &&
           (pc->type != CT_NEWLINE))
@@ -214,7 +214,7 @@ static chunk_t *pawn_process_variable(fp_data& fpd, chunk_t *start)
    chunk_t *prev = NULL;
    chunk_t *pc   = start;
 
-   while ((pc = chunk_get_next_nc(pc)) != NULL)
+   while ((pc = chunk_get_next(pc)) != NULL)
    {
       if ((pc->type == CT_NEWLINE) &&
           !pawn_continued(prev, start->level))
@@ -304,7 +304,7 @@ static chunk_t *pawn_mark_function0(fp_data& fpd, chunk_t *start, chunk_t *fcn)
                  get_token_name(fcn->type),
                  get_token_name(start->type));
          fcn->type = CT_FUNC_PROTO;
-         return(chunk_get_next_nc(fcn));
+         return(chunk_get_next(fcn));
       }
    }
 

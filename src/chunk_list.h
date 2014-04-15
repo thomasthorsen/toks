@@ -44,7 +44,6 @@ chunk_t *chunk_get_prev(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_first_on_line(chunk_t *pc);
 
 chunk_t *chunk_get_next_nl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
-chunk_t *chunk_get_next_nc(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_next_nnl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_next_ncnl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_next_ncnlnp(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
