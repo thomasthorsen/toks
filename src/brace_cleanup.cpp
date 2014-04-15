@@ -154,7 +154,7 @@ void brace_cleanup(fp_data& fpd)
        * #define bodies get the full formatting treatment
        * Also need to pass in the initial '#' to close out any virtual braces.
        */
-      if (!chunk_is_comment(pc) && !chunk_is_newline(pc) &&
+      if (!chunk_is_newline(pc) &&
           ((in_preproc == CT_PP_DEFINE) ||
            (in_preproc == CT_NONE)))
       {
@@ -933,7 +933,7 @@ static chunk_t *insert_vbrace(fp_data& fpd, chunk_t *pc, bool after,
          chunk.flags &= ~PCF_IN_PREPROC;
       }
 
-      while (chunk_is_newline(ref) || chunk_is_comment(ref))
+      while (chunk_is_newline(ref))
       {
          ref->level++;
          ref->brace_level++;

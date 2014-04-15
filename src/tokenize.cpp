@@ -1372,7 +1372,7 @@ void tokenize(fp_data& fpd)
          pc->flags |= PCF_IN_PREPROC;
 
          /* Count words after the preprocessor */
-         if (!chunk_is_comment(pc) && !chunk_is_newline(pc))
+         if (!chunk_is_newline(pc))
          {
             preproc_ncnl_count++;
          }

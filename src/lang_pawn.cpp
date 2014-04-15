@@ -244,8 +244,7 @@ void pawn_add_virtual_semicolons(fp_data& fpd)
       pc = chunk_get_head(fpd);
       while ((pc = chunk_get_next(pc)) != NULL)
       {
-         if (!chunk_is_comment(pc) &&
-             !chunk_is_newline(pc) &&
+         if (!chunk_is_newline(pc) &&
              (pc->type != CT_VBRACE_CLOSE) &&
              (pc->type != CT_VBRACE_OPEN))
          {

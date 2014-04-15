@@ -1023,7 +1023,7 @@ void fix_symbols(fp_data& fpd)
    }
 
    pc = chunk_get_head(fpd);
-   if (chunk_is_newline(pc) || chunk_is_comment(pc))
+   if (chunk_is_newline(pc))
    {
       pc = chunk_get_next_nnl(pc);
    }
