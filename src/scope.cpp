@@ -86,7 +86,7 @@ static chunk_t *mark_scope(chunk_t *popen,
 
 static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
 {
-   chunk_t *prev = chunk_get_prev_ncnl(scope, CNAV_PREPROC);
+   chunk_t *prev = chunk_get_prev_nnl(scope, CNAV_PREPROC);
    bool first = true;
 
    res_scopes.clear();
@@ -94,12 +94,12 @@ static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
    if ((scope->type == CT_FUNC_CLASS) &&
        (scope->parent_type == CT_DESTRUCTOR))
    {
-      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+      prev = chunk_get_prev_nnl(prev, CNAV_PREPROC);
    }
 
    while ((prev != NULL) && (prev->type == CT_DC_MEMBER))
    {
-      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+      prev = chunk_get_prev_nnl(prev, CNAV_PREPROC);
       if (prev->type != CT_TYPE)
          break;
       if (!first)
@@ -108,7 +108,7 @@ static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
       }
       first = false;
       res_scopes.prepend(prev->str);
-      prev = chunk_get_prev_ncnl(prev, CNAV_PREPROC);
+      prev = chunk_get_prev_nnl(prev, CNAV_PREPROC);
    }
 }
 

@@ -449,7 +449,7 @@ chunk_t *pawn_check_vsemicolon(fp_data& fpd, chunk_t *pc)
     *  - it is something that needs a continuation
     *    + arith, assign, bool, comma, compare
     */
-   prev = chunk_get_prev_ncnl(pc);
+   prev = chunk_get_prev_nnl(pc);
    if ((prev == NULL) ||
        (prev == vb_open) ||
        ((prev->flags & PCF_IN_PREPROC) != 0) ||

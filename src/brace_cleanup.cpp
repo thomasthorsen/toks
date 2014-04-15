@@ -175,7 +175,7 @@ static bool maybe_while_of_do(chunk_t *pc)
 {
    chunk_t *prev;
 
-   prev = chunk_get_prev_ncnl(pc);
+   prev = chunk_get_prev_nnl(pc);
    if ((prev == NULL) || !(prev->flags & PCF_IN_PREPROC))
    {
       return(false);
@@ -184,7 +184,7 @@ static bool maybe_while_of_do(chunk_t *pc)
    /* Find the chunk before the preprocessor */
    while ((prev != NULL) && (prev->flags & PCF_IN_PREPROC))
    {
-      prev = chunk_get_prev_ncnl(prev);
+      prev = chunk_get_prev_nnl(prev);
    }
 
    if ((prev != NULL) &&
@@ -466,7 +466,7 @@ static void parse_cleanup(fp_data& fpd, bool& consumed, struct parse_frame *frm,
        (pc->type == CT_SPAREN_OPEN) ||
        (pc->type == CT_BRACE_OPEN))
    {
-      prev = chunk_get_prev_ncnl(pc);
+      prev = chunk_get_prev_nnl(pc);
       if (prev != NULL)
       {
          if ((pc->type == CT_PAREN_OPEN) ||
@@ -1006,7 +1006,7 @@ static bool close_statement(fp_data& fpd, bool& consumed, struct parse_frame *fr
       else
       {
          /* otherwise, add before it and consume the vbrace */
-         vbc = chunk_get_prev_ncnl(pc);
+         vbc = chunk_get_prev_nnl(pc);
          vbc = insert_vbrace_close_after(fpd, vbc, frm);
          vbc->parent_type = frm->pse[frm->pse_tos].parent;
 

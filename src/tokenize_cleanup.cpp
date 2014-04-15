@@ -755,7 +755,7 @@ static void check_template(fp_data& fpd, chunk_t *start)
 
    LOG_FMT(LTEMPL, "%s: Line %d, col %d:", __func__, start->orig_line, start->orig_col);
 
-   prev = chunk_get_prev_ncnl(start, CNAV_PREPROC);
+   prev = chunk_get_prev_nnl(start, CNAV_PREPROC);
    if (prev == NULL)
    {
       return;
@@ -820,7 +820,7 @@ static void check_template(fp_data& fpd, chunk_t *start)
 
       /* Scan back and make sure we aren't inside square parens */
       pc = start;
-      while ((pc = chunk_get_prev_ncnl(pc, CNAV_PREPROC)) != NULL)
+      while ((pc = chunk_get_prev_nnl(pc, CNAV_PREPROC)) != NULL)
       {
          if ((pc->type == CT_SEMICOLON) ||
              (pc->type == CT_BRACE_OPEN) ||

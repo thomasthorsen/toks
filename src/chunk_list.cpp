@@ -336,21 +336,6 @@ chunk_t *chunk_get_next_nc(chunk_t *cur, chunk_nav_t nav)
 
 
 /**
- * Gets the prev non-NEWLINE and non-comment chunk
- */
-chunk_t *chunk_get_prev_ncnl(chunk_t *cur, chunk_nav_t nav)
-{
-   chunk_t *pc = cur;
-
-   do
-   {
-      pc = chunk_get_prev(pc, nav);
-   } while ((pc != NULL) && (chunk_is_comment(pc) || chunk_is_newline(pc)));
-   return(pc);
-}
-
-
-/**
  * Grabs the next chunk of the given type at the level.
  *
  * @param cur     Starting chunk
