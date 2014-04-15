@@ -3611,49 +3611,6 @@ static void mark_struct_union_body(chunk_t *start)
 
 
 /**
- * Sets the parent for comments.
- */
-void mark_comments(fp_data& fpd)
-{
-   chunk_t *cur;
-   chunk_t *next;
-   bool    prev_nl = true;
-   bool    next_nl;
-
-   cur = chunk_get_head(fpd);
-
-   while (cur != NULL)
-   {
-      next    = chunk_get_next_nvb(cur);
-      next_nl = (next == NULL) || chunk_is_newline(next);
-
-      if (chunk_is_comment(cur))
-      {
-         if (next_nl && prev_nl)
-         {
-            cur->parent_type = CT_COMMENT_WHOLE;
-         }
-         else if (next_nl)
-         {
-            cur->parent_type = CT_COMMENT_END;
-         }
-         else if (prev_nl)
-         {
-            cur->parent_type = CT_COMMENT_START;
-         }
-         else
-         {
-            cur->parent_type = CT_COMMENT_EMBED;
-         }
-      }
-
-      prev_nl = chunk_is_newline(cur);
-      cur     = next;
-   }
-}
-
-
-/**
  * Marks statement starts in a macro body.
  * REVISIT: this may already be done
  */

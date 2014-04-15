@@ -507,33 +507,3 @@ chunk_t *chunk_first_on_line(chunk_t *pc)
 
    return(first);
 }
-
-
-/**
- * Gets the next non-vbrace chunk
- */
-chunk_t *chunk_get_next_nvb(chunk_t *cur, chunk_nav_t nav)
-{
-   chunk_t *pc = cur;
-
-   do
-   {
-      pc = chunk_get_next(pc, nav);
-   } while (chunk_is_vbrace(pc));
-   return(pc);
-}
-
-
-/**
- * Gets the prev non-vbrace chunk
- */
-chunk_t *chunk_get_prev_nvb(chunk_t *cur, chunk_nav_t nav)
-{
-   chunk_t *pc = cur;
-
-   do
-   {
-      pc = chunk_get_prev(pc, nav);
-   } while (chunk_is_vbrace(pc));
-   return(pc);
-}

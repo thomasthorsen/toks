@@ -25,17 +25,11 @@ typedef enum
    CT_JUNK,          /* junk collected when parsing is disabled */
 
    CT_WHITESPACE,    /* whitespace without any newlines */
-   CT_SPACE,         /* a fixed number of spaces to support weird spacing rules */
    CT_NEWLINE,       /* CRA, one or more newlines */
    CT_NL_CONT,       /* CRA, backslash-newline */
    CT_COMMENT_CPP,   /* C++ comment (always followed by CT_NEWLINE) */
    CT_COMMENT,       /* C-comment, single line */
    CT_COMMENT_MULTI, /* Multi-lined comment */
-   CT_COMMENT_EMBED, /* comment parent_type: non-newline before and after */
-   CT_COMMENT_START, /* comment parent_type: newline before */
-   CT_COMMENT_END,   /* comment parent_type: newline after */
-   CT_COMMENT_WHOLE, /* comment parent_type: newline before and after */
-   CT_COMMENT_ENDIF, /* C-comment, single line, after ENDIF */
 
    CT_IGNORED,       /* a chunk of ignored text */
 

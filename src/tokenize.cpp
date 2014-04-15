@@ -1323,8 +1323,8 @@ void tokenize(fp_data& fpd)
          break;
       }
 
-      /* Don't create an entry for whitespace */
-      if (chunk.type == CT_WHITESPACE)
+      /* Don't create an entry for whitespace or comments */
+      if ((chunk.type == CT_WHITESPACE) || chunk_is_comment(&chunk))
       {
          continue;
       }

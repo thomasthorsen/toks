@@ -481,8 +481,6 @@ static void toks_start(fp_data& fpd)
     */
    fix_symbols(fpd);
 
-   mark_comments(fpd);
-
    /**
     * Look at all colons ':' and mark labels, :? sequences, etc.
     */

@@ -47,7 +47,6 @@ void output_identifier(
 
 void fix_symbols(fp_data& fpd);
 void combine_labels(fp_data& fpd);
-void mark_comments(fp_data& fpd);
 void make_type(chunk_t *pc);
 
 void flag_series(chunk_t *start, chunk_t *end, UINT64 set_flags, UINT64 clr_flags=0, chunk_nav_t nav = CNAV_ALL);

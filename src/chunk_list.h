@@ -64,8 +64,6 @@ chunk_t *chunk_get_prev_type(chunk_t *cur, c_token_t type, int level, chunk_nav_
 chunk_t *chunk_get_next_str(chunk_t *cur, const char *str, int len, int level, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev_str(chunk_t *cur, const char *str, int len, int level, chunk_nav_t nav = CNAV_ALL);
 
-chunk_t *chunk_get_next_nvb(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
-chunk_t *chunk_get_prev_nvb(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 
 /**
  * Skips to the closing match for the current paren/brace/square.
@@ -116,14 +114,6 @@ bool chunk_is_comment(chunk_t *pc)
 {
    return((pc != NULL) && ((pc->type == CT_COMMENT) ||
                            (pc->type == CT_COMMENT_MULTI) ||
-                           (pc->type == CT_COMMENT_CPP)));
-}
-
-
-static_inline
-bool chunk_is_single_line_comment(chunk_t *pc)
-{
-   return((pc != NULL) && ((pc->type == CT_COMMENT) ||
                            (pc->type == CT_COMMENT_CPP)));
 }
 
@@ -274,24 +264,5 @@ bool chunk_same_preproc(chunk_t *pc1, chunk_t *pc2)
    return((pc1 == NULL) || (pc2 == NULL) ||
           ((pc1->flags & PCF_IN_PREPROC) == (pc2->flags & PCF_IN_PREPROC)));
 }
-
-
-/**
- * Returns true if it is safe to delete the newline token.
- * The prev and next chunks must have the same PCF_IN_PREPROC flag AND
- * the newline can't be after a C++ comment.
- */
-static_inline
-bool chunk_safe_to_del_nl(chunk_t *nl)
-{
-   chunk_t *tmp = chunk_get_prev(nl);
-
-   if ((tmp != NULL) && (tmp->type == CT_COMMENT_CPP))
-   {
-      return(false);
-   }
-   return(chunk_same_preproc(chunk_get_prev(nl), chunk_get_next(nl)));
-}
-
 
 #endif   /* CHUNK_LIST_H_INCLUDED */
