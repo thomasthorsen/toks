@@ -2725,8 +2725,8 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
    chunk_t *paren_close;
    chunk_t *pc_op = NULL;
 
-   prev = chunk_get_prev_ncnlnp(pc);
-   next = chunk_get_next_ncnlnp(pc);
+   prev = chunk_get_prev_nnlnp(pc);
+   next = chunk_get_next_nnlnp(pc);
 
    /* Find out what is before the operator */
    if (pc->parent_type == CT_OPERATOR)
@@ -2783,7 +2783,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
 
    if (chunk_is_star(next) || chunk_is_addr(next))
    {
-      next = chunk_get_next_ncnlnp(next);
+      next = chunk_get_next_nnlnp(next);
    }
 
    LOG_FMT(LFCN, "%s: %d] %s[%s] - parent=%s level=%d/%d, next=%s[%s] - level=%d\n",
@@ -2920,12 +2920,12 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
          pc->parent_type = CT_DESTRUCTOR;
 
          destr = prev;
-         prev  = chunk_get_prev_ncnlnp(prev);
+         prev  = chunk_get_prev_nnlnp(prev);
       }
 
       if ((prev != NULL) && (prev->type == CT_DC_MEMBER))
       {
-         prev = chunk_get_prev_ncnlnp(prev);
+         prev = chunk_get_prev_nnlnp(prev);
          // LOG_FMT(LNOTE, "%s: prev1 = %s (%s)\n", __func__,
          //         get_token_name(prev->type), prev->str.c_str());
          prev = skip_template_prev(prev);
@@ -2948,7 +2948,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
             else
             {
                /* Point to the item previous to the class name */
-               prev = chunk_get_prev_ncnlnp(prev);
+               prev = chunk_get_prev_nnlnp(prev);
             }
          }
       }
@@ -2993,7 +2993,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
       {
          if (prev->flags & PCF_IN_PREPROC)
          {
-            prev = chunk_get_prev_ncnlnp(prev);
+            prev = chunk_get_prev_nnlnp(prev);
             continue;
          }
 
@@ -3018,7 +3018,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
          if ((prev->type == CT_DC_MEMBER) ||
              (prev->type == CT_MEMBER))
          {
-            prev = chunk_get_prev_ncnlnp(prev);
+            prev = chunk_get_prev_nnlnp(prev);
             if ((prev == NULL) ||
                 ((prev->type != CT_WORD) &&
                  (prev->type != CT_TYPE) &&
@@ -3031,7 +3031,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
                break;
             }
             LOG_FMT(LFCN, " <skip %s>", prev->str.c_str());
-            prev = chunk_get_prev_ncnlnp(prev);
+            prev = chunk_get_prev_nnlnp(prev);
             continue;
          }
 
@@ -3087,7 +3087,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
          }
          else
          {
-            prev = chunk_get_prev_ncnlnp(prev);
+            prev = chunk_get_prev_nnlnp(prev);
          }
       }
 

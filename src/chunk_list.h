@@ -45,14 +45,14 @@ chunk_t *chunk_first_on_line(chunk_t *pc);
 
 chunk_t *chunk_get_next_nl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_next_nnl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
-chunk_t *chunk_get_next_ncnlnp(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
+chunk_t *chunk_get_next_nnlnp(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 
 chunk_t *chunk_get_next_nblank(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev_nblank(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 
 chunk_t *chunk_get_prev_nl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev_nnl(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
-chunk_t *chunk_get_prev_ncnlnp(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
+chunk_t *chunk_get_prev_nnlnp(chunk_t *cur, chunk_nav_t nav = CNAV_ALL);
 
 chunk_t *chunk_get_next_type(chunk_t *cur, c_token_t type, int level, chunk_nav_t nav = CNAV_ALL);
 chunk_t *chunk_get_prev_type(chunk_t *cur, c_token_t type, int level, chunk_nav_t nav = CNAV_ALL);

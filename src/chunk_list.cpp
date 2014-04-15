@@ -232,9 +232,9 @@ chunk_t *chunk_get_prev_nnl(chunk_t *cur, chunk_nav_t nav)
 
 
 /**
- * Gets the next non-NEWLINE and non-comment chunk, non-preprocessor chunk
+ * Gets the next non-NEWLINE and non-preprocessor chunk
  */
-chunk_t *chunk_get_next_ncnlnp(chunk_t *cur, chunk_nav_t nav)
+chunk_t *chunk_get_next_nnlnp(chunk_t *cur, chunk_nav_t nav)
 {
    chunk_t *pc = cur;
 
@@ -243,26 +243,23 @@ chunk_t *chunk_get_next_ncnlnp(chunk_t *cur, chunk_nav_t nav)
       do
       {
          pc = chunk_get_next(pc, nav);
-      } while ((pc != NULL) && chunk_is_preproc(pc) &&
-               (chunk_is_comment(pc) || chunk_is_newline(pc)));
+      } while ((pc != NULL) && chunk_is_preproc(pc) && chunk_is_newline(pc));
    }
    else
    {
       do
       {
          pc = chunk_get_next(pc, nav);
-      } while ((pc != NULL) && (chunk_is_comment(pc) ||
-                                chunk_is_newline(pc) ||
-                                chunk_is_preproc(pc)));
+      } while ((pc != NULL) && (chunk_is_newline(pc) || chunk_is_preproc(pc)));
    }
    return(pc);
 }
 
 
 /**
- * Gets the prev non-NEWLINE and non-comment chunk, non-preprocessor chunk
+ * Gets the prev non-NEWLINE and non-preprocessor chunk
  */
-chunk_t *chunk_get_prev_ncnlnp(chunk_t *cur, chunk_nav_t nav)
+chunk_t *chunk_get_prev_nnlnp(chunk_t *cur, chunk_nav_t nav)
 {
    chunk_t *pc = cur;
 
@@ -271,17 +268,14 @@ chunk_t *chunk_get_prev_ncnlnp(chunk_t *cur, chunk_nav_t nav)
       do
       {
          pc = chunk_get_prev(pc, nav);
-      } while ((pc != NULL) && chunk_is_preproc(pc) &&
-               (chunk_is_comment(pc) || chunk_is_newline(pc)));
+      } while ((pc != NULL) && chunk_is_preproc(pc) && chunk_is_newline(pc));
    }
    else
    {
       do
       {
          pc = chunk_get_prev(pc, nav);
-      } while ((pc != NULL) && (chunk_is_comment(pc) ||
-                                chunk_is_newline(pc) ||
-                                chunk_is_preproc(pc)));
+      } while ((pc != NULL) && (chunk_is_newline(pc) || chunk_is_preproc(pc)));
    }
    return(pc);
 }
