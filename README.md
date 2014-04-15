@@ -22,7 +22,7 @@ However, unlike a normal compiler it uses fuzzy parsing and heuristics to avoid 
  * Pawn
  * Vala
 
-Please note that this is a project currently under heavy development, and not everything will work the way it is supposed to and some features still need to be implemented, and testing is very limited. There are absolutely no guarantees as far as backward compatibility is concerned at this point in time. Future plans include implementing a database format for storing the identified tokens for quick retrieval. The goal is to make it easy and fast to use it from other tools such as editors and IDE's for code navigation.
+Please note that this is a project currently under development, but in a very usable state. There are no guarantees as far as backward compatibility is concerned at this point in time though.
 
 
 Building
