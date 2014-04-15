@@ -103,15 +103,6 @@ chunk_t *chunk_skip_to_match_rev(chunk_t *cur, chunk_nav_t nav = CNAV_ALL)
 
 
 static_inline
-bool chunk_is_comment(chunk_t *pc)
-{
-   return((pc != NULL) && ((pc->type == CT_COMMENT) ||
-                           (pc->type == CT_COMMENT_MULTI) ||
-                           (pc->type == CT_COMMENT_CPP)));
-}
-
-
-static_inline
 bool chunk_is_newline(chunk_t *pc)
 {
    return((pc != NULL) && ((pc->type == CT_NEWLINE) ||

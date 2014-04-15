@@ -302,7 +302,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
 
    if (ch == '/')
    {
-      pc.type = CT_COMMENT_CPP;
+      pc.type = CT_WHITESPACE;
       while (true)
       {
          bs_cnt = 0;
@@ -350,7 +350,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    }
    else if (ch == '+')
    {
-      pc.type = CT_COMMENT;
+      pc.type = CT_WHITESPACE;
       d_level++;
       while ((d_level > 0) && ctx.more())
       {
@@ -374,7 +374,6 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          pc.str.append(ch);
          if ((ch == '\n') || (ch == '\r'))
          {
-            pc.type = CT_COMMENT_MULTI;
             pc.nl_count++;
 
             if (ch == '\r')
@@ -389,7 +388,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    }
    else  /* must be '/ *' */
    {
-      pc.type = CT_COMMENT;
+      pc.type = CT_WHITESPACE;
       while (ctx.more())
       {
          if ((ctx.peek() == '*') && (ctx.peek(1) == '/'))
@@ -419,7 +418,6 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          pc.str.append(ch);
          if ((ch == '\n') || (ch == '\r'))
          {
-            pc.type = CT_COMMENT_MULTI;
             pc.nl_count++;
 
             if (ch == '\r')
@@ -1324,7 +1322,7 @@ void tokenize(fp_data& fpd)
       }
 
       /* Don't create an entry for whitespace or comments */
-      if ((chunk.type == CT_WHITESPACE) || chunk_is_comment(&chunk))
+      if (chunk.type == CT_WHITESPACE)
       {
          continue;
       }
@@ -1360,7 +1358,7 @@ void tokenize(fp_data& fpd)
       pc = chunk_add_before(fpd, &chunk, NULL);
 
       /* A newline marks the end of a preprocessor */
-      if (pc->type == CT_NEWLINE) // || (pc->type == CT_COMMENT_MULTI))
+      if (pc->type == CT_NEWLINE)
       {
          in_preproc = CT_NONE;
          preproc_ncnl_count = 0;

@@ -24,12 +24,9 @@ typedef enum
 
    CT_JUNK,          /* junk collected when parsing is disabled */
 
-   CT_WHITESPACE,    /* whitespace without any newlines */
+   CT_WHITESPACE,    /* whitespace without any newlines or comments*/
    CT_NEWLINE,       /* CRA, one or more newlines */
    CT_NL_CONT,       /* CRA, backslash-newline */
-   CT_COMMENT_CPP,   /* C++ comment (always followed by CT_NEWLINE) */
-   CT_COMMENT,       /* C-comment, single line */
-   CT_COMMENT_MULTI, /* Multi-lined comment */
 
    CT_IGNORED,       /* a chunk of ignored text */
 
