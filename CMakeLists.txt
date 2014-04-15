@@ -46,3 +46,26 @@ src/unc_text.cpp
 src/unicode.cpp)
 
 target_link_libraries(toks ${CMAKE_THREAD_LIBS_INIT})
+
+install(TARGETS toks
+        RUNTIME DESTINATION bin)
+
+set(CPACK_PACKAGE_NAME "toks")
+set(CPACK_PACKAGE_VENDOR "Thomas Thorsen")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Source code analysis and search utility")
+set(CPACK_PACKAGE_VERSION "${VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_STRIP_FILES "toks")
+
+set(CPACK_GENERATOR DEB RPM)
+
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Thomas Thorsen <ttdkgit@gmail.com>")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.github.com/thomasthorsen/toks")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libstdc++6 (>= 4.6.3-1ubuntu5)")
+
+set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
+set(CPACK_RPM_PACKAGE_URL "http://www.github.com/thomasthorsen/toks")
+
+set(CPACK_PACKAGE_EXECUTABLES "toks")
+
+include(CPack)
