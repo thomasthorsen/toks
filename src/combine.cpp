@@ -788,8 +788,7 @@ static void do_symbol_check(fp_data& fpd, chunk_t *prev, chunk_t *pc, chunk_t *n
            (next->type == CT_ENUM) ||
            (next->type == CT_UNION)) &&
           (prev->type != CT_SIZEOF) &&
-          (prev->parent_type != CT_OPERATOR) &&
-          ((pc->flags & PCF_IN_TYPEDEF) == 0))
+          (prev->parent_type != CT_OPERATOR))
       {
          fix_casts(pc);
       }
