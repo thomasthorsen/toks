@@ -945,39 +945,23 @@ static bool parse_word(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, bool skipcheck, 
 static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
 {
    bool nl_found = false;
-   int ch       = -2;
+   bool ret = false;
 
-   /* REVISIT: use a better whitespace detector? */
-   while (ctx.more() && unc_isspace(ctx.peek()))
+   while (isspace(ctx.peek()))
    {
-      ch = ctx.get();   /* throw away the whitespace char */
-      switch (ch)
+      if (ctx.get() == '\n')
       {
-      case '\r':
-         /* CRLF ending */
-         ctx.expect('\n');
          nl_found = true;
-         break;
-
-      case '\n':
-         /* LF ending */
-         nl_found = true;
-         break;
-
-      case '\t':
-      case ' ':
-      default:
-         break;
       }
+      ret = true;
    }
 
-   if (ch != -2)
+   if (ret)
    {
-      pc.str.clear();
-      pc.type      = nl_found ? CT_NEWLINE : CT_WHITESPACE;
-      return(true);
+      pc.type = nl_found ? CT_NEWLINE : CT_WHITESPACE;
    }
-   return(false);
+
+   return ret;
 }
 
 
