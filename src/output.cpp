@@ -204,18 +204,34 @@ void output(fp_data& fpd)
 void output_dump_tokens(fp_data& fpd)
 {
    chunk_t *pc;
-   int     cnt;
    const char *tolog;
 
-   printf("# -=====-\n");
-   printf("# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
+   printf("Line Tag           Parent        Scope          Cols Br/Lvl/pp     Text       Flags");
    for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next(pc))
    {
-      printf("\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d]",
+      if (pc->type == CT_NEWLINE)
+      {
+         printf("\n");
+         continue;
+      }
+      printf("\n%4d %-13.13s %-13.13s %-13.13s [%2d-%2d][%d/%d/%d]",
               pc->orig_line, get_token_name(pc->type),
               get_token_name(pc->parent_type), pc->scope_text(),
-              pc->column, pc->orig_col, pc->orig_col_end,
+              pc->orig_col, pc->orig_col_end,
               pc->brace_level, pc->level, pc->pp_level);
+
+      if (pc->type == CT_NL_CONT)
+      {
+         printf(" \\               ");
+      }
+      else if (pc->len() != 0)
+      {
+         printf(" %-15s ", pc->str.c_str());
+      }
+      else
+      {
+         printf("                 ");
+      }
 
       tolog = NULL;
       for (int i = 0; i < (int)ARRAY_SIZE(pcf_names); i++)
@@ -235,23 +251,6 @@ void output_dump_tokens(fp_data& fpd)
       {
          printf("%s", tolog);
       }
-
-      if ((pc->type != CT_NEWLINE) && (pc->len() != 0))
-      {
-         for (cnt = 0; cnt < pc->column; cnt++)
-         {
-            printf(" ");
-         }
-         if (pc->type != CT_NL_CONT)
-         {
-            printf("%s", pc->str.c_str());
-         }
-         else
-         {
-            printf("\\");
-         }
-      }
    }
-   printf("\n# -=====-\n");
    fflush(stdout);
 }

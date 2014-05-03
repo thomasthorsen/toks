@@ -35,7 +35,6 @@ chunk_t *pawn_add_vsemi_after(fp_data& fpd, chunk_t *pc)
    chunk             = *pc;
    chunk.type        = CT_VSEMICOLON;
    chunk.str         = "";
-   chunk.column     += pc->len();
    chunk.parent_type = CT_NONE;
 
    LOG_FMT(LPVSEMI, "%s: Added VSEMI on line %d, prev='%s' [%s]\n",
@@ -413,7 +412,6 @@ static chunk_t *pawn_process_func_def(fp_data& fpd, chunk_t *pc)
 
       chunk             = *last;
       chunk.str.clear();
-      chunk.column     += last->len();
       chunk.type        = CT_VBRACE_CLOSE;
       chunk.level       = 0;
       chunk.brace_level = 0;

@@ -72,7 +72,6 @@ static void split_off_angle_close(fp_data& fpd, chunk_t *pc)
    nc.type = ct->type;
    nc.str.pop_front();
    nc.orig_col++;
-   nc.column++;
    chunk_add_after(fpd, &nc, pc);
 }
 

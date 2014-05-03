@@ -1002,7 +1002,6 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
  * pc.str is the input text.
  * pc.len in the output length.
  * pc.type is the output type
- * pc.column is output column
  *
  * @param pc      The structure to update, str is an input.
  * @return        true/false - whether anything was parsed
@@ -1014,7 +1013,6 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
 
    /* Save off the current column */
    pc.orig_line = ctx.c.row;
-   pc.column    = ctx.c.col;
    pc.orig_col  = ctx.c.col;
    pc.type      = CT_NONE;
    pc.flags     = 0;

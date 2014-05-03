@@ -215,7 +215,6 @@ struct chunk_t
       orig_col = 0;
       orig_col_end = 0;
       flags = 0;
-      column = 0;
       level = 0;
       brace_level = 0;
       pp_level = 0;
@@ -243,7 +242,6 @@ struct chunk_t
    UINT32       orig_col;
    UINT32       orig_col_end;
    UINT64       flags;            /* see PCF_xxx */
-   int          column;           /* column of chunk */
    int          level;            /* nest level in {, (, or [ */
    int          brace_level;      /* nest level in braces only */
    int          pp_level;         /* nest level in #if stuff */

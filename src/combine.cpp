@@ -3811,7 +3811,6 @@ static void handle_cpp_lambda(fp_data& fpd, chunk_t *sq_o)
       nc.type = CT_SQUARE_CLOSE;
       nc.str.pop_front();
       nc.orig_col++;
-      nc.column++;
       sq_c = chunk_add_after(fpd, &nc, sq_o);
    }
    sq_o->parent_type = CT_CPP_LAMBDA;

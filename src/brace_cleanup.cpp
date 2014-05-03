@@ -958,7 +958,6 @@ static chunk_t *insert_vbrace(fp_data& fpd, chunk_t *pc, bool after,
       }
 
       chunk.orig_line = ref->orig_line;
-      chunk.column    = ref->column + ref->len() + 1;
       chunk.type      = CT_VBRACE_OPEN;
       rv = chunk_add_after(fpd, &chunk, ref);
    }
