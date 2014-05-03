@@ -339,7 +339,6 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          {
             pc.str.append(ctx.get());
          }
-         pc.nl_count++;
       }
    }
    else if (!ctx.more())
@@ -374,8 +373,6 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          pc.str.append(ch);
          if ((ch == '\n') || (ch == '\r'))
          {
-            pc.nl_count++;
-
             if (ch == '\r')
             {
                if (ctx.peek() == '\n')
@@ -418,8 +415,6 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          pc.str.append(ch);
          if ((ch == '\n') || (ch == '\r'))
          {
-            pc.nl_count++;
-
             if (ch == '\r')
             {
                if (ctx.peek() == '\n')
@@ -721,7 +716,6 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
       pc.str.append(ch);
       if (ch == '\n')
       {
-         pc.nl_count++;
          pc.type = CT_STRING_MULTI;
          escaped = 0;
          continue;
@@ -729,7 +723,6 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
       if ((ch == '\r') && (ctx.peek() != '\n'))
       {
          pc.str.append(ctx.get());
-         pc.nl_count++;
          pc.type = CT_STRING_MULTI;
          escaped = 0;
          continue;
@@ -861,7 +854,6 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
       if (ctx.peek() == '\n')
       {
          pc.str.append(ctx.get());
-         pc.nl_count++;
          pc.type = CT_STRING_MULTI;
       }
       else
@@ -952,7 +944,7 @@ static bool parse_word(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, bool skipcheck, 
  */
 static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
 {
-   int nl_count = 0;
+   bool nl_found = false;
    int ch       = -2;
 
    /* REVISIT: use a better whitespace detector? */
@@ -964,12 +956,12 @@ static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
       case '\r':
          /* CRLF ending */
          ctx.expect('\n');
-         nl_count++;
+         nl_found = true;
          break;
 
       case '\n':
          /* LF ending */
-         nl_count++;
+         nl_found = true;
          break;
 
       case '\t':
@@ -982,8 +974,7 @@ static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
    if (ch != -2)
    {
       pc.str.clear();
-      pc.nl_count  = nl_count;
-      pc.type      = nl_count ? CT_NEWLINE : CT_WHITESPACE;
+      pc.type      = nl_found ? CT_NEWLINE : CT_WHITESPACE;
       return(true);
    }
    return(false);
@@ -1012,7 +1003,6 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
          }
          pc.str      = "\\";
          pc.type     = CT_NL_CONT;
-         pc.nl_count = 1;
          return(true);
       }
    }
@@ -1043,7 +1033,6 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
    pc.column    = ctx.c.col;
    pc.orig_col  = ctx.c.col;
    pc.type      = CT_NONE;
-   pc.nl_count  = 0;
    pc.flags     = 0;
 
    /**

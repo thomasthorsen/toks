@@ -217,7 +217,6 @@ struct chunk_t
       flags = 0;
       column = 0;
       column_indent = 0;
-      nl_count = 0;
       level = 0;
       brace_level = 0;
       pp_level = 0;
@@ -249,7 +248,6 @@ struct chunk_t
    int          column_indent;    /* if 1st on a line, set to the 'indent'
                                    * column, which may be less than the real column
                                    * used to indent with tabs */
-   int          nl_count;         /* number of newlines in CT_NEWLINE */
    int          level;            /* nest level in {, (, or [ */
    int          brace_level;      /* nest level in braces only */
    int          pp_level;         /* nest level in #if stuff */

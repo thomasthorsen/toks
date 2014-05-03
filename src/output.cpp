@@ -211,12 +211,11 @@ void output_dump_tokens(fp_data& fpd)
    printf("# Line      Tag          Parent     Scope     Columns  Br/Lvl/pp Flag Nl  Text");
    for (pc = chunk_get_head(fpd); pc != NULL; pc = chunk_get_next(pc))
    {
-      printf("\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d][%d]",
+      printf("\n# %3d> %13.13s[%13.13s][%10.10s][%2d/%2d/%2d][%d/%d/%d]",
               pc->orig_line, get_token_name(pc->type),
               get_token_name(pc->parent_type), pc->scope_text(),
               pc->column, pc->orig_col, pc->orig_col_end,
-              pc->brace_level, pc->level, pc->pp_level,
-              pc->nl_count);
+              pc->brace_level, pc->level, pc->pp_level);
 
       tolog = NULL;
       for (int i = 0; i < (int)ARRAY_SIZE(pcf_names); i++)
