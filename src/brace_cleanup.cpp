@@ -160,7 +160,7 @@ void brace_cleanup(fp_data& fpd)
       {
          consumed = false;
          parse_cleanup(fpd, consumed, &frm, pc);
-         print_stack(LBCSAFTER, (pc->type == CT_VBRACE_CLOSE) ? "Virt-}" : pc->str, &frm, pc);
+         print_stack(LBCSAFTER, (pc->type == CT_VBRACE_CLOSE) ? "Virt-}" : pc->str.c_str(), &frm, pc);
       }
       pc = chunk_get_next(pc);
    }

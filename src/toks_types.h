@@ -12,13 +12,13 @@
 #include <vector>
 #include <deque>
 #include <cstdio>
+#include <string>
 using namespace std;
 
 #include "base_types.h"
 #include "token_enum.h"    /* c_token_t */
 #include "log_levels.h"
 #include "logger.h"
-#include "unc_text.h"
 #include "sqlite3080200.h"
 #include "ListManager.h"
 
@@ -245,8 +245,8 @@ struct chunk_t
    int          level;            /* nest level in {, (, or [ */
    int          brace_level;      /* nest level in braces only */
    int          pp_level;         /* nest level in #if stuff */
-   unc_text     str;              /* the token text */
-   unc_text     scope;            /* the scope of the token */
+   string       str;              /* the token text */
+   string       scope;            /* the scope of the token */
 };
 
 enum

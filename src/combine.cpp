@@ -1350,7 +1350,7 @@ static bool mark_function_type(fp_data& fpd, chunk_t *pc)
               get_token_name(tmp->type), tmp->str.c_str(),
               tmp->orig_line, tmp->orig_col);
 
-      if (*tmp->str == '(')
+      if (*tmp->str.data() == '(')
       {
          if ((pc->flags & PCF_IN_TYPEDEF) == 0)
          {
@@ -1882,7 +1882,7 @@ static void fix_typedef(fp_data& fpd, chunk_t *start)
             the_type = next;
          }
          next->flags &= ~PCF_VAR_DEF;
-         if (*next->str == '(')
+         if (*next->str.data() == '(')
          {
             last_op = next;
          }
@@ -2934,7 +2934,7 @@ static void mark_function(fp_data& fpd, chunk_t *pc)
          //         get_token_name(pc->type), pc->len, pc->str.c_str());
          if ((prev != NULL) && ((prev->type == CT_WORD) || (prev->type == CT_TYPE)))
          {
-            if (pc->str.equals(prev->str))
+            if (pc->str == prev->str)
             {
                pc->type = CT_FUNC_CLASS;
                LOG_FMT(LFCN, "FOUND %sSTRUCTOR for %s[%s]\n",
@@ -3809,7 +3809,7 @@ static void handle_cpp_lambda(fp_data& fpd, chunk_t *sq_o)
       sq_o->orig_col_end = sq_o->orig_col + 1;
 
       nc.type = CT_SQUARE_CLOSE;
-      nc.str.pop_front();
+      nc.str = "]";
       nc.orig_col++;
       sq_c = chunk_add_after(fpd, &nc, sq_o);
    }
@@ -3875,7 +3875,7 @@ static bool chunkstack_match(ChunkStack& cs, chunk_t *pc)
    for (idx = 0; idx < cs.Len(); idx++)
    {
       tmp = cs.GetChunk(idx);
-      if (pc->str.equals(tmp->str))
+      if (pc->str == tmp->str)
       {
          return true;
       }

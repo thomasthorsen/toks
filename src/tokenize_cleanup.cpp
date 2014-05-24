@@ -34,7 +34,7 @@ static chunk_t *handle_double_angle_close(fp_data& fpd, chunk_t *pc)
           ((pc->orig_col_end + 1) == next->orig_col) &&
           (next->parent_type == CT_NONE))
       {
-         pc->str.append('>');
+         pc->str.append(1, '>');
          pc->type = CT_ARITH;
          pc->orig_col_end = next->orig_col_end;
 
@@ -70,7 +70,7 @@ static void split_off_angle_close(fp_data& fpd, chunk_t *pc)
    pc->type = CT_ANGLE_CLOSE;
 
    nc.type = ct->type;
-   nc.str.pop_front();
+   nc.str.assign(pc->str, 1, pc->str.length() - 1);
    nc.orig_col++;
    chunk_add_after(fpd, &nc, pc);
 }
@@ -346,7 +346,7 @@ void tokenize_cleanup(fp_data& fpd)
                   tmp2 && (tmp2->type == CT_ANGLE_CLOSE) &&
                   (tmp2->orig_col == next->orig_col_end))
          {
-            next->str.append('>');
+            next->str.append(1, '>');
             next->orig_col_end++;
             next->type = CT_OPERATOR_VAL;
             chunk_del(fpd, tmp2);
@@ -447,7 +447,7 @@ void tokenize_cleanup(fp_data& fpd)
                {
                   break;
                }
-               if ((tmp->len() > 0) && unc_isalpha(*tmp->str))
+               if ((tmp->len() > 0) && isalpha(*tmp->str.data()))
                {
                   tmp->type = CT_SQL_WORD;
                }
@@ -461,7 +461,7 @@ void tokenize_cleanup(fp_data& fpd)
           (next == chunk_get_next(pc)))
       {
          /* merge the two with a space between */
-         pc->str.append(' ');
+         pc->str.append(1, ' ');
          pc->str += next->str;
          pc->orig_col_end = next->orig_col_end;
          chunk_del(fpd, next);
@@ -654,10 +654,10 @@ void tokenize_cleanup(fp_data& fpd)
       /* Detect "pragma region" and "pragma endregion" */
       if ((pc->type == CT_PP_PRAGMA) && (next->type == CT_PREPROC_BODY))
       {
-         if ((memcmp(next->str, "region", 6) == 0) ||
-             (memcmp(next->str, "endregion", 9) == 0))
+         if ((memcmp(next->str.c_str(), "region", 6) == 0) ||
+             (memcmp(next->str.c_str(), "endregion", 9) == 0))
          {
-            pc->type = (*next->str == 'r') ? CT_PP_REGION : CT_PP_ENDREGION;
+            pc->type = (*next->str.data() == 'r') ? CT_PP_REGION : CT_PP_ENDREGION;
 
             prev->parent_type = pc->type;
          }

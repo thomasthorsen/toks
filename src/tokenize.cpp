@@ -160,7 +160,7 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
       pc.str.clear();
       while (ctx.peek() == '\\')
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
          /* Check for end of file */
          switch (ctx.peek())
          {
@@ -169,7 +169,7 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
             cnt = 3;
             while (cnt--)
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             break;
 
@@ -178,7 +178,7 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
             cnt = 5;
             while (cnt--)
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             break;
 
@@ -187,7 +187,7 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
             cnt = 9;
             while (cnt--)
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             break;
 
@@ -200,35 +200,35 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
          case '6':
          case '7':
             /* handle up to 3 octal digits */
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
             ch = ctx.peek();
             if ((ch >= '0') && (ch <= '7'))
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
                ch = ctx.peek();
                if ((ch >= '0') && (ch <= '7'))
                {
-                  pc.str.append(ctx.get());
+                  pc.str.append(1, ctx.get());
                }
             }
             break;
 
          case '&':
             /* \& NamedCharacterEntity ; */
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
             while (unc_isalpha(ctx.peek()))
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             if (ctx.peek() == ';')
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             break;
 
          default:
             /* Everything else is a single character */
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
             break;
          }
       }
@@ -298,7 +298,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    /* account for opening two chars */
    pc.str = ctx.get();   /* opening '/' */
    ch = ctx.get();
-   pc.str.append(ch);    /* second char */
+   pc.str.append(1, ch);    /* second char */
 
    if (ch == '/')
    {
@@ -321,7 +321,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
             {
                bs_cnt = 0;
             }
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
 
          /* If we hit an odd number of backslashes right before the newline,
@@ -333,11 +333,11 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          }
          if (ctx.peek() == '\r')
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
          if (ctx.peek() == '\n')
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
       }
    }
@@ -355,29 +355,29 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       {
          if ((ctx.peek() == '+') && (ctx.peek(1) == '/'))
          {
-            pc.str.append(ctx.get());  /* store the '+' */
-            pc.str.append(ctx.get());  /* store the '/' */
+            pc.str.append(1, ctx.get());  /* store the '+' */
+            pc.str.append(1, ctx.get());  /* store the '/' */
             d_level--;
             continue;
          }
 
          if ((ctx.peek() == '/') && (ctx.peek(1) == '+'))
          {
-            pc.str.append(ctx.get());  /* store the '/' */
-            pc.str.append(ctx.get());  /* store the '+' */
+            pc.str.append(1, ctx.get());  /* store the '/' */
+            pc.str.append(1, ctx.get());  /* store the '+' */
             d_level++;
             continue;
          }
 
          ch = ctx.get();
-         pc.str.append(ch);
+         pc.str.append(1, ch);
          if ((ch == '\n') || (ch == '\r'))
          {
             if (ch == '\r')
             {
                if (ctx.peek() == '\n')
                {
-                  pc.str.append(ctx.get());  /* store the '\n' */
+                  pc.str.append(1, ctx.get());  /* store the '\n' */
                }
             }
          }
@@ -390,8 +390,8 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       {
          if ((ctx.peek() == '*') && (ctx.peek(1) == '/'))
          {
-            pc.str.append(ctx.get());  /* store the '*' */
-            pc.str.append(ctx.get());  /* store the '/' */
+            pc.str.append(1, ctx.get());  /* store the '*' */
+            pc.str.append(1, ctx.get());  /* store the '/' */
 
             tok_info ss;
             ctx.save(ss);
@@ -400,7 +400,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
             /* If there is another C comment right after this one, combine them */
             while ((ctx.peek() == ' ') || (ctx.peek() == '\t'))
             {
-               pc.str.append(ctx.get());
+               pc.str.append(1, ctx.get());
             }
             if ((ctx.peek() != '/') || (ctx.peek(1) != '*'))
             {
@@ -412,14 +412,14 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          }
 
          ch = ctx.get();
-         pc.str.append(ch);
+         pc.str.append(1, ch);
          if ((ch == '\n') || (ch == '\r'))
          {
             if (ch == '\r')
             {
                if (ctx.peek() == '\n')
                {
-                  pc.str.append(ctx.get());  /* store the '\n' */
+                  pc.str.append(1, ctx.get());  /* store the '\n' */
                }
             }
          }
@@ -456,12 +456,12 @@ static void parse_suffix(tok_ctx& ctx, chunk_t& pc, bool forstring = false)
       while (ctx.more() && CharTable::IsKw2(ctx.peek()))
       {
          slen++;
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
 
       if (forstring && (slen >= 4) &&
-          (pc.str.startswith("PRI", oldsize) ||
-           pc.str.startswith("SCN", oldsize)))
+          ((pc.str.substr(0, 3) == "PRI") ||
+           (pc.str.substr(0, 3) == "SCN")))
       {
          ctx.restore(ss);
          pc.str.resize(oldsize);
@@ -552,7 +552,7 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
     */
    if (ctx.peek() == '0')
    {
-      pc.str.append(ctx.get());  /* store the '0' */
+      pc.str.append(1, ctx.get());  /* store the '0' */
 
       switch (unc_toupper(ctx.peek()))
       {
@@ -560,14 +560,14 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
          did_hex = true;
          do
          {
-            pc.str.append(ctx.get());  /* store the 'x' and then the rest */
+            pc.str.append(1, ctx.get());  /* store the 'x' and then the rest */
          } while (is_hex_(ctx.peek()));
          break;
 
       case 'B':               /* binary */
          do
          {
-            pc.str.append(ctx.get());  /* store the 'b' and then the rest */
+            pc.str.append(1, ctx.get());  /* store the 'b' and then the rest */
          } while (is_bin_(ctx.peek()));
          break;
 
@@ -583,7 +583,7 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
       case '9':
          do
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          } while (is_oct_(ctx.peek()));
          break;
 
@@ -597,27 +597,27 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
       /* Regular int or float */
       while (is_dec_(ctx.peek()))
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
    }
 
    /* Check if we stopped on a decimal point & make sure it isn't '..' */
    if ((ctx.peek() == '.') && (ctx.peek(1) != '.'))
    {
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
       is_float = true;
       if (did_hex)
       {
          while (is_hex_(ctx.peek()))
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
       }
       else
       {
          while (is_dec_(ctx.peek()))
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
       }
    }
@@ -631,14 +631,14 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
    if ((tmp == 'E') || (tmp == 'P'))
    {
       is_float = true;
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
       if ((ctx.peek() == '+') || (ctx.peek() == '-'))
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
       while (is_dec_(ctx.peek()))
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
    }
 
@@ -664,14 +664,14 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
       {
          break;
       }
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
    }
 
    /* skip the Microsoft-specific '64' suffix */
    if ((ctx.peek() == '6') && (ctx.peek(1) == '4'))
    {
-      pc.str.append(ctx.get());
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
+      pc.str.append(1, ctx.get());
    }
 
    pc.type = is_float ? CT_NUMBER_FP : CT_NUMBER;
@@ -703,17 +703,17 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
    pc.str.clear();
    while (quote_idx-- > 0)
    {
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
    }
 
    pc.type = CT_STRING;
    end_ch  = CharTable::Get(ctx.peek()) & 0xff;
-   pc.str.append(ctx.get());  /* store the " */
+   pc.str.append(1, ctx.get());  /* store the " */
 
    while (ctx.more())
    {
       int ch = ctx.get();
-      pc.str.append(ch);
+      pc.str.append(1, ch);
       if (ch == '\n')
       {
          pc.type = CT_STRING_MULTI;
@@ -722,7 +722,7 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
       }
       if ((ch == '\r') && (ctx.peek() != '\n'))
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
          pc.type = CT_STRING_MULTI;
          escaped = 0;
          continue;
@@ -763,18 +763,18 @@ static bool parse_string(tok_ctx& ctx, chunk_t& pc, int quote_idx, bool allow_es
 static bool parse_cs_string(tok_ctx& ctx, chunk_t& pc)
 {
    pc.str = ctx.get();
-   pc.str.append(ctx.get());
+   pc.str.append(1, ctx.get());
 
    /* go until we hit a zero (end of file) or a single " */
    while (ctx.more())
    {
       int ch = ctx.get();
-      pc.str.append(ch);
+      pc.str.append(1, ch);
       if (ch == '"')
       {
          if (ctx.peek() == '"')
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
          else
          {
@@ -821,14 +821,14 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
    cnt = q_idx + 1;
    while (cnt--)
    {
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
    }
 
    /* Add the tag and get the length of the tag */
    while (ctx.more() && (ctx.peek() != '('))
    {
       tag_len++;
-      pc.str.append(ctx.get());
+      pc.str.append(1, ctx.get());
    }
    if (ctx.peek() != '(')
    {
@@ -846,19 +846,19 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
          cnt = tag_len + 2;   /* for the )" */
          while (cnt--)
          {
-            pc.str.append(ctx.get());
+            pc.str.append(1, ctx.get());
          }
          parse_suffix(ctx, pc);
          return(true);
       }
       if (ctx.peek() == '\n')
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
          pc.type = CT_STRING_MULTI;
       }
       else
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
    }
    ctx.restore();
@@ -876,16 +876,15 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
 static bool parse_word(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, bool skipcheck, int preproc_ncnl_count, c_token_t in_preproc)
 {
    int             ch;
-   static unc_text interface("@interface");
 
    /* The first character is already valid */
    pc.str.clear();
-   pc.str.append(ctx.get());
+   pc.str.append(1, ctx.get());
 
    while (ctx.more() && CharTable::IsKw2(ctx.peek()))
    {
       ch = ctx.get();
-      pc.str.append(ch);
+      pc.str.append(1, ch);
 
       /* HACK: Non-ASCII character are only allowed in identifiers */
       if (ch > 0x7f)
@@ -916,8 +915,8 @@ static bool parse_word(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, bool skipcheck, 
    else
    {
       /* '@interface' is reserved, not an interface itself */
-      if ((fpd.lang_flags & LANG_JAVA) && pc.str.startswith("@") &&
-          !pc.str.equals(interface))
+      if ((fpd.lang_flags & LANG_JAVA) && (pc.str.substr(0, 1) == "@") &&
+          (pc.str != "@interface"))
       {
          pc.type = CT_ANNOTATION;
       }
@@ -1047,7 +1046,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
             if (last == '\\')
             {
                ctx.restore(ss);
-               pc.str.pop_back();
+               pc.str.resize(pc.str.length() - 1);
             }
             break;
          }
@@ -1060,7 +1059,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
          last = ch;
          ctx.save(ss);
 
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
       if (pc.str.size() > 0)
       {
@@ -1220,7 +1219,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       else if ((nc >= '0') && (nc <= '9'))
       {
          /* literal number */
-         pc.str.append(ctx.get());  /* store the '@' */
+         pc.str.append(1, ctx.get());  /* store the '@' */
          parse_number(ctx, pc);
          return true;
       }
@@ -1245,7 +1244,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       int cnt = strlen(punc->tag);
       while (cnt--)
       {
-         pc.str.append(ctx.get());
+         pc.str.append(1, ctx.get());
       }
       pc.type   = punc->type;
       pc.flags |= PCF_PUNCTUATOR;
@@ -1254,7 +1253,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
 
    /* throw away this character */
    pc.type = CT_UNKNOWN;
-   pc.str.append(ctx.get());
+   pc.str.append(1, ctx.get());
 
    LOG_FMT(LWARN, "%s:%d Garbage in col %d: %x\n",
            fpd.filename, pc.orig_line, (int)ctx.c.col, pc.str[0]);
@@ -1308,7 +1307,7 @@ void tokenize(fp_data& fpd)
              ((chunk.str[chunk.str.size() - 1] == ' ') ||
               (chunk.str[chunk.str.size() - 1] == '\t')))
       {
-         chunk.str.pop_back();
+         chunk.str.resize(chunk.str.length() - 1);
       }
 
       /* Store off the end column */

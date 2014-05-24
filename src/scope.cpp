@@ -7,17 +7,17 @@
  */
 #include "toks_types.h"
 #include "chunk_list.h"
-#include "unc_text.h"
 #include "prototypes.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <cerrno>
 #include "unc_ctype.h"
 #include <cassert>
 
-static void mark_resolved_scopes(chunk_t *pc, unc_text& res_scopes)
+static void mark_resolved_scopes(chunk_t *pc, string& res_scopes)
 {
    if (res_scopes.size() > 0)
    {
@@ -32,7 +32,7 @@ static void mark_resolved_scopes(chunk_t *pc, unc_text& res_scopes)
 static void mark_scope_single(chunk_t *pc,
                               chunk_t *scope,
                               const char *decoration,
-                              unc_text& res_scopes)
+                              string& res_scopes)
 {
    if (pc->scope.size() > 0)
    {
@@ -62,7 +62,7 @@ static void mark_scope_single(chunk_t *pc,
 static chunk_t *mark_scope(chunk_t *popen,
                            chunk_t *scope,
                            const char *decoration,
-                           unc_text& res_scopes)
+                           string& res_scopes)
 {
    chunk_t *pc = popen;
 
@@ -84,7 +84,7 @@ static chunk_t *mark_scope(chunk_t *popen,
 }
 
 
-static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
+static void get_resolved_scopes(chunk_t *scope, string& res_scopes)
 {
    chunk_t *prev = chunk_get_prev_nnl(scope, CNAV_PREPROC);
    bool first = true;
@@ -104,10 +104,10 @@ static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
          break;
       if (!first)
       {
-         res_scopes.prepend(":");
+         res_scopes.insert(0, ":");
       }
       first = false;
-      res_scopes.prepend(prev->str);
+      res_scopes.insert(0, prev->str);
       prev = chunk_get_prev_nnl(prev, CNAV_PREPROC);
    }
 }
@@ -116,7 +116,7 @@ static void get_resolved_scopes(chunk_t *scope, unc_text& res_scopes)
 void assign_scope(fp_data& fpd)
 {
    chunk_t *pc = chunk_get_head(fpd);
-   unc_text res_scopes;
+   string res_scopes;
 
    while (pc != NULL)
    {
@@ -237,15 +237,15 @@ void assign_scope(fp_data& fpd)
       {
          if (pc->flags & PCF_STATIC)
          {
-            pc->scope.set("<local>");
+            pc->scope = "<local>";
          }
          else if (pc->flags & PCF_IN_PREPROC)
          {
-            pc->scope.set("<preproc>");
+            pc->scope = "<preproc>";
          }
          else
          {
-            pc->scope.set("<global>");
+            pc->scope = "<global>";
          }
       }
 

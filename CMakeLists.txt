@@ -42,7 +42,6 @@ src/scope.cpp
 src/tokenize_cleanup.cpp
 src/tokenize.cpp
 src/toks.cpp
-src/unc_text.cpp
 src/unicode.cpp)
 
 target_link_libraries(toks ${CMAKE_THREAD_LIBS_INIT})

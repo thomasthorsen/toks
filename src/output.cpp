@@ -194,10 +194,10 @@ void output(fp_data& fpd)
       (void) index_insert_entry(fpd,
                                 pc->orig_line,
                                 pc->orig_col,
-                                pc->scope,
+                                pc->scope.c_str(),
                                 type,
                                 sub_type,
-                                pc->str);
+                                pc->str.c_str());
    }
 }
 
