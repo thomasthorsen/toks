@@ -9,7 +9,7 @@
 #include "logmask.h"
 #include <cstdio>      /* snprintf() */
 #include <cstdlib>     /* strtoul() */
-#include "unc_ctype.h"
+#include <cctype>
 
 
 /**
@@ -102,7 +102,7 @@ void logmask_from_string(const char *str, log_mask_t& mask)
    logmask_set_all(mask, false);
 
    /* If the first character is 'A', set all sevs */
-   if (unc_toupper(*str) == 'A')
+   if (toupper((unsigned char) *str) == 'A')
    {
       logmask_set_all(mask, true);
       str++;
@@ -110,13 +110,13 @@ void logmask_from_string(const char *str, log_mask_t& mask)
 
    while (*str != 0)
    {
-      if (unc_isspace(*str))
+      if (isspace((unsigned char) *str))
       {
          str++;
          continue;
       }
 
-      if (unc_isdigit(*str))
+      if (isdigit((unsigned char) *str))
       {
          level = strtoul(str, &ptmp, 10);
          str   = ptmp;

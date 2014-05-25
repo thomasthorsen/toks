@@ -9,7 +9,7 @@
 #include "toks_types.h"
 #include "prototypes.h"
 #include "chunk_list.h"
-#include "unc_ctype.h"
+#include <cctype>
 #include <cstdlib>
 
 

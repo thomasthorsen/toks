@@ -15,7 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-#include "unc_ctype.h"
+#include <cctype>
 
 struct tok_info
 {
@@ -216,7 +216,7 @@ static bool d_parse_string(tok_ctx& ctx, chunk_t& pc)
          case '&':
             /* \& NamedCharacterEntity ; */
             pc.str.append(1, ctx.get());
-            while (unc_isalpha(ctx.peek()))
+            while (isalpha(ctx.peek()))
             {
                pc.str.append(1, ctx.get());
             }
@@ -554,7 +554,7 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
    {
       pc.str.append(1, ctx.get());  /* store the '0' */
 
-      switch (unc_toupper(ctx.peek()))
+      switch (toupper(ctx.peek()))
       {
       case 'X':               /* hex */
          did_hex = true;
@@ -627,7 +627,7 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
     * C/C++/D/Java: eEpP
     * C#/Pawn:      eE
     */
-   tmp = unc_toupper(ctx.peek());
+   tmp = toupper(ctx.peek());
    if ((tmp == 'E') || (tmp == 'P'))
    {
       is_float = true;
@@ -655,7 +655,7 @@ static bool parse_number(tok_ctx& ctx, chunk_t& pc)
     */
    while (1)
    {
-      tmp = unc_toupper(ctx.peek());
+      tmp = toupper(ctx.peek());
       if ((tmp == 'I') || (tmp == 'F') || (tmp == 'D') || (tmp == 'M'))
       {
          is_float = true;
@@ -975,7 +975,7 @@ static bool parse_bs_newline(tok_ctx& ctx, chunk_t& pc)
    ctx.get(); /* skip the '\' */
 
    int ch;
-   while (ctx.more() && unc_isspace(ch = ctx.peek()))
+   while (isspace(ch = ctx.peek()))
    {
       ctx.get();
       if ((ch == '\r') || (ch == '\n'))
@@ -1111,7 +1111,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
       {
          idx = 2;
       }
-      else if (unc_tolower(ch) == 'u')
+      else if (tolower(ch) == 'u')
       {
          idx++;
       }
@@ -1191,7 +1191,7 @@ static bool parse_next(fp_data& fpd, tok_ctx& ctx, chunk_t& pc, int preproc_ncnl
           (ch == '\'') ||
           ((ch == '<') && (in_preproc == CT_PP_INCLUDE)))
       {
-         parse_string(ctx, pc, unc_isalpha(ch) ? 1 : 0, true);
+         parse_string(ctx, pc, isalpha(ch) ? 1 : 0, true);
          return(true);
       }
 

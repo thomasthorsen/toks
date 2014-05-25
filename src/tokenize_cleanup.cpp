@@ -12,7 +12,7 @@
 #include "prototypes.h"
 #include "chunk_list.h"
 #include "char_table.h"
-#include "unc_ctype.h"
+#include <cctype>
 #include <cstring>
 
 static void check_template(fp_data& fpd, chunk_t *start);

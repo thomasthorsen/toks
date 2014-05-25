@@ -14,7 +14,7 @@
 #include <cstring>
 #include <string>
 #include <cerrno>
-#include "unc_ctype.h"
+#include <cctype>
 #include <cassert>
 
 static void mark_resolved_scopes(chunk_t *pc, string& res_scopes)

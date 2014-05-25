@@ -117,25 +117,6 @@ void log_hex(log_sev_t sev, const void *vdata, int len);
 
 
 /**
- * Logs a block of data in a pretty hex format
- * Numbers on the left, characters on the right, just like I like it.
- *
- * "nnn | XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX | ................"
- *  0     ^6                                            54^ ^56           72^
- *
- *  nnn is the line number or index/16
- *
- * @param sev     The severity
- * @param data    The data to log
- * @param len     The number of bytes to log
- */
-void log_hex_blk(log_sev_t sev, const void *data, int len);
-
-#define LOG_HEX_BLK(sev, ptr, len)                           \
-   do { if (log_sev_on(sev)) { log_hex_blk(sev, ptr, len); } } while (0)
-
-
-/**
  * Returns the HEX digit for a low nibble in a number
  *
  * @param nibble  The nibble

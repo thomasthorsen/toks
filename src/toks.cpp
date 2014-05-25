@@ -26,7 +26,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
-#include "unc_ctype.h"
+#include <cctype>
 #include <strings.h>  /* strcasecmp() */
 #include <vector>
 #include <deque>
@@ -361,12 +361,12 @@ static bool process_source_list(const char *source_list, deque<string>& source_f
       line++;
       fname = linebuf;
       len   = strlen(fname);
-      while ((len > 0) && unc_isspace(*fname))
+      while ((len > 0) && isspace((unsigned char) *fname))
       {
          fname++;
          len--;
       }
-      while ((len > 0) && unc_isspace(fname[len - 1]))
+      while ((len > 0) && isspace((unsigned char) fname[len - 1]))
       {
          len--;
       }

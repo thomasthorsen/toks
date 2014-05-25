@@ -13,7 +13,7 @@
 
 #include <cstdio>
 #include <stdarg.h>
-#include "unc_ctype.h"
+#include <cctype>
 #include "log_levels.h"
 
 
@@ -285,87 +285,5 @@ void log_hex(log_sev_t sev, const void *vdata, int len)
    {
       buf[idx] = 0;
       log_str(sev, buf, idx);
-   }
-}
-
-
-/**
- * Logs a block of data in a pretty hex format
- * Numbers on the left, characters on the right, just like I like it.
- *
- * @param sev     The severity
- * @param data    The data to log
- * @param len     The number of bytes to log
- */
-void log_hex_blk(log_sev_t sev, const void *data, int len)
-{
-   static char buf[80] = "nnn | XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX | cccccccccccccccc\n";
-   const UINT8 *dat    = (const UINT8 *)data;
-   int         idx;
-   int         count;
-   int         str_idx = 0;
-   int         chr_idx = 0;
-   int         tmp;
-   int         total;
-
-   if ((data == NULL) || (len <= 0) || !log_sev_on(sev))
-   {
-      return;
-   }
-
-   /*
-    * Dump the specified number of bytes in hex, 16 byte per line by
-    * creating a string and then calling log_str()
-    */
-
-   /* Loop through the data of the current iov */
-   count = 0;
-   total = 0;
-   for (idx = 0; idx < len; idx++)
-   {
-      if (count == 0)
-      {
-         str_idx = 6;
-         chr_idx = 56;
-
-         buf[0] = to_hex_char(total >> 12);
-         buf[1] = to_hex_char(total >> 8);
-         buf[2] = to_hex_char(total >> 4);
-      }
-
-      tmp = dat[idx];
-
-      buf[str_idx]     = to_hex_char(tmp >> 4);
-      buf[str_idx + 1] = to_hex_char(tmp);
-      str_idx         += 3;
-
-      buf[chr_idx++] = unc_isprint(tmp) ? tmp : '.';
-
-      total++;
-      count++;
-      if (count >= 16)
-      {
-         count = 0;
-         log_str(sev, buf, 73);
-      }
-   }
-
-   /*
-   ** Print partial line if any
-   */
-   if (count != 0)
-   {
-      /* Clear out any junk */
-      while (count < 16)
-      {
-         buf[str_idx]     = ' ';   /* MSB hex */
-         buf[str_idx + 1] = ' ';   /* LSB hex */
-         str_idx         += 3;
-
-         buf[chr_idx++] = ' ';
-
-         count++;
-      }
-      log_str(sev, buf, 73);
    }
 }

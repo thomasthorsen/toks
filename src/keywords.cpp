@@ -13,7 +13,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <map>
-#include "unc_ctype.h"
+#include <cctype>
 
 using namespace std;
 

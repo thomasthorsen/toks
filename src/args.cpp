@@ -7,7 +7,7 @@
  */
 #include "args.h"
 #include <cstring>
-#include "unc_ctype.h"
+#include <cctype>
 
 
 /**
@@ -214,7 +214,7 @@ int Args::SplitLine(char *text, char *args[], int num_args)
    while ((*text != 0) && (argc <= num_args))
    {
       /* Detect the start of an arg */
-      if (!in_arg && !unc_isspace(*text))
+      if (!in_arg && !isspace((unsigned char) *text))
       {
          in_arg     = true;
          args[argc] = dest;
@@ -246,7 +246,7 @@ int Args::SplitLine(char *text, char *args[], int num_args)
             *dest = *text;
             dest++;
          }
-         else if (unc_isspace(*text))
+         else if (isspace((unsigned char) *text))
          {
             *dest = 0;
             dest++;

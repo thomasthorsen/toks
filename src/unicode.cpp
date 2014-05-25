@@ -7,7 +7,7 @@
  */
 #include "toks_types.h"
 #include "prototypes.h"
-#include "unc_ctype.h"
+#include <cctype>
 #include "logger.h"
 #include <cstring>
 #include <cstdlib>

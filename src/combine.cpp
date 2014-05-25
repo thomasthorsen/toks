@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-#include "unc_ctype.h"
+#include <cctype>
 #include <cassert>
 
 static void fix_fcn_def_params(fp_data& fpd, chunk_t *pc);
@@ -1394,7 +1394,7 @@ static bool is_ucase_str(const char *str, int len)
 {
    while (len-- > 0)
    {
-      if (unc_toupper(*str) != *str)
+      if (toupper((unsigned char) *str) != *str)
       {
          return(false);
       }
