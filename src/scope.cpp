@@ -66,9 +66,14 @@ static chunk_t *mark_scope(chunk_t *popen,
 {
    chunk_t *pc = popen;
 
-   while (pc != NULL)
+   for (pc = popen;
+        pc != NULL;
+        pc = chunk_get_next(pc, CNAV_PREPROC))
    {
-      mark_scope_single(pc, scope, decoration, res_scopes);
+      if (!(pc->flags & (PCF_PUNCTUATOR | PCF_KEYWORD)))
+      {
+         mark_scope_single(pc, scope, decoration, res_scopes);
+      }
 
       if (((pc->type == (popen->type + 1)) &&
           ((pc->level == popen->level) ||
@@ -76,8 +81,6 @@ static chunk_t *mark_scope(chunk_t *popen,
       {
          break;
       }
-
-      pc = chunk_get_next(pc, CNAV_PREPROC);
    }
 
    return pc;
@@ -115,11 +118,18 @@ static void get_resolved_scopes(chunk_t *scope, string& res_scopes)
 
 void assign_scope(fp_data& fpd)
 {
-   chunk_t *pc = chunk_get_head(fpd);
+   chunk_t *pc;
    string res_scopes;
 
-   while (pc != NULL)
+   for (pc = chunk_get_head(fpd);
+        pc != NULL;
+        pc = chunk_get_next(pc))
    {
+      if (pc->flags & (PCF_PUNCTUATOR | PCF_KEYWORD))
+      {
+         continue;
+      }
+
       switch (pc->type)
       {
          case CT_WORD:
@@ -248,7 +258,5 @@ void assign_scope(fp_data& fpd)
             pc->scope = "<global>";
          }
       }
-
-      pc = chunk_get_next(pc);
-    }
+   }
 }
