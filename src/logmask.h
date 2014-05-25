@@ -62,19 +62,6 @@ static_inline void logmask_set_all(log_mask_t& mask, bool value)
 
 
 /**
- * Convert a logmask into a string.
- * The string is a comma-delimited list of severities.
- * Example: 1,3,5-10
- *
- * @param mask the mask to convert
- * @param buf  the buffer to hold the string
- * @param size the size of the buffer
- * @return     buf (pass through)
- */
-char *logmask_to_str(const log_mask_t& mask, char *buf, int size);
-
-
-/**
  * Parses a string into a log severity
  *
  * @param str     The string to parse
