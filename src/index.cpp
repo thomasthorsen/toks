@@ -2,6 +2,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cinttypes>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "prototypes.h"
 #include "toks_types.h"
@@ -140,6 +143,15 @@ bool index_prepare_for_analysis(void)
    if (result == SQLITE_OK)
    {
       result = sqlite3_prepare_v2(cpd.index,
+                                  "DELETE FROM Files WHERE rowid=?",
+                                  -1,
+                                  &cpd.stmt_remove_file,
+                                  NULL);
+   }
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_prepare_v2(cpd.index,
                                   "DELETE FROM Refs WHERE Filerow=?",
                                   -1,
                                   &cpd.stmt_prune_refs,
@@ -200,6 +212,7 @@ void index_end_analysis(void)
    (void) sqlite3_finalize(cpd.stmt_begin);
    (void) sqlite3_finalize(cpd.stmt_commit);
    (void) sqlite3_finalize(cpd.stmt_insert_file);
+   (void) sqlite3_finalize(cpd.stmt_remove_file);
    (void) sqlite3_finalize(cpd.stmt_prune_refs);
    (void) sqlite3_finalize(cpd.stmt_prune_defs);
    (void) sqlite3_finalize(cpd.stmt_prune_decls);
@@ -293,6 +306,85 @@ static int index_prune_entries(sqlite3_int64 filerow)
    }
 
    return result;
+}
+
+static int index_remove_file(sqlite3_int64 filerow)
+{
+   int result;
+
+   result = sqlite3_bind_int64(cpd.stmt_remove_file,
+                               1,
+                               filerow);
+
+   if (result == SQLITE_OK)
+   {
+      result = sqlite3_step(cpd.stmt_remove_file);
+      if (result == SQLITE_DONE)
+      {
+         result = sqlite3_reset(cpd.stmt_remove_file);
+      }
+   }
+
+   return result;
+}
+
+static bool file_exists(const char *filename)
+{
+   struct stat buffer;
+   return stat(filename, &buffer) == 0;
+}
+
+bool index_prune_files(void)
+{
+   int result;
+   bool retval = true;
+   sqlite3_stmt *stmt_iterate_files;
+
+   result = sqlite3_prepare_v2(cpd.index,
+                               "SELECT rowid,Filename FROM Files",
+                               -1,
+                               &stmt_iterate_files,
+                               NULL);
+
+   if (result == SQLITE_OK)
+   {
+      while ((result = sqlite3_step(stmt_iterate_files)) == SQLITE_ROW)
+      {
+         sqlite3_int64 filerow = sqlite3_column_int64(stmt_iterate_files, 0);
+         const char *filename =
+            (const char *) sqlite3_column_text(stmt_iterate_files, 1);
+         if (!file_exists(filename))
+         {
+            LOG_FMT(LNOTE, "File %s at filerow %"PRId64" does not exist, removed from index\n", filename, (int64_t) filerow);
+            result = index_remove_file(filerow);
+
+            if (result == SQLITE_OK)
+            {
+               result = index_prune_entries(filerow);
+            }
+
+            if (result != SQLITE_OK)
+            {
+               break;
+            }
+         }
+      }
+      if (result == SQLITE_DONE)
+      {
+         result = SQLITE_OK;
+      }
+   }
+
+   if (result != SQLITE_OK)
+   {
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "index_prune_files: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      retval = false;
+   }
+
+   (void) sqlite3_finalize(stmt_iterate_files);
+
+   return retval;
 }
 
 static int index_replace_file(const char *digest, const char *filename)

@@ -134,6 +134,7 @@ void assign_scope(fp_data& fpd);
 bool index_check(void);
 bool index_prepare_for_analysis(void);
 void index_end_analysis(void);
+bool index_prune_files(void);
 bool index_prepare_for_file(fp_data& fpd);
 void index_begin_file(fp_data& fpd);
 void index_end_file(fp_data& fpd);

@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 
       if ((source_list != NULL) || (p_arg != NULL))
       {
-         if (index_prepare_for_analysis())
+         if (index_prepare_for_analysis() && index_prune_files())
          {
             /* Build a list of source files */
             if (p_arg != NULL)

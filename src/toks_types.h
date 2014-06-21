@@ -325,6 +325,7 @@ struct cp_data
    sqlite3_stmt       *stmt_begin;
    sqlite3_stmt       *stmt_commit;
    sqlite3_stmt       *stmt_insert_file;
+   sqlite3_stmt       *stmt_remove_file;
    sqlite3_stmt       *stmt_prune_refs;
    sqlite3_stmt       *stmt_prune_defs;
    sqlite3_stmt       *stmt_prune_decls;
