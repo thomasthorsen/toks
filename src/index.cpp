@@ -355,7 +355,7 @@ bool index_prune_files(void)
             (const char *) sqlite3_column_text(stmt_iterate_files, 1);
          if (!file_exists(filename))
          {
-            LOG_FMT(LNOTE, "File %s at filerow %"PRId64" does not exist, removed from index\n", filename, (int64_t) filerow);
+            LOG_FMT(LNOTE, "File %s at filerow %" PRId64 " does not exist, removed from index\n", filename, (int64_t) filerow);
             result = index_remove_file(filerow);
 
             if (result == SQLITE_OK)
@@ -444,13 +444,13 @@ bool index_prepare_for_file(fp_data& fpd)
 
       if (strcmp(fpd.digest, ingest) == 0)
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %"PRId64" with same digest\n", fpd.filename, fpd.digest, (int64_t) filerow);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %" PRId64 " with same digest\n", fpd.filename, fpd.digest, (int64_t) filerow);
          result = SQLITE_OK;
          retval = false;
       }
       else
       {
-         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %"PRId64" with different digest (%s)\n", fpd.filename, fpd.digest, (int64_t) filerow, ingest);
+         LOG_FMT(LNOTE, "File %s(%s) exists in index at filerow %" PRId64 " with different digest (%s)\n", fpd.filename, fpd.digest, (int64_t) filerow, ingest);
          result = index_replace_file(fpd.digest, fpd.filename);
          if (result == SQLITE_OK)
          {
@@ -461,7 +461,7 @@ bool index_prepare_for_file(fp_data& fpd)
    else if (result == SQLITE_DONE)
    {
       result = index_insert_file(fpd.digest, fpd.filename, &filerow);
-      LOG_FMT(LNOTE, "File %s(%s) does not exist in index, inserted at filerow %"PRId64"\n", fpd.filename, fpd.digest, (int64_t) filerow);
+      LOG_FMT(LNOTE, "File %s(%s) does not exist in index, inserted at filerow %" PRId64 "\n", fpd.filename, fpd.digest, (int64_t) filerow);
    }
 
    if (result == SQLITE_OK)
