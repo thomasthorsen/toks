@@ -285,10 +285,12 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    int  d_level = 0;
    int  bs_cnt;
 
+   ch = ctx.peek(1);
+
    /* does this start with '/ /' or '/ *' or '/ +' (d) */
    if ((ctx.peek() != '/') ||
-       ((ctx.peek(1) != '*') && (ctx.peek(1) != '/') &&
-        ((ctx.peek(1) != '+') || !is_d)))
+       ((ch != '*') && (ch != '/') &&
+        ((ch != '+') || !is_d)))
    {
       return(false);
    }
@@ -296,9 +298,8 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
    ctx.save();
 
    /* account for opening two chars */
-   pc.str = ctx.get();   /* opening '/' */
-   ch = ctx.get();
-   pc.str.append(1, ch);    /* second char */
+   (void) ctx.get();   /* opening '/' */
+   (void) ctx.get();   /* second char */
 
    if (ch == '/')
    {
@@ -306,9 +307,8 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       while (true)
       {
          bs_cnt = 0;
-         while (ctx.more())
+         while ((ch = ctx.peek()) >= 0)
          {
-            ch = ctx.peek();
             if ((ch == '\r') || (ch == '\n'))
             {
                break;
@@ -321,7 +321,7 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
             {
                bs_cnt = 0;
             }
-            pc.str.append(1, ctx.get());
+            (void) ctx.get();
          }
 
          /* If we hit an odd number of backslashes right before the newline,
@@ -333,11 +333,11 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
          }
          if (ctx.peek() == '\r')
          {
-            pc.str.append(1, ctx.get());
+            (void) ctx.get();
          }
          if (ctx.peek() == '\n')
          {
-            pc.str.append(1, ctx.get());
+            (void) ctx.get();
          }
       }
    }
@@ -347,7 +347,19 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       ctx.restore();
       return(false);
    }
-   else if (ch == '+')
+   else if (ch == '*')
+   {
+      pc.type = CT_WHITESPACE;
+      while ((ch = ctx.get()) >= 0)
+      {
+         if (ch == '*' && ctx.peek() == '/')
+         {
+            (void) ctx.get(); /* discard the '/' */
+            break;
+         }
+      }
+   }
+   else /* must be '/ +' */
    {
       pc.type = CT_WHITESPACE;
       d_level++;
@@ -355,72 +367,26 @@ static bool parse_comment(fp_data& fpd, tok_ctx& ctx, chunk_t& pc)
       {
          if ((ctx.peek() == '+') && (ctx.peek(1) == '/'))
          {
-            pc.str.append(1, ctx.get());  /* store the '+' */
-            pc.str.append(1, ctx.get());  /* store the '/' */
+            (void) ctx.get();  /* discard the '+' */
+            (void) ctx.get();  /* discard the '/' */
             d_level--;
             continue;
          }
 
          if ((ctx.peek() == '/') && (ctx.peek(1) == '+'))
          {
-            pc.str.append(1, ctx.get());  /* store the '/' */
-            pc.str.append(1, ctx.get());  /* store the '+' */
+            (void) ctx.get();  /* discard the '/' */
+            (void) ctx.get();  /* discard the '+' */
             d_level++;
             continue;
          }
 
          ch = ctx.get();
-         pc.str.append(1, ch);
-         if ((ch == '\n') || (ch == '\r'))
+         if (ch == '\r')
          {
-            if (ch == '\r')
+            if (ctx.peek() == '\n')
             {
-               if (ctx.peek() == '\n')
-               {
-                  pc.str.append(1, ctx.get());  /* store the '\n' */
-               }
-            }
-         }
-      }
-   }
-   else  /* must be '/ *' */
-   {
-      pc.type = CT_WHITESPACE;
-      while (ctx.more())
-      {
-         if ((ctx.peek() == '*') && (ctx.peek(1) == '/'))
-         {
-            pc.str.append(1, ctx.get());  /* store the '*' */
-            pc.str.append(1, ctx.get());  /* store the '/' */
-
-            tok_info ss;
-            ctx.save(ss);
-            int oldsize = pc.str.size();
-
-            /* If there is another C comment right after this one, combine them */
-            while ((ctx.peek() == ' ') || (ctx.peek() == '\t'))
-            {
-               pc.str.append(1, ctx.get());
-            }
-            if ((ctx.peek() != '/') || (ctx.peek(1) != '*'))
-            {
-               /* undo the attempt to join */
-               ctx.restore(ss);
-               pc.str.resize(oldsize);
-               break;
-            }
-         }
-
-         ch = ctx.get();
-         pc.str.append(1, ch);
-         if ((ch == '\n') || (ch == '\r'))
-         {
-            if (ch == '\r')
-            {
-               if (ctx.peek() == '\n')
-               {
-                  pc.str.append(1, ctx.get());  /* store the '\n' */
-               }
+               (void) ctx.get();  /* discard the '\n' */
             }
          }
       }
