@@ -116,7 +116,7 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -l <language> : Language override: C, CPP, D, CS, JAVA, PAWN, OC, OC+\n"
            " -t            : Load a file with types (usually not needed)\n"
            "\n"
-           "Lookup Options (can be combined, supports SQL Wildcards):\n"
+           "Lookup Options (can be combined, supports ? and * wildcards):\n"
            " --id <name>          : Identifier name to search for\n"
            " --refs               : Show only references\n"
            " --defs               : Show only definitions\n"

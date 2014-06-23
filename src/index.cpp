@@ -580,7 +580,7 @@ bool index_lookup_identifier(const char *identifier, id_sub_type sub_type)
          result = sqlite3_prepare_v2(cpd.index,
                                      "SELECT Files.Filename,Refs.Line,Refs.ColumnStart,Refs.Scope,Refs.Type,Refs.Identifier "
                                      "FROM Files JOIN Refs ON Files.rowid=Refs.Filerow "
-                                     "WHERE Refs.Identifier LIKE ?",
+                                     "WHERE Refs.Identifier GLOB ?",
                                      -1,
                                      &stmt_lookup_identifier,
                                      NULL);
@@ -591,7 +591,7 @@ bool index_lookup_identifier(const char *identifier, id_sub_type sub_type)
          result = sqlite3_prepare_v2(cpd.index,
                                      "SELECT Files.Filename,Defs.Line,Defs.ColumnStart,Defs.Scope,Defs.Type,Defs.Identifier "
                                      "FROM Files JOIN Defs ON Files.rowid=Defs.Filerow "
-                                     "WHERE Defs.Identifier LIKE ?",
+                                     "WHERE Defs.Identifier GLOB ?",
                                      -1,
                                      &stmt_lookup_identifier,
                                      NULL);
@@ -602,7 +602,7 @@ bool index_lookup_identifier(const char *identifier, id_sub_type sub_type)
          result = sqlite3_prepare_v2(cpd.index,
                                      "SELECT Files.Filename,Decls.Line,Decls.ColumnStart,Decls.Scope,Decls.Type,Decls.Identifier "
                                      "FROM Files JOIN Decls ON Files.rowid=Decls.Filerow "
-                                     "WHERE Decls.Identifier LIKE ?",
+                                     "WHERE Decls.Identifier GLOB ?",
                                      -1,
                                      &stmt_lookup_identifier,
                                      NULL);
