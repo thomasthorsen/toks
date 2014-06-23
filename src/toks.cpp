@@ -131,10 +131,10 @@ static void usage_exit(const char *msg, const char *argv0, int code)
            " -L <severity> : Set the log severity (see log_levels.h)\n"
            " -s            : Show the log severity in the logs\n"
            "\n"
-           "Usage Examples\n"
-           "toks foo.d\n"
-           "toks -L0-2,20-23,51 foo.d\n"
-           "toks --id my_identifier\n"
+           "Usage Examples:\n"
+           " toks foo.c\n"
+           " toks -L0-2,20-23,51 foo.d\n"
+           " toks --id my_identifier\n"
            "\n"
            ,
            path_basename(argv0));
