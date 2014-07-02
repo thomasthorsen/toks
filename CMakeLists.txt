@@ -5,7 +5,7 @@ find_package(Threads REQUIRED)
 
 set(SQLITE_FLAGS "-DSQLITE_OMIT_LOAD_EXTENSION")
 
-set(C_FLAGS "-O3 -g ${SQLITE_FLAGS}")
+set(C_FLAGS "${C_FLAGS} -O3 -g ${SQLITE_FLAGS}")
 
 # Create a stand-alone executable when compiling for Windows
 if(MINGW)

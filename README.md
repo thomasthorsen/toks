@@ -83,6 +83,11 @@ Building for Windows is only supported using the mingw compiler. To cross compil
     toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-mingw32.cmake ..
     toks/build> make
 
+Building for a 32bit Linux target on a 64bit host:
+
+    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-i686-gcc.cmake ..
+    toks/build> make
+
 History
 -------
 
