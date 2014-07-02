@@ -26,7 +26,7 @@ static int index_version_check_callback(
    return 0;
 }
 
-bool index_check(void)
+static bool index_check(void)
 {
    int result;
    int version = 0;
@@ -80,6 +80,62 @@ bool index_check(void)
       NULL,
       NULL,
       NULL);
+
+   return retval;
+}
+
+bool index_open(const char *index_file, bool create)
+{
+   int result, open_flags = SQLITE_OPEN_READWRITE;
+   bool retval = true;
+
+   if (index_file == NULL)
+   {
+      index_file = "TOKS";
+   }
+
+   if (create)
+   {
+      open_flags |= SQLITE_OPEN_CREATE;
+   }
+
+   result = sqlite3_open_v2(index_file,
+                            &cpd.index,
+                            open_flags,
+                            NULL);
+
+   if (result == SQLITE_OK)
+   {
+      retval = index_check();
+   }
+   else
+   {
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "index_open: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      retval = false;
+   }
+
+   if (!retval)
+   {
+      (void) sqlite3_close(cpd.index);
+   }
+
+   return retval;
+}
+
+bool index_close(void)
+{
+   int result;
+   bool retval = true;
+
+   result = sqlite3_close(cpd.index);
+
+   if (result != SQLITE_OK)
+   {
+      const char *errstr = sqlite3_errstr(result);
+      LOG_FMT(LERR, "index_close: access error (%d: %s)\n", result, errstr != NULL ? errstr : "");
+      retval = false;
+   }
 
    return retval;
 }

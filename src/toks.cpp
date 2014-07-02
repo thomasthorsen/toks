@@ -174,7 +174,6 @@ int main(int argc, char *argv[])
    int idx;
    const char *p_arg;
    bool dump = false;
-   int retval;
    const char *identifier;
    bool refs, defs, decls;
 
@@ -257,19 +256,6 @@ int main(int argc, char *argv[])
 
    redir_stdout(output_file);
 
-   retval = sqlite3_open(index_file != NULL ? index_file : "TOKS", &cpd.index);
-   if ((retval != SQLITE_OK) || (cpd.index == NULL))
-   {
-      LOG_FMT(LERR, "Unable to open index (%d)\n", retval);
-      return EXIT_FAILURE;
-   }
-
-   if (!index_check())
-   {
-      sqlite3_close(cpd.index);
-      return EXIT_FAILURE;
-   }
-
    /* Check for unused args (ignore them) */
    idx   = 1;
    p_arg = arg.Unused(idx);
@@ -277,6 +263,11 @@ int main(int argc, char *argv[])
    if ((source_list != NULL) || (p_arg != NULL) || (identifier != NULL))
    {
       deque<string> source_files;
+
+      if (!index_open(index_file, (source_list != NULL) || (p_arg != NULL)))
+      {
+         return EXIT_FAILURE;
+      }
 
       if ((source_list != NULL) || (p_arg != NULL))
       {
@@ -323,17 +314,16 @@ int main(int argc, char *argv[])
             (void) index_lookup_identifier(identifier, IST_REFERENCE);
          }
       }
+
+      index_close();
    }
    else
    {
       /* no input specified */
-      sqlite3_close(cpd.index);
       usage_exit(NULL, argv[0], EXIT_SUCCESS);
    }
 
    clear_keyword_file();
-
-   sqlite3_close(cpd.index);
 
    return EXIT_SUCCESS;
 }

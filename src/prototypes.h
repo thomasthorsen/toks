@@ -131,7 +131,8 @@ void assign_scope(fp_data& fpd);
 /*
  * index.cpp
  */
-bool index_check(void);
+bool index_open(const char *index_file, bool create);
+bool index_close(void);
 bool index_prepare_for_analysis(void);
 void index_end_analysis(void);
 bool index_prune_files(void);
