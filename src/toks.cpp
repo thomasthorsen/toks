@@ -371,13 +371,6 @@ static bool process_source_list(const char *source_list, deque<string>& source_f
          len--;
       }
       fname[len] = 0;
-      while (len-- > 0)
-      {
-         if (fname[len] == '\\')
-         {
-            fname[len] = '/';
-         }
-      }
 
       LOG_FMT(LFILELIST, "%3d] %s\n", line, fname);
 
