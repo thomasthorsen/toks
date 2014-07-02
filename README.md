@@ -27,7 +27,9 @@ Currently, the following languages are supported:
 Installation
 ------------
 
-Prebuilt deb and rpm packages are available for 64bit Ubuntu/Fedora (and compatible derivatives). The latest release is available at https://github.com/thomasthorsen/toks/releases.
+Prebuilt deb and rpm packages are available for 64bit Ubuntu/Fedora (and compatible derivatives) as well as a zipped executable for Windows (works on both 32bit and 64bit versions). The deb and rpm packages will place the executable in /usr/bin. On Windows, the executable should be placed in a directory that is included in the system path.
+
+The latest release is always available at https://github.com/thomasthorsen/toks/releases.
 
 Usage
 -----
