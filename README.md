@@ -78,9 +78,14 @@ To use LLVM/Clang, use the provided toolchain file:
     toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-clang.cmake ..
     toks/build> make
 
-Building for Windows is only supported using the mingw compiler. To cross compile on Linux, use the following commands:
+Building for Windows is only supported using the mingw compiler. To cross compile on Linux for Windows 32bit (also works on 64bit), use the following commands:
 
-    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-mingw32.cmake ..
+    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-i686-mingw32.cmake ..
+    toks/build> make
+
+Building for Windows 64bit:
+
+    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-x86_64-mingw32.cmake ..
     toks/build> make
 
 Building for a 32bit Linux target on a 64bit host:
