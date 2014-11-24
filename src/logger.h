@@ -93,7 +93,7 @@ void log_str(log_sev_t sev, const char *str, int len);
  * @param fmt     The format string
  * @param ...     Additional arguments
  */
-void log_fmt(log_sev_t sev, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void log_fmt(log_sev_t sev, const char *fmt, ...);
 
 #ifdef NO_MACRO_VARARG
 #define LOG_FMT    log_fmt
