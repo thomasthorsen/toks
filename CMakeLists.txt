@@ -15,7 +15,7 @@ endif()
 set(CMAKE_C_FLAGS "${C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${C_FLAGS} -Wall -Werror -std=c++0x")
 
-set(VERSION "1.0.0")
+set(VERSION "1.0.1")
 
 configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in"
                "${PROJECT_BINARY_DIR}/config.h")
