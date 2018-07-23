@@ -64,34 +64,11 @@ The first part shows the location in the form filename:line:column followed by t
 Building from source
 --------------------
 
-The build system is CMake:
+The build system is CMake, with a simple make wrapper. At the top level, just type "make" and it will invoke CMake automatically and launch the generated build system and build a native executable for the host machine. This probably only works on Linux or unix-like systems or with mingw64 on Windows. The resulting executable is in builds/native.
 
-    toks> mkdir build
-    toks> cd build
-    toks/build> cmake ..
-    toks/build> make
+It is also possible to cross-compile for Windows on a Linux or unix-like system. Just type "make win64". You need to have the mingw64 cross compilers installed, and you may need to adjust the name of the compiler in scripts/toolchain-x86_64-mingw32.cmake depending on how it is named on the particular host system (the provided toolchain file works with the Ubuntu naming). 
 
-The resulting executable is build/toks.
-
-To use LLVM/Clang, use the provided toolchain file:
-
-    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-clang.cmake ..
-    toks/build> make
-
-Building for Windows is only supported using the mingw compiler. To cross compile on Linux for Windows 32bit (also works on 64bit), use the following commands:
-
-    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-i686-mingw32.cmake ..
-    toks/build> make
-
-Building for Windows 64bit:
-
-    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-x86_64-mingw32.cmake ..
-    toks/build> make
-
-Building for a 32bit Linux target on a 64bit host:
-
-    toks/build> cmake -DCMAKE_TOOLCHAIN_FILE=../scripts/toolchain-i686-gcc.cmake ..
-    toks/build> make
+Finally, it is possible to build to build using Docker, so you don't have to worry about dependencies, execute "dockerbuild.sh" which will create an Ubuntu based Docker image and launch a container that builds the code for Ubuntu. To cross-compile for Windows, execute "dockerbuild.sh win64".
 
 History
 -------
